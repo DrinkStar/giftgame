@@ -3,9 +3,9 @@
   "created_at": "2026-08-13T00:00:00+08:00",
   "updated_at": "2026-08-13T18:28:52+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration1",
-  "git_branch": "dev/iteration1",
-  "last_stable_commit": "45e2150",
+  "current_iteration": "iteration2",
+  "git_branch": "dev/iteration2",
+  "last_stable_commit": "7630157",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
@@ -38,15 +38,25 @@
         {"id": "T1.3", "file": "project.godot", "action": "modify", "status": "done"},
         {"id": "T1.4", "file": "test/src/PlayerMotionTest.cs", "action": "create", "status": "done"}
       ]
+    },
+    {
+      "name": "iteration2",
+      "status": "done",
+      "tasks": [
+        {"id": "T2.1", "file": "assets + project.godot shader_globals", "action": "import", "status": "done"},
+        {"id": "T2.2", "file": "src/world/ocean/*.cs", "action": "create", "status": "done"},
+        {"id": "T2.3", "file": "src/world/buoyancy/*.cs", "action": "create", "status": "done"},
+        {"id": "T2.4", "file": "scenes/ocean_test.tscn", "action": "create", "status": "done"}
+      ]
     }
   ],
-  "checkpoint": "phase3_iteration1_verified",
+  "checkpoint": "phase3_iteration2_verified",
   "verification": {
     "build": "dotnet build 0 errors",
-    "smoke": "godot --headless --quit-after 5 exit 0",
-    "tests": "GoDotTest Passed 12 Failed 0",
+    "smoke": "Game.tscn --quit-after 5 exit 0",
+    "tests": "GoDotTest Passed 20 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
-    "visual_evidence": "evidence/iter1_frame.png (write-movie, 231KB, 非黑屏像素校验)"
+    "visual_evidence": "evidence/ocean/iter2_frame.png 683KB 非黑帧 + 60vs80 帧运动校验通过(diff 19.78)"
   },
-  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13"
+  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配"
 }
