@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/ItemData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "raw_meat"
+DisplayName = "Raw Meat"
+Description = "Uncooked meat, unsafe to eat before it is cooked over a fire"
+Type = 2
+MaxStack = 20
+HungerRestore = 15.0
+ThirstRestore = 0.0
+HealthRestore = 0.0
+RequiresCooking = true
+ToolPower = 1.0
+ToolDurability = 100.0
