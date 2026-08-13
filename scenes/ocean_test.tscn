@@ -1,0 +1,85 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://src/world/OceanTest.cs" id="1_oceantest"]
+[ext_resource type="Script" path="res://src/world/ocean/WaterMesh.cs" id="2_watermesh"]
+[ext_resource type="Script" path="res://src/world/buoyancy/FloatingBody.cs" id="3_floatingbody"]
+[ext_resource type="ArrayMesh" path="res://assets/water/clipmap_high.obj" id="4_clipmap"]
+[ext_resource type="Material" path="res://assets/water/mat_water.tres" id="5_watermat"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.385, 0.454, 0.55, 1)
+sky_horizon_color = Color(0.646, 0.656, 0.67, 1)
+ground_bottom_color = Color(0.2, 0.169, 0.133, 1)
+ground_horizon_color = Color(0.646, 0.656, 0.67, 1)
+
+[sub_resource type="Sky" id="Sky_sky"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_env"]
+background_mode = 2
+sky = SubResource("Sky_sky")
+ambient_light_source = 3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_island"]
+albedo_color = Color(0.760784, 0.698039, 0.501961, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_box"]
+albedo_color = Color(0.545098, 0.270588, 0.0745098, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_island"]
+material = SubResource("StandardMaterial3D_island")
+top_radius = 8.0
+bottom_radius = 8.0
+height = 2.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_island"]
+radius = 8.0
+height = 2.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_box"]
+material = SubResource("StandardMaterial3D_box")
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_box"]
+size = Vector3(2, 1, 2)
+
+[node name="OceanTest" type="Node3D"]
+script = ExtResource("1_oceantest")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 10, 0)
+shadow_enabled = true
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+material_override = ExtResource("5_watermat")
+mesh = ExtResource("4_clipmap")
+script = ExtResource("2_watermesh")
+
+[node name="Island" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -15)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Island"]
+mesh = SubResource("CylinderMesh_island")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Island"]
+shape = SubResource("CylinderShape3D_island")
+
+[node name="FloatBox" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 8)
+gravity_scale = 0.0
+script = ExtResource("3_floatingbody")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FloatBox"]
+mesh = SubResource("BoxMesh_box")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FloatBox"]
+shape = SubResource("BoxShape3D_box")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.3420201, 0, 0.3420201, 0.9396926, 0, 8, 20)
+current = true
