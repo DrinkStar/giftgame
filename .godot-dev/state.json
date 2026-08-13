@@ -1,0 +1,36 @@
+{
+  "task_id": "godot-dev-20260813-001",
+  "created_at": "2026-08-13T00:00:00+08:00",
+  "updated_at": "2026-08-13T00:00:00+08:00",
+  "stage": "phase3",
+  "current_iteration": "skeleton",
+  "git_branch": "dev/skeleton",
+  "last_stable_commit": "d9de59c",
+  "project": {
+    "name": "SeaAnomaly",
+    "path": "D:/work-auto/giftgame/game",
+    "godot_version": "4.7 (engine not installed yet)",
+    "godot_sdk": "Godot.NET.Sdk 4.7.1",
+    "dotnet": ".NET 8.0 target / SDK 10.0.400 installed",
+    "main_scene": "res://src/Main.tscn",
+    "renderer": "forward_plus",
+    "scene_count": 2,
+    "script_count": 3,
+    "refs_dir": "D:/work-auto/giftgame/godot-refs (8 upstream repos)",
+    "integration_checklist": "D:/work-auto/giftgame/godot-refs/集成清单.md"
+  },
+  "iterations": [
+    {
+      "name": "skeleton",
+      "status": "done",
+      "tasks": [
+        {"id": "T1", "file": "project.godot", "action": "create/configure", "status": "done", "note": "chickensoft template + forward_plus + 1280x720"},
+        {"id": "T2", "file": "SeaAnomaly.csproj/.sln/src/**", "action": "rename", "status": "done", "note": "Chickensoft.GodotGame -> SeaAnomaly"},
+        {"id": "T3", "file": "build", "action": "dotnet build", "status": "done", "note": "0 errors, 2 harmless editorconfig warnings"}
+      ]
+    }
+  ],
+  "next_iteration": "player_and_camera (集成清单 §五 步骤2: 参考 chickensoft-GameDemo 第三人称控制器)",
+  "pending_gate": "install Godot 4.7 editor (winget/choco/manual) for scene import & smoke test",
+  "checkpoint": "phase3_skeleton_build_ok"
+}
