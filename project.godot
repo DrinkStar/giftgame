@@ -126,6 +126,9 @@ sprint={
 3d_physics/layer_2="Player"
 3d_physics/layer_3="Interactables"
 3d_physics/layer_4="Animals"
+3d_physics/layer_5="Buildings"
+3d_physics/layer_6="BuildingWalls"
+3d_physics/layer_7="FreeObjects"
 
 [rendering]
 

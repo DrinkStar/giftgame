@@ -95,6 +95,40 @@ public static class GameEvents
 
   #endregion Crafting
 
+  #region Building
+
+  /// <summary>Slot (library index, mouse button) clicked in the building menu.</summary>
+  public static event Action<int, int>? BuildingSlotClicked;
+
+  public static event Action<bool>? BuildModeChanged;
+
+  public static event Action<bool>? DemolitionModeChanged;
+
+  /// <summary>Active grid level index changed.</summary>
+  public static event Action<int>? BuildingLevelChanged;
+
+  /// <summary>
+  ///   Raise-only this iteration (plan Decision 1): the F5 handler publishes
+  ///   it with <c>false</c> as a seam for the W2 save system and any future
+  ///   UI/feedback; nothing subscribes yet.
+  /// </summary>
+  public static event Action<bool>? BuildingSaved;
+
+  /// <summary>
+  ///   Raise-only this iteration (plan Decision 1): the F9 handler publishes
+  ///   it with an empty filename as a seam for the W2 save system and any
+  ///   future UI/feedback; nothing subscribes yet.
+  /// </summary>
+  public static event Action<string>? BuildingLoaded;
+
+  /// <summary>A mouse tile began overlapping another body (red collision feedback).</summary>
+  public static event Action? MouseTileBodyEntered;
+
+  /// <summary>A mouse tile stopped overlapping other bodies (red collision feedback).</summary>
+  public static event Action? MouseTileBodyExited;
+
+  #endregion Building
+
   #region Raise helpers
 
   public static void RaiseGameStarted() => GameStarted?.Invoke();
@@ -150,6 +184,28 @@ public static class GameEvents
 
   public static void RaiseCraftingFailed(string recipeId) =>
     CraftingFailed?.Invoke(recipeId);
+
+  public static void RaiseBuildingSlotClicked(int libraryIndex, int button) =>
+    BuildingSlotClicked?.Invoke(libraryIndex, button);
+
+  public static void RaiseBuildModeChanged(bool enabled) =>
+    BuildModeChanged?.Invoke(enabled);
+
+  public static void RaiseDemolitionModeChanged(bool enabled) =>
+    DemolitionModeChanged?.Invoke(enabled);
+
+  public static void RaiseBuildingLevelChanged(int levelIndex) =>
+    BuildingLevelChanged?.Invoke(levelIndex);
+
+  public static void RaiseBuildingSaved(bool overwrite) =>
+    BuildingSaved?.Invoke(overwrite);
+
+  public static void RaiseBuildingLoaded(string fileName) =>
+    BuildingLoaded?.Invoke(fileName);
+
+  public static void RaiseMouseTileBodyEntered() => MouseTileBodyEntered?.Invoke();
+
+  public static void RaiseMouseTileBodyExited() => MouseTileBodyExited?.Invoke();
 
   #endregion Raise helpers
 }

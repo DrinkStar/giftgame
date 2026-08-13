@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BuildableResource" load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/building/buildables/storage_box.tscn" id="1_model"]
+[ext_resource type="Script" path="res://src/building/BuildableResource.cs" id="2_script"]
+
+[resource]
+script = ExtResource("2_script")
+Name = "storage_box"
+Description = ""
+Object3DModel = ExtResource("1_model")
+SnapBehaviour = 0
+Size = Vector3i(1, 0, 1)
+CostItemId = "wood"
+CostAmount = 6

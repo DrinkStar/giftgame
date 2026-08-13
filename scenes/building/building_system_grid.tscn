@@ -1,0 +1,28 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/building/BuildingSystemGrid.cs" id="1_grid"]
+[ext_resource type="Shader" path="res://assets/shaders/grid_lines.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_grid"]
+render_priority = 0
+shader = ExtResource("2_shader")
+shader_parameter/gridlineOnEvery = 1.0
+shader_parameter/lineThickness = 0.01
+shader_parameter/originOffset = Vector2(0, 0)
+shader_parameter/color = Color(0, 0.87451, 0.72549, 0.501961)
+shader_parameter/glowStrength = 0.3
+shader_parameter/glowSpread = 0.05
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_grid"]
+material = SubResource("ShaderMaterial_grid")
+size = Vector2(40, 40)
+subdivide_width = 40
+subdivide_depth = 40
+
+[node name="Grid" type="Node3D"]
+script = ExtResource("1_grid")
+
+[node name="GridVisual" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+visible = false
+mesh = SubResource("PlaneMesh_grid")
