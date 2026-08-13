@@ -85,6 +85,13 @@ public partial class WaveGenerator : Node
 
     var spectrumSet = context.CreateDescriptorSet(
       new[] { Descriptors["spectrum"] }, spectrumComputeShader, 0);
+    // Godot 4.7 validates uniform-set formats against the bound pipeline
+    // shader, including image writability taken from the GLSL qualifiers.
+    // spectrum_modulate declares its spectrum image as `readonly`, so it needs
+    // its OWN descriptor set created against its own shader — reusing the
+    // writeonly set from spectrum_compute is rejected ("Writable: Y" vs "N").
+    var spectrumReadSet = context.CreateDescriptorSet(
+      new[] { Descriptors["spectrum"] }, spectrumModulateShader, 0);
     var fftButterflySet = context.CreateDescriptorSet(
       new[] { Descriptors["butterfly_factors"] }, fftButterflyShader, 0);
     var fftComputeSet = context.CreateDescriptorSet(
@@ -102,7 +109,7 @@ public partial class WaveGenerator : Node
     );
     Pipelines["spectrum_modulate"] = context.CreatePipeline(
       new uint[] { (uint)(MapSize / 16), (uint)(MapSize / 16), 1 },
-      new[] { spectrumSet, fftBufferSet },
+      new[] { spectrumReadSet, fftBufferSet },
       spectrumModulateShader
     );
     Pipelines["fft_butterfly"] = context.CreatePipeline(
