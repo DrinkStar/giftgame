@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260813-001",
   "created_at": "2026-08-13T00:00:00+08:00",
-  "updated_at": "2026-08-13T18:28:52+08:00",
+  "updated_at": "2026-08-13T21:39:14+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration2",
-  "git_branch": "dev/iteration2",
-  "last_stable_commit": "7630157",
+  "current_iteration": "iteration3",
+  "git_branch": "dev/iteration3",
+  "last_stable_commit": "049c5e44dcc683b9d45c674ee24ec224b65a9a8d",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
@@ -48,15 +48,24 @@
         {"id": "T2.3", "file": "src/world/buoyancy/*.cs", "action": "create", "status": "done"},
         {"id": "T2.4", "file": "scenes/ocean_test.tscn", "action": "create", "status": "done"}
       ]
+    },
+    {
+      "name": "iteration3",
+      "status": "done",
+      "tasks": [
+        {"id": "T3.1", "file": "src/core/* + src/player/PlayerStats.cs", "action": "create", "status": "done"},
+        {"id": "T3.2", "file": "src/inventory/* + assets/items + assets/recipes", "action": "create", "status": "done"},
+        {"id": "T3.3", "file": "PlayerInteraction/HUD/hud.tscn/Game.tscn/project.godot", "action": "create/modify", "status": "done"}
+      ]
     }
   ],
-  "checkpoint": "phase3_iteration2_verified",
+  "checkpoint": "phase3_iteration3_verified",
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "Game.tscn --quit-after 5 exit 0",
-    "tests": "GoDotTest Passed 20 Failed 0",
+    "tests": "GoDotTest Passed 60 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
-    "visual_evidence": "evidence/ocean/iter2_frame.png 683KB 非黑帧 + 60vs80 帧运动校验通过(diff 19.78)"
+    "visual_evidence": "evidence/iter3_frame.png 212KB 非黑帧 (平均亮度 134.48, >10KB 通过)"
   },
-  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配"
+  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）"
 }
