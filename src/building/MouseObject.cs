@@ -72,7 +72,7 @@ public partial class MouseObject : Node3D
   /// <inheritdoc/>
   public override void _ExitTree()
   {
-    // Plan Decision 13: static bus subscriptions must be released on exit.
+    // FIX(iter4-plan): Plan Decision 13: static bus subscriptions must be released on exit.
     GameEvents.MouseTileBodyEntered -= OnMouseTileBodyEntered;
     GameEvents.MouseTileBodyExited -= OnMouseTileBodyExited;
   }

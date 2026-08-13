@@ -55,7 +55,7 @@ public partial class BuildableResource : Resource
   public Vector3I Size { get; set; }
 
   /// <summary>
-  ///   Cost extension (plan Decision 2): the inventory item id the player
+  ///   Cost extension (FIX(iter4-plan): plan Decision 2): the inventory item id the player
   ///   pays when placing this buildable. An empty string means the buildable
   ///   is free and no inventory check or deduction happens.
   /// </summary>
@@ -63,7 +63,7 @@ public partial class BuildableResource : Resource
   public string CostItemId { get; set; } = "";
 
   /// <summary>
-  ///   Cost extension (plan Decision 2): how many of <see cref="CostItemId"/>
+  ///   Cost extension (FIX(iter4-plan): plan Decision 2): how many of <see cref="CostItemId"/>
   ///   are consumed by one placement. Ignored when the cost item is empty.
   /// </summary>
   [Export]

@@ -9,7 +9,7 @@ using Godot;
 ///   Represents the user interface for displaying building information
 ///   (upstream InfoInterface). Subscribes to the static
 ///   <see cref="GameEvents"/> bus instead of an exported EventBus node, and
-///   unsubscribes in _ExitTree (plan Decision 13).
+  ///   unsubscribes in _ExitTree (FIX(iter4-plan): plan Decision 13).
 /// </summary>
 public partial class BuildingInfo : Control
 {

@@ -136,7 +136,7 @@ public partial class BuildingSystemGrid : Node3D
 
   /// <summary>
   ///   Validates that <paramref name="selectedObject"/> can be placed at
-  ///   <paramref name="position"/> WITHOUT placing it (plan Decision 2). The
+  ///   <paramref name="position"/> WITHOUT placing it (FIX(iter4-plan): plan Decision 2). The
   ///   BuildingSystem calls this BEFORE deducting inventory cost, then calls
   ///   <see cref="TryToPlaceObject"/> which re-runs the same footprint check
   ///   and can therefore no longer fail on occupancy.
@@ -156,7 +156,7 @@ public partial class BuildingSystemGrid : Node3D
   }
 
   /// <summary>
-  ///   Tries to place an object on the grid. Plan Decision 2 change: returns
+  ///   Tries to place an object on the grid. FIX(iter4-plan): Plan Decision 2 change: returns
   ///   a bool — <c>false</c> when a footprint cell is occupied (or would be
   ///   for walls), <c>true</c> when the object was actually placed. The
   ///   BuildingSystem only deducts the material cost after <c>true</c>.

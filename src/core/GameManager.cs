@@ -30,7 +30,7 @@ public partial class GameManager : Node
   [Export] public HUD? HUD { get; set; }
 
   /// <summary>
-  ///   BuildingSystem reference (W3, plan Decision 8/15). The auto-load below
+  ///   BuildingSystem reference (W3, FIX(iter4-plan): plan Decision 8/15). The auto-load below
   ///   runs deferred so the building grids are guaranteed initialized before
   ///   the most recent save is restored.
   /// </summary>
@@ -58,10 +58,10 @@ public partial class GameManager : Node
     GameEvents.PlayerDied += OnPlayerDied;
     GameEvents.RaiseGameStarted();
 
-    // W3 auto-load (plan Decision 8/15): deferred so it runs AFTER every
+    // W3 auto-load (FIX(iter4-plan): plan Decision 8/15): deferred so it runs AFTER every
     // node's _Ready — in particular BuildingSystem._Ready, which spawns the
     // grids that LoadMostRecent reads. BuildingSystem is also placed BEFORE
-    // GameManager in Game.tscn (Decision 15), so its _Ready precedes ours
+    // GameManager in Game.tscn (FIX(iter4-plan): Decision 15), so its _Ready precedes ours
     // even without the defer; the deferred call makes the ordering explicit
     // and keeps working if the scene tree is ever reordered.
     CallDeferred(nameof(AutoLoadBuildings));

@@ -12,7 +12,7 @@ public static class BSConstants
   public const int DEFAULT_CELL_HEIGHT = 2;
 
   /// <summary>
-  ///   The default ground layer mask (plan Decision 3): layer 1 = "World".
+  ///   The default ground layer mask (FIX(iter4-plan): plan Decision 3): layer 1 = "World".
   ///   The building raycast shoots at the existing ground of Game.tscn; the
   ///   player capsule also lives on layers 1/2, so the build ray can
   ///   occasionally hit the player — accepted this iteration.
@@ -20,7 +20,7 @@ public static class BSConstants
   public const uint DEFAULT_GROUND_LAYER_MASK = 1u;
 
   /// <summary>
-  ///   The default floor layer mask (plan Decision 3): layer 5 = "Buildings".
+  ///   The default floor layer mask (FIX(iter4-plan): plan Decision 3): layer 5 = "Buildings".
   ///   Placed buildings' colliders live here; demolition raycasts and mouse
   ///   tile collision feedback target this layer. The player does NOT collide
   ///   with buildings this iteration (walking through them is accepted).
@@ -28,14 +28,14 @@ public static class BSConstants
   public const uint DEFAULT_FLOOR_LAYER_MASK = 1u << 4;
 
   /// <summary>
-  ///   The default wall layer mask (plan Decision 3): layer 6 =
+  ///   The default wall layer mask (FIX(iter4-plan): plan Decision 3): layer 6 =
   ///   "BuildingWalls". No wall objects exist this iteration; the constant is
   ///   kept so the mask contract stays stable for the future wall port.
   /// </summary>
   public const uint DEFAULT_WALL_LAYER_MASK = 1u << 5;
 
   /// <summary>
-  ///   The default free layer mask (plan Decision 3): layer 7 =
+  ///   The default free layer mask (FIX(iter4-plan): plan Decision 3): layer 7 =
   ///   "FreeObjects". Unused this iteration (no free object use case).
   /// </summary>
   public const uint DEFAULT_FREE_LAYER_MASK = 1u << 6;

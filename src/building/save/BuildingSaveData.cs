@@ -4,7 +4,7 @@ namespace SeaAnomaly;
 
 using System.Collections.Generic;
 
-/// <summary>Represents a saved buildable object (plan Decision 5 fix ⑤).</summary>
+/// <summary>Represents a saved buildable object (FIX(iter4-plan): plan Decision 5 fix ⑤).</summary>
 /// <remarks>
 ///   The rotation field is named <c>RotationDegreesY</c> and stores DEGREES.
 ///   Upstream stored a degrees value inside a field named "YRotationRadiants",
@@ -65,7 +65,7 @@ public class SaveGrid
 {
   /// <summary>
   ///   Gets or sets the index of the grid inside the BuildingSystem's grid
-  ///   list (plan Decision 5 fix ④). Load uses this value to locate the
+  ///   list (FIX(iter4-plan): plan Decision 5 fix ④). Load uses this value to locate the
   ///   target grid instead of assuming list order.
   /// </summary>
   public int Index { get; set; }
@@ -78,7 +78,7 @@ public class SaveGrid
 public class SaveFile
 {
   /// <summary>
-  ///   Gets or sets the list of saved grids. Plan Decision 5 fix ④: EVERY
+  ///   Gets or sets the list of saved grids. FIX(iter4-plan): Plan Decision 5 fix ④: EVERY
   ///   grid is written with its index, including empty ones, so the file is
   ///   a faithful snapshot of the grid stack.
   /// </summary>

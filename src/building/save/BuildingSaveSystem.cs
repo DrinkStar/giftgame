@@ -12,12 +12,12 @@ using Godot;
 /// </summary>
 /// <remarks>
 ///   Plan Decision 5 fixes locked here:
-///   - fix ③: the ENTIRE load (including the free-object loop) runs inside
+  ///   - FIX(iter4-plan): fix ③: the ENTIRE load (including the free-object loop) runs inside
 ///     the null guard — a missing or corrupt file returns false without
 ///     touching the scene (upstream dereferenced the null save file).
-///   - fix ④: Save writes EVERY grid with its index (upstream skipped empty
+  ///   - FIX(iter4-plan): fix ④: Save writes EVERY grid with its index (upstream skipped empty
 ///     grids); Load uses the stored Index to locate the target grid.
-///   - fix ⑤: rotation is stored and applied in DEGREES everywhere; free
+  ///   - FIX(iter4-plan): fix ⑤: rotation is stored and applied in DEGREES everywhere; free
 ///     objects convert to radians exactly once on load.
 ///   - Decision 4: grid object Y comes from the grid's GlobalPosition.Y,
 ///     never from the grid index.
@@ -45,7 +45,7 @@ public static class BuildingSaveSystem
   {
     var saveFile = new SaveFile();
 
-    // Fix ④: write ALL grids with their list index — upstream only wrote
+    // FIX(iter4-plan): Fix ④: write ALL grids with their list index — upstream only wrote
     // non-empty grids, so a level-0-only save silently restored every object
     // onto grid 0 after a reload. Empty grids are cheap and keep the file a
     // faithful snapshot of the grid stack.
@@ -65,7 +65,7 @@ public static class BuildingSaveSystem
 
   /// <summary>
   ///   Loads a saved state of the grid building system. Returns false without
-  ///   touching the scene when the file is missing or corrupt (fix ③).
+  ///   touching the scene when the file is missing or corrupt (FIX(iter4-plan): fix ③).
   /// </summary>
   /// <param name="filename">The path of the save file to load.</param>
   /// <param name="library">The library used to resolve buildables by name.</param>
@@ -85,7 +85,7 @@ public static class BuildingSaveSystem
   {
     _ = folder;
 
-    // Fix ③: the free-object loop used to live OUTSIDE this guard, so a
+    // FIX(iter4-plan): Fix ③: the free-object loop used to live OUTSIDE this guard, so a
     // missing save file crashed with a null reference instead of reporting
     // failure. Now the whole load sits inside the guard.
     var saveFile = JsonSaveSystem.Load<SaveFile>(filename);
@@ -94,7 +94,7 @@ public static class BuildingSaveSystem
       return false;
     }
 
-    // Fix ④: locate each saved grid by its stored Index. The grid list is
+    // FIX(iter4-plan): Fix ④: locate each saved grid by its stored Index. The grid list is
     // index-ordered (Index == i for valid files), but a tampered file must
     // never index out of bounds.
     for (var i = 0; i < saveFile.Grids.Count; i++)
@@ -122,14 +122,14 @@ public static class BuildingSaveSystem
         // index as upstream did.
         var position = new Vector3(gridObject.PositionX, grid.GlobalPosition.Y, gridObject.PositionZ);
 
-        // Fix ⑤: rotation is already in degrees; TryToPlaceObject converts
+        // FIX(iter4-plan): Fix ⑤: rotation is already in degrees; TryToPlaceObject converts
         // internally. Occupancy failures (e.g. duplicate entries) are safe
         // to ignore — the cell was already restored.
         grid.TryToPlaceObject(resource, gridObject.RotationDegreesY, position);
       }
     }
 
-    // Fix ③: free objects restore inside the guard, after the grids.
+    // FIX(iter4-plan): Fix ③: free objects restore inside the guard, after the grids.
     foreach (var freeObject in saveFile.FreeObjects)
     {
       var resource = library.GetByName(freeObject.Name);
@@ -151,7 +151,7 @@ public static class BuildingSaveSystem
         freeObject.PositionZ
       );
 
-      // Fix ⑤: convert the saved degrees to radians exactly ONCE (upstream
+      // FIX(iter4-plan): Fix ⑤: convert the saved degrees to radians exactly ONCE (upstream
       // saved radians and re-converted, double-rotating the object).
       instance.RotateY(Mathf.DegToRad(freeObject.RotationDegreesY));
     }
@@ -208,7 +208,7 @@ public static class BuildingSaveSystem
     {
       Name = instance.BuildableResource.Name,
       ResourcePath = instance.BuildableResource.ResourcePath,
-      // Fix ⑤: degrees — upstream wrote the degrees value into a field
+      // FIX(iter4-plan): Fix ⑤: degrees — upstream wrote the degrees value into a field
       // named "radiants", corrupting the semantics.
       RotationDegreesY = instance.RotationDegrees.Y,
       PositionX = instance.GlobalPosition.X,
@@ -221,7 +221,7 @@ public static class BuildingSaveSystem
     {
       Name = instance.BuildableResource.Name,
       ResourcePath = instance.BuildableResource.ResourcePath,
-      // Fix ⑤: degrees from the rotated BuildableInstance (upstream read
+      // FIX(iter4-plan): Fix ⑤: degrees from the rotated BuildableInstance (upstream read
       // ObjectInstance.Rotation.Y in radians — always 0 — and lost the
       // rotation entirely).
       RotationDegreesY = instance.RotationDegrees.Y,

@@ -8,10 +8,10 @@ using Godot;
 ///   Pure static grid math, extracted from the upstream
 ///   <c>BuildingSystemGrid</c> methods so it is unit-testable without a scene
 ///   tree. Two upstream bugs are fixed here and locked by GridMathTest:
-///   - Fix ① (<see cref="IsValidGridIndex"/>): upstream checked
+  ///   - FIX(iter4-plan): Fix ① (<see cref="IsValidGridIndex"/>): upstream checked
 ///     <c>x &lt;= _xSize</c> (one cell too far) and required x/y &gt; 0, which
 ///     wrongly rejected row 0 and column 0.
-///   - Fix ② (<see cref="SnappedPosition"/>): upstream rounded the raw
+  ///   - FIX(iter4-plan): Fix ② (<see cref="SnappedPosition"/>): upstream rounded the raw
 ///     distance from the grid origin without dividing by the cell size, so a
 ///     cell size other than 1 snapped to the wrong points.
 /// </summary>
@@ -58,7 +58,7 @@ public static class GridMath
   }
 
   /// <summary>
-  ///   Fix ①: a grid index is valid only when strictly inside
+  ///   FIX(iter4-plan): Fix ①: a grid index is valid only when strictly inside
   ///   <c>[0, xSize)</c> x <c>[0, zSize)</c>. Upstream used
   ///   <c>x &lt;= _xSize &amp;&amp; y &lt;= _zSize &amp;&amp; x &gt; 0 &amp;&amp; y &gt; 0</c>
   ///   which rejected the first row/column and accepted one cell past the
@@ -69,7 +69,7 @@ public static class GridMath
 
   /// <summary>
   ///   Snaps a world position to the grid, following the upstream
-  ///   GetMouseSnappedPosition math with fix ②: divide by the cell size
+  ///   GetMouseSnappedPosition math with FIX(iter4-plan): fix ②: divide by the cell size
   ///   BEFORE rounding and multiply back after, so any cell size snaps
   ///   correctly (upstream only worked for cellSize == 1). The odd-size
   ///   offset logic (upstream lines 117-137) is kept verbatim: objects whose
@@ -92,7 +92,7 @@ public static class GridMath
     float yRotationInDegrees
   )
   {
-    // Fix ②: upstream rounded (mousePosition - GlobalPosition) directly,
+    // FIX(iter4-plan): Fix ②: upstream rounded (mousePosition - GlobalPosition) directly,
     // which is only correct when cellSize == 1.
     var delta = mousePosition - gridGlobalPosition;
     var x = Mathf.Round(delta.X / cellSize) * cellSize;

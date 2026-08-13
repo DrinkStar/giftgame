@@ -48,7 +48,7 @@ public static class JsonSaveSystem
   /// <summary>
   ///   Loads data from the specified save file. Returns <c>default</c> (null
   ///   for reference types) when the file is missing or corrupt — loading
-  ///   never throws (plan Decision 5 fix ③ null-safety).
+  ///   never throws (FIX(iter4-plan): plan Decision 5 fix ③ null-safety).
   /// </summary>
   /// <typeparam name="T">The type of data to load.</typeparam>
   /// <param name="path">The path of the save file (user://-style or absolute).</param>
@@ -76,7 +76,7 @@ public static class JsonSaveSystem
 
   /// <summary>
   ///   Retrieves information about the save files in the folder, newest
-  ///   first. Plan Decision 5 fix ⑥: ONLY <c>savegame_*.json</c> files are
+  ///   first. FIX(iter4-plan): Plan Decision 5 fix ⑥: ONLY <c>savegame_*.json</c> files are
   ///   listed — upstream returned every file in the folder, so unrelated
   ///   files could be picked up as saves.
   /// </summary>

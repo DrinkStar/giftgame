@@ -9,7 +9,7 @@ public class GridCell
   public BuildableInstance? GroundObject { get; private set; }
 
   /// <summary>
-  ///   Gets the wall objects placed on this grid cell. Fix ⑦: the model only
+  ///   Gets the wall objects placed on this grid cell. FIX(iter4-plan): Fix ⑦: the model only
   ///   stores TWO sides (index 0 = <see cref="Side.MinusZ"/>, index 1 =
   ///   <see cref="Side.MinusX"/>) although the <see cref="Side"/> enum has
   ///   four values. Upstream indexed this array with the raw enum value, so
@@ -46,7 +46,7 @@ public class GridCell
   /// <param name="side">The <see cref="Side"/> of the grid cell where the wall object is placed.</param>
   public void SetWallObject(BuildableInstance buildableInstance, Side side)
   {
-    // Fix ⑦: ignore sides outside the two-slot model instead of indexing
+    // FIX(iter4-plan): Fix ⑦: ignore sides outside the two-slot model instead of indexing
     // out of bounds.
     if (buildableInstance.BuildableResource.SnapBehaviour != SnapBehaviour.Wall)
     {
@@ -76,7 +76,7 @@ public class GridCell
   /// <param name="side">The <see cref="Side"/> of the grid cell where the wall object is placed.</param>
   public void ClearWallObject(Side side)
   {
-    // Fix ⑦: same bounds guard as SetWallObject.
+    // FIX(iter4-plan): Fix ⑦: same bounds guard as SetWallObject.
     if (TryGetSideIndex(side, out var index))
     {
       WallObjects[index] = null;
@@ -105,7 +105,7 @@ public class GridCell
     TryGetSideIndex(side, out var index) ? WallObjects[index] : null;
 
   /// <summary>
-  ///   Fix ⑦ helper: maps a <see cref="Side"/> to a slot in the two-entry
+  ///   FIX(iter4-plan): Fix ⑦ helper: maps a <see cref="Side"/> to a slot in the two-entry
   ///   wall array. The model intentionally only supports the two sides that
   ///   exist as array entries (MinusZ, MinusX); the other enum values are
   ///   unsupported and return false instead of writing out of bounds.

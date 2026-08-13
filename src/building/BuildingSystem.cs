@@ -16,14 +16,14 @@ using Godot;
 ///   - EventBus replaced by the static <see cref="GameEvents"/> hub.
 ///   - Material cost is checked AFTER occupancy validation and BEFORE the
 ///     actual placement, so a failed payment never spawns a building
-///     (Decision 2).
-///   - SetBuildMode toggles the mouse cursor Visible/Captured (Decision 6);
+  ///     (FIX(iter4-plan): Decision 2).
+  ///   - SetBuildMode toggles the mouse cursor Visible/Captured (FIX(iter4-plan): Decision 6);
 ///     the W3 GameManager is expected to call SetBuildMode(false) before
 ///     pausing (pause takes priority over build mode).
-///   - PageUp/PageDown skip the camera move when Levels == 1 (Decision 14).
-///   - The grid visual follows build mode (Decision 13).
+  ///   - PageUp/PageDown skip the camera move when Levels == 1 (FIX(iter4-plan): Decision 14).
+  ///   - The grid visual follows build mode (FIX(iter4-plan): Decision 13).
   ///   - F5/F9 quick save/load are wired to the W2 BuildingSaveSystem
-  ///     (Decision 7); free objects stay out of the save this iteration
+  ///     (FIX(iter4-plan): Decision 7); free objects stay out of the save this iteration
   ///     (plan OUT list).
 /// </summary>
 public partial class BuildingSystem : Node3D
@@ -177,7 +177,7 @@ public partial class BuildingSystem : Node3D
     // Mouse tiles must detect placed buildings (Decision 3: layer 16).
     _mouseObject.SetLayerMask(FloorLayerMask);
 
-    // Initialize grids. Decision 4: the grid is positioned with LOCAL
+    // Initialize grids. FIX(iter4-plan): Decision 4: the grid is positioned with LOCAL
     // Position (upstream used GlobalPosition, which breaks when the
     // GridContainer is offset — e.g. y=0.5 on the ground top in Game.tscn).
     for (var i = 0; i < Levels; i++)
@@ -276,7 +276,7 @@ public partial class BuildingSystem : Node3D
       }
     }
 
-    // Decision 7: F5/F9 quick save/load seams — the real save system lands
+    // FIX(iter4-plan): Decision 7: F5/F9 quick save/load seams — the real save system lands
     // in W2, so for now they only raise GameEvents placeholders.
     if (@event.IsActionPressed("quick_save"))
     {
@@ -322,7 +322,7 @@ public partial class BuildingSystem : Node3D
     if (_selectedObject.SnapBehaviour != SnapBehaviour.Free)
     {
       // Handle the object in the grid as it is snappable.
-      // Decision 2 atomicity: validate occupancy BEFORE paying, then pay,
+      // FIX(iter4-plan): Decision 2 atomicity: validate occupancy BEFORE paying, then pay,
       // then place. CanPlace and TryToPlaceObject share the same footprint
       // check, so a placement that passed CanPlace cannot fail — the cost is
       // only deducted when the object is guaranteed to land.
@@ -366,7 +366,7 @@ public partial class BuildingSystem : Node3D
 
   /// <summary>
   ///   Deducts the material cost of <paramref name="selected"/> from the
-  ///   player's inventory (plan Decision 2). CostItemId == "" means free.
+  ///   player's inventory (FIX(iter4-plan): plan Decision 2). CostItemId == "" means free.
   /// </summary>
   private bool TryConsumeCost(BuildableResource selected)
   {
@@ -504,7 +504,7 @@ public partial class BuildingSystem : Node3D
       return;
     }
 
-    // Decision 14: with a single level there is nowhere to switch to; skip
+    // FIX(iter4-plan): Decision 14: with a single level there is nowhere to switch to; skip
     // entirely so the camera never teleports (upstream moved the camera to
     // the new grid's height even when the grid set never changed).
     if (_grids.Count <= 1)
@@ -555,7 +555,7 @@ public partial class BuildingSystem : Node3D
   #region Build mode
 
   /// <summary>
-  ///   Toggles build mode. Decision 6: the mouse cursor follows build mode
+  ///   Toggles build mode. FIX(iter4-plan): Decision 6: the mouse cursor follows build mode
   ///   (Visible while building, Captured while playing). The W3 GameManager
   ///   pauses the game through ui_cancel and must call SetBuildMode(false)
   ///   first when build mode is active — pause takes priority over build
@@ -566,12 +566,12 @@ public partial class BuildingSystem : Node3D
     _isBuildModeActive = value;
     _objectMenu.Visible = _isBuildModeActive;
 
-    // Decision 6: mouse cursor.
+    // FIX(iter4-plan): Decision 6: mouse cursor.
     Input.MouseMode = _isBuildModeActive
       ? Input.MouseModeEnum.Visible
       : Input.MouseModeEnum.Captured;
 
-    // Decision 13: the grid visual follows build mode.
+    // FIX(iter4-plan): Decision 13: the grid visual follows build mode.
     RefreshActiveGridVisual();
 
     if (!_isBuildModeActive)
@@ -608,7 +608,7 @@ public partial class BuildingSystem : Node3D
   #region Save system
 
   /// <summary>
-  ///   Decision 7: F5 handler, wired to the W2 BuildingSaveSystem. Overwrites
+  ///   FIX(iter4-plan): Decision 7: F5 handler, wired to the W2 BuildingSaveSystem. Overwrites
   ///   the current save file when one exists, otherwise creates a new one.
   ///   The free-object list is passed EMPTY on purpose — free objects are out
   ///   of scope this iteration (plan OUT list) and the tracked list can hold
@@ -627,7 +627,7 @@ public partial class BuildingSystem : Node3D
   }
 
   /// <summary>
-  ///   Decision 7: F9 handler. Loads the most recent save and raises the
+  ///   FIX(iter4-plan): Decision 7: F9 handler. Loads the most recent save and raises the
   ///   BuildingLoaded event only when something was actually loaded — a
   ///   missing or corrupt save reports nothing (W2 fix ③ guarantees the load
   ///   itself never throws).
@@ -788,7 +788,7 @@ public partial class BuildingSystem : Node3D
   }
 
   /// <summary>
-  ///   Decision 13 helper: the active grid's visual is visible only while
+  ///   FIX(iter4-plan): Decision 13 helper: the active grid's visual is visible only while
   ///   build mode is active.
   /// </summary>
   private void RefreshActiveGridVisual()

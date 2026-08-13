@@ -47,14 +47,12 @@ public partial class MouseTile : Node3D
   /// <param name="size">The size of the tile.</param>
   public void SetSize(int size)
   {
-    var planeMesh = _meshInstance.Mesh as PlaneMesh;
-    if (planeMesh != null)
+    if (_meshInstance.Mesh is PlaneMesh planeMesh)
     {
       planeMesh.Size = new Vector2(size, size);
     }
 
-    var shape = _collisionShape3D.Shape as BoxShape3D;
-    if (shape != null)
+    if (_collisionShape3D.Shape is BoxShape3D shape)
     {
       shape.Size = new Vector3(size * 0.8f, 0.3f, size * 0.8f);
     }

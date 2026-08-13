@@ -3,7 +3,7 @@
 namespace SeaAnomaly;
 
 /// <summary>
-///   Pure cost-check helper for buildable placement (plan Decision 2).
+///   Pure cost-check helper for buildable placement (FIX(iter4-plan): plan Decision 2).
 ///   <c>CostItemId == ""</c> means the buildable is free — TryConsume returns
 ///   <c>true</c> without touching the inventory. Otherwise the full
 ///   <c>CostAmount</c> must be present and removable in one atomic
