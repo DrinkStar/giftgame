@@ -19,7 +19,7 @@ godot --headless --path . --run-tests --quit-on-finish   # ✓ 正确
 godot --headless --path . -- --run-tests ...             # ✗ 测试静默不执行
 ```
 
-> **注**：复用策略以设计定稿 §13 为准（最大化复用 godot-refs）。
+> **注**：复用策略以设计定稿 §13 为准（最大化复用 godot-refs）；缺失资源的外部获取渠道以定稿 §13.5 为准（见 §1 技术基线）。
 
 ## 1. 技术基线
 
@@ -28,6 +28,7 @@ godot --headless --path . -- --run-tests ...             # ✗ 测试静默不�
 - **架构**：chickensoft 体系（GoDotTest 测试、GameTools 显示适配）+ **C# 事件信号总线**（SurvivalIsland 的 GameManager 模式——各系统通过静态 C# 事件解耦，见 §4）
 - **存档**：GDSave（纯 C# 库，MIT，复制 .cs 进工程）
 - **任务**：DotnetQuestSystem（MIT，NuGet 引入 `DotNetQuestSystem.Core` 或复制 addons）
+- **资源获取（定稿 §13.5 规则）**：`godot-refs` 缺失的图片/图标/3D 模型/场景资源**仅从** opengameart.org、kenney.nl、craftpix.net、quaternius.com、opensource3dassets.com、game-icons.net 获取；音乐/音效/配乐**仅从** soundimage.org、freesound.org、aigei.com 获取。逐项核对许可（Kenney/Quaternius 为 CC0；game-icons.net 为 CC-BY 需署名），下载后记录来源 URL 与许可类型至 `.godot-dev/state.json` 与 Git 提交；带 NC（非商用）/ND（禁止演绎）条款的资源仅限原型占位，商用发布前必须替换或取得授权。
 
 ## 2. 集成矩阵（设计需求 × 参考仓库 × 集成方式）
 
