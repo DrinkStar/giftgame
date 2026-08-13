@@ -7,8 +7,9 @@ using Godot;
 
 /// <summary>
 ///   Handles updating the displacement/normal maps for the water material as
-///   well as managing wave generation pipelines (port of water.gd, WITHOUT the
-///   sea spray logic — SPRAY_MAT/mat_spray are intentionally not ported).
+///   well as managing wave generation pipelines (port of water.gd; the foam
+///   particle emitter logic at water.gd:7,110 is intentionally not ported —
+///   that material is out of scope for this iteration).
 /// </summary>
 public partial class WaterMesh : MeshInstance3D
 {
