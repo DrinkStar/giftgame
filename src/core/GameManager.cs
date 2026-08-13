@@ -29,6 +29,13 @@ public partial class GameManager : Node
   /// <summary>HUD reference (added in W3, per the plan's W1 note).</summary>
   [Export] public HUD? HUD { get; set; }
 
+  /// <summary>
+  ///   BuildingSystem reference (W3, plan Decision 8/15). The auto-load below
+  ///   runs deferred so the building grids are guaranteed initialized before
+  ///   the most recent save is restored.
+  /// </summary>
+  [Export] public BuildingSystem? BuildingSystem { get; set; }
+
   public bool IsPaused { get; private set; }
 
   public override void _Ready()
@@ -50,7 +57,23 @@ public partial class GameManager : Node
 
     GameEvents.PlayerDied += OnPlayerDied;
     GameEvents.RaiseGameStarted();
+
+    // W3 auto-load (plan Decision 8/15): deferred so it runs AFTER every
+    // node's _Ready — in particular BuildingSystem._Ready, which spawns the
+    // grids that LoadMostRecent reads. BuildingSystem is also placed BEFORE
+    // GameManager in Game.tscn (Decision 15), so its _Ready precedes ours
+    // even without the defer; the deferred call makes the ordering explicit
+    // and keeps working if the scene tree is ever reordered.
+    CallDeferred(nameof(AutoLoadBuildings));
   }
+
+  /// <summary>
+  ///   W3 auto-load hook: loads the most recent building save when a
+  ///   BuildingSystem is wired. A missing save file or an unwired library is
+  ///   handled inside LoadMostRecent (returns false), so there is no
+  ///   exception path here.
+  /// </summary>
+  private void AutoLoadBuildings() => BuildingSystem?.LoadMostRecent();
 
   public override void _ExitTree() => GameEvents.PlayerDied -= OnPlayerDied;
 

@@ -18,6 +18,9 @@
 [ext_resource type="Resource" path="res://assets/recipes/stone_axe.tres" id="16_recipe_axe"]
 [ext_resource type="Resource" path="res://assets/recipes/cooked_meat.tres" id="17_recipe_meat"]
 [ext_resource type="Resource" path="res://assets/recipes/iron_ingot.tres" id="18_recipe_ingot"]
+[ext_resource type="PackedScene" path="res://scenes/building/building_system.tscn" id="19_buildsys"]
+[ext_resource type="Resource" path="res://assets/buildables/buildable_library.tres" id="20_library"]
+[ext_resource type="Script" path="res://src/building/StationLinker.cs" id="21_linker"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -126,12 +129,30 @@ EnvironmentPath = NodePath("../../WorldEnvironment")
 script = ExtResource("10_weather")
 Environment = NodePath("../../WorldEnvironment")
 
-[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("DayNightService", "WeatherService", "Player", "HUD")]
+[node name="BuildingSystem" parent="." node_paths=PackedStringArray("MainCamera", "Player") instance=ExtResource("19_buildsys")]
+MainCamera = NodePath("../Player/CameraPivot/Camera3D")
+Player = NodePath("../Player")
+BuildableObjectLibrary = ExtResource("20_library")
+XSize = 40
+ZSize = 40
+Levels = 1
+
+[node name="GridContainer" parent="BuildingSystem" index="0"]
+position = Vector3(0, 0.5, 0)
+
+[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("DayNightService", "WeatherService", "Player", "HUD", "BuildingSystem")]
 script = ExtResource("11_manager")
 DayNightService = NodePath("../Environment/DayNightService")
 WeatherService = NodePath("../Environment/WeatherService")
 Player = NodePath("../Player")
 HUD = NodePath("../HUD")
+BuildingSystem = NodePath("../BuildingSystem")
+
+[node name="StationLinker" type="Node" parent="." node_paths=PackedStringArray("BuildingSystem", "Player", "Crafting")]
+script = ExtResource("21_linker")
+BuildingSystem = NodePath("../BuildingSystem")
+Player = NodePath("../Player")
+Crafting = NodePath("../Player/CraftingSystem")
 
 [node name="HUD" parent="." node_paths=PackedStringArray("Player", "DayNightService", "WeatherService") instance=ExtResource("12_hud")]
 Player = NodePath("../Player")

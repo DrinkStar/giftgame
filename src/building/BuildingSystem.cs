@@ -4,6 +4,7 @@ namespace SeaAnomaly;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 /// <summary>
@@ -21,8 +22,9 @@ using Godot;
 ///     pausing (pause takes priority over build mode).
 ///   - PageUp/PageDown skip the camera move when Levels == 1 (Decision 14).
 ///   - The grid visual follows build mode (Decision 13).
-///   - F5/F9 raise GameEvents.BuildingSaved/BuildingLoaded placeholders; the
-///     real save system lands in W2 (Decision 7 seam).
+  ///   - F5/F9 quick save/load are wired to the W2 BuildingSaveSystem
+  ///     (Decision 7); free objects stay out of the save this iteration
+  ///     (plan OUT list).
 /// </summary>
 public partial class BuildingSystem : Node3D
 {
@@ -107,6 +109,12 @@ public partial class BuildingSystem : Node3D
   private Vector3 _mouseEndPosition;
   private MeshInstance3D? _dragRectangleMesh;
   private Vector2 _mousePressPosition;
+
+  /// <summary>
+  ///   The save file the last quick-save wrote to (W3). Null until the first
+  ///   F5; F5 overwrites it and the BuildingLoaded event reports it.
+  /// </summary>
+  private string? _currentSaveFile;
 
   #endregion Private Variables
 
@@ -600,34 +608,75 @@ public partial class BuildingSystem : Node3D
   #region Save system
 
   /// <summary>
-  ///   Decision 7 seam: F5 handler. The save system lands in W2; for now this
-  ///   only raises the placeholder event so future UI/feedback can listen.
+  ///   Decision 7: F5 handler, wired to the W2 BuildingSaveSystem. Overwrites
+  ///   the current save file when one exists, otherwise creates a new one.
+  ///   The free-object list is passed EMPTY on purpose — free objects are out
+  ///   of scope this iteration (plan OUT list) and the tracked list can hold
+  ///   dangling references after demolitions, so the save stays grid-only.
   /// </summary>
-  private static void OnQuickSave()
+  private void OnQuickSave()
   {
-    // FIX(iter4-plan): W2 wires BuildingSaveSystem here.
-    GameEvents.RaiseBuildingSaved(false);
+    _currentSaveFile = BuildingSaveSystem.Save(
+      true,
+      _currentSaveFile,
+      Grids.ToList(),
+      [],
+      JsonSaveSystem.DEFAULT_FOLDER
+    );
+    GameEvents.RaiseBuildingSaved(true);
   }
 
   /// <summary>
-  ///   Decision 7 seam: F9 handler. The save system lands in W2; for now this
-  ///   only raises the placeholder event so future UI/feedback can listen.
+  ///   Decision 7: F9 handler. Loads the most recent save and raises the
+  ///   BuildingLoaded event only when something was actually loaded — a
+  ///   missing or corrupt save reports nothing (W2 fix ③ guarantees the load
+  ///   itself never throws).
   /// </summary>
-  private static void OnQuickLoad()
+  private void OnQuickLoad()
   {
-    // FIX(iter4-plan): W2 wires BuildingSaveSystem here.
-    GameEvents.RaiseBuildingLoaded("");
+    if (LoadMostRecent())
+    {
+      GameEvents.RaiseBuildingLoaded(_currentSaveFile ?? "");
+    }
   }
 
   /// <summary>
-  ///   Plan Decision 9 public API: loads the most recent building save.
-  ///   Stub — the W2 save system fills the body; until then it reports false
-  ///   (nothing loaded) so callers can skip post-load wiring safely.
+  ///   Plan Decision 9 public API: loads the most recent building save
+  ///   through the W2 BuildingSaveSystem and records the file it came from.
+  ///   Returns false when there is no save, or when the library is not wired
+  ///   (tests / unwired scenes must fail closed instead of crashing). The
+  ///   free-object container is passed through but stays empty: free objects
+  ///   are out of scope this iteration, so saves never contain them.
   /// </summary>
   public bool LoadMostRecent()
   {
-    // FIX(iter4-plan): W2 wires BuildingSaveSystem here.
-    return false;
+    if (BuildableObjectLibrary == null)
+    {
+      GD.PushWarning(
+        "BuildingSystem: LoadMostRecent skipped — BuildableObjectLibrary not wired."
+      );
+      return false;
+    }
+
+    var loaded = BuildingSaveSystem.LoadMostRecent(
+      BuildableObjectLibrary,
+      Grids,
+      _freeObjectsContainer,
+      FreeLayerMask,
+      JsonSaveSystem.DEFAULT_FOLDER
+    );
+
+    if (loaded)
+    {
+      // The static helper reports success only; recover the file name for
+      // the BuildingLoaded event from the (same, newest-first) listing.
+      // Should the listing race empty, the event still fires with "".
+      var saveFiles = JsonSaveSystem.GetSaveFilesInfo(JsonSaveSystem.DEFAULT_FOLDER);
+      _currentSaveFile =
+        saveFiles.Count > 0 ? ProjectSettings.LocalizePath(saveFiles[0].FullName) : "";
+    }
+
+    return loaded;
   }
 
   /// <summary>
