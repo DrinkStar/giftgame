@@ -1,7 +1,7 @@
 {
   "task_id": "godot-dev-20260813-001",
   "created_at": "2026-08-13T00:00:00+08:00",
-  "updated_at": "2026-08-13T18:30:00+08:00",
+  "updated_at": "2026-08-13T18:28:52+08:00",
   "stage": "phase3",
   "current_iteration": "iteration1",
   "git_branch": "dev/iteration1",
@@ -44,7 +44,7 @@
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "godot --headless --quit-after 5 exit 0",
-    "tests": "GoDotTest Passed 10 Failed 0",
+    "tests": "GoDotTest Passed 12 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
     "visual_evidence": "evidence/iter1_frame.png (write-movie, 231KB, 非黑屏像素校验)"
   },
