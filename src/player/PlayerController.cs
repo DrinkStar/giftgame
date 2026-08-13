@@ -19,6 +19,7 @@ public partial class PlayerController : CharacterBody3D
   public const string MoveLeftAction = "move_left";
   public const string MoveRightAction = "move_right";
   public const string JumpAction = "jump";
+  public const string SprintAction = "sprint";
 
   #endregion Input action names
 
@@ -48,11 +49,20 @@ public partial class PlayerController : CharacterBody3D
   [Export(PropertyHint.Range, "0, 100, 0.1")]
   public float JumpImpulseForce { get; set; } = 8f;
 
+  /// <summary>
+  ///   Survival stats (stamina source/sink). Optional: when null, sprinting
+  ///   is not stamina-gated and no stamina is drained, so scenes without the
+  ///   survival stack keep working unchanged.
+  /// </summary>
+  [Export]
+  public PlayerStats? Stats { get; set; }
+
   #endregion Exports
 
   /// <summary>
-  ///   Whether the player is running. Defaults to walking; a future task can
-  ///   bind this to an input action or a sprint system.
+  ///   Whether the player is running. Bound to the sprint action and gated on
+  ///   stamina (see <see cref="_PhysicsProcess"/>); the run speed itself is
+  ///   applied by <see cref="PlayerMotion.ComputeVelocity"/>.
   /// </summary>
   public bool Running { get; set; }
 
@@ -76,10 +86,20 @@ public partial class PlayerController : CharacterBody3D
 
   public override void _PhysicsProcess(double delta)
   {
+    // Sprint: the action is held AND stamina allows it (plan Decision 2).
+    // With no stats node wired (Stats == null) sprinting stays ungated.
+    Running = Input.IsActionPressed(SprintAction)
+      && (Stats is null || Stats.CanSprint());
+
     var camera = GetViewport().GetCamera3D();
     var cameraBasis = camera is null ? Basis.Identity : camera.GlobalBasis;
 
     var input = GetInputVector();
+
+    // Sprint drains stamina only while actually running with horizontal
+    // input (rate read from the stats export, not hardcoded — Decision 2).
+    if (Running && input.LengthSquared() > 0f)
+      Stats?.DrainStamina(Stats.SprintStaminaDrain * (float)delta);
 
     var velocity = _motion.ComputeVelocity(
       Velocity, input, cameraBasis, (float)delta, Running
@@ -88,6 +108,7 @@ public partial class PlayerController : CharacterBody3D
     // Only jump from the ground (tracked by the motion object).
     if (Input.IsActionJustPressed(JumpAction) && _motion.IsGrounded)
     {
+      Stats?.DrainStamina(Stats.JumpStaminaCost);
       velocity = _motion.Jump(velocity);
     }
 

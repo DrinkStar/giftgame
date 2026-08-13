@@ -3,6 +3,21 @@
 [ext_resource type="Script" path="res://src/Game.cs" id="1_game"]
 [ext_resource type="Script" path="res://src/player/PlayerController.cs" id="2_controller"]
 [ext_resource type="Script" path="res://src/player/PlayerCamera.cs" id="3_camera"]
+[ext_resource type="Script" path="res://src/player/PlayerStats.cs" id="4_stats"]
+[ext_resource type="Script" path="res://src/player/PlayerInteraction.cs" id="5_interaction"]
+[ext_resource type="Script" path="res://src/inventory/InventorySystem.cs" id="6_inventory"]
+[ext_resource type="Script" path="res://src/inventory/CraftingSystem.cs" id="7_crafting"]
+[ext_resource type="Script" path="res://src/inventory/CraftingRecipe.cs" id="8_recipe_script"]
+[ext_resource type="Script" path="res://src/core/DayNightService.cs" id="9_daynight"]
+[ext_resource type="Script" path="res://src/core/WeatherService.cs" id="10_weather"]
+[ext_resource type="Script" path="res://src/core/GameManager.cs" id="11_manager"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="12_hud"]
+[ext_resource type="Resource" path="res://assets/items/stone_axe.tres" id="13_item_axe"]
+[ext_resource type="Resource" path="res://assets/items/wood.tres" id="14_item_wood"]
+[ext_resource type="Resource" path="res://assets/items/berries.tres" id="15_item_berries"]
+[ext_resource type="Resource" path="res://assets/recipes/stone_axe.tres" id="16_recipe_axe"]
+[ext_resource type="Resource" path="res://assets/recipes/cooked_meat.tres" id="17_recipe_meat"]
+[ext_resource type="Resource" path="res://assets/recipes/iron_ingot.tres" id="18_recipe_ingot"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -58,9 +73,10 @@ shape = SubResource("BoxShape3D_ground")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
 mesh = SubResource("BoxMesh_ground")
 
-[node name="Player" type="CharacterBody3D" parent="."]
+[node name="Player" type="CharacterBody3D" parent="." node_paths=PackedStringArray("Stats")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 script = ExtResource("2_controller")
+Stats = NodePath("PlayerStats")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
 mesh = SubResource("CapsuleMesh_player")
@@ -74,3 +90,50 @@ shape = SubResource("CapsuleShape3D_player")
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 2, 5)
 current = true
 script = ExtResource("3_camera")
+
+[node name="PlayerStats" type="Node" parent="Player"]
+script = ExtResource("4_stats")
+
+[node name="PlayerInteraction" type="Node" parent="Player"]
+script = ExtResource("5_interaction")
+CameraPath = NodePath("../CameraPivot/Camera3D")
+
+[node name="InventorySystem" type="Node" parent="Player"]
+script = ExtResource("6_inventory")
+StartingItems = Array[Dictionary]([{
+"item": ExtResource("13_item_axe"),
+"amount": 1,
+}, {
+"item": ExtResource("14_item_wood"),
+"amount": 5,
+}, {
+"item": ExtResource("15_item_berries"),
+"amount": 3,
+}])
+
+[node name="CraftingSystem" type="Node" parent="Player"]
+script = ExtResource("7_crafting")
+Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot")])
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="DayNightService" type="Node" parent="Environment"]
+script = ExtResource("9_daynight")
+SunPath = NodePath("../../Sun")
+EnvironmentPath = NodePath("../../WorldEnvironment")
+
+[node name="WeatherService" type="Node" parent="Environment"]
+script = ExtResource("10_weather")
+Environment = NodePath("../../WorldEnvironment")
+
+[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("DayNightService", "WeatherService", "Player", "HUD")]
+script = ExtResource("11_manager")
+DayNightService = NodePath("../Environment/DayNightService")
+WeatherService = NodePath("../Environment/WeatherService")
+Player = NodePath("../Player")
+HUD = NodePath("../HUD")
+
+[node name="HUD" parent="." node_paths=PackedStringArray("Player", "DayNightService", "WeatherService") instance=ExtResource("12_hud")]
+Player = NodePath("../Player")
+DayNightService = NodePath("../Environment/DayNightService")
+WeatherService = NodePath("../Environment/WeatherService")
