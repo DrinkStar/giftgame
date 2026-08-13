@@ -108,16 +108,16 @@ public static class GameEvents
   public static event Action<int>? BuildingLevelChanged;
 
   /// <summary>
-  ///   Raise-only this iteration (plan Decision 1): the F5 handler publishes
-  ///   it with <c>false</c> as a seam for the W2 save system and any future
-  ///   UI/feedback; nothing subscribes yet.
+  ///   Raised by the F5 handler after a real save: BuildingSaveSystem.Save
+  ///   has run and the event carries <c>true</c> (overwrite flag). No
+  ///   subscribers yet — the event exists for future UI/feedback.
   /// </summary>
   public static event Action<bool>? BuildingSaved;
 
   /// <summary>
-  ///   Raise-only this iteration (plan Decision 1): the F9 handler publishes
-  ///   it with an empty filename as a seam for the W2 save system and any
-  ///   future UI/feedback; nothing subscribes yet.
+  ///   Raised by the F9 handler only when a save was actually loaded, carrying
+  ///   the real save filename (empty only if the loaded file name is unknown).
+  ///   No subscribers yet — the event exists for future UI/feedback.
   /// </summary>
   public static event Action<string>? BuildingLoaded;
 
