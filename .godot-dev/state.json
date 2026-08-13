@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260813-001",
   "created_at": "2026-08-13T00:00:00+08:00",
-  "updated_at": "2026-08-13T21:39:14+08:00",
+  "updated_at": "2026-08-13T23:15:46+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration3",
-  "git_branch": "dev/iteration3",
-  "last_stable_commit": "049c5e44dcc683b9d45c674ee24ec224b65a9a8d",
+  "current_iteration": "iteration4",
+  "git_branch": "dev/iteration4",
+  "last_stable_commit": "154261d747e9ba11d96820403ea47bc7840650ec",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
@@ -57,15 +57,24 @@
         {"id": "T3.2", "file": "src/inventory/* + assets/items + assets/recipes", "action": "create", "status": "done"},
         {"id": "T3.3", "file": "PlayerInteraction/HUD/hud.tscn/Game.tscn/project.godot", "action": "create/modify", "status": "done"}
       ]
+    },
+    {
+      "name": "iteration4",
+      "status": "done",
+      "tasks": [
+        {"id": "T4.1", "file": "src/building/* (grid/ghost/placement/cost/ui)", "action": "create", "status": "done"},
+        {"id": "T4.2", "file": "src/building/save/*", "action": "create", "status": "done"},
+        {"id": "T4.3", "file": "Game.tscn/StationLinker/GameManager", "action": "create/modify", "status": "done"}
+      ]
     }
   ],
-  "checkpoint": "phase3_iteration3_verified",
+  "checkpoint": "phase3_iteration4_verified",
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "Game.tscn --quit-after 5 exit 0",
-    "tests": "GoDotTest Passed 60 Failed 0",
+    "tests": "GoDotTest Passed 80 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
-    "visual_evidence": "evidence/iter3_frame.png 212KB 非黑帧 (平均亮度 134.48, >10KB 通过)"
+    "visual_evidence": "evidence/iter4_frame.png (>10KB 非黑帧)"
   },
-  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）"
+  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）。建造系统移植自 MarkoDM/GodotInGameBuildingSystem（MIT）；7 上游 bug + 6 集成修复；层 5 Buildings/6 BuildingWalls/7 FreeObjects；建筑存档 user://buildings"
 }
