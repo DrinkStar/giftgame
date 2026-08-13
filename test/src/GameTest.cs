@@ -3,10 +3,13 @@ namespace SeaAnomaly;
 using System.Threading.Tasks;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
-using Chickensoft.GodotTestDriver.Drivers;
 using Godot;
 using Shouldly;
 
+/// <summary>
+///   Integration test for the 3D game scene (src/Game.tscn): the scene must
+///   load cleanly and contain the player node used by the controller cluster.
+/// </summary>
 public class GameTest : TestClass
 {
   private Game _game = default!;
@@ -25,10 +28,18 @@ public class GameTest : TestClass
   public void Cleanup() => _fixture.Cleanup();
 
   [Test]
-  public void TestButtonUpdatesCounter()
+  public void GameSceneLoadsWithRootNode()
   {
-    var buttonDriver = new ButtonDriver(() => _game.TestButton);
-    buttonDriver.ClickCenter();
-    _game.ButtonPresses.ShouldBe(1);
+    _game.ShouldNotBeNull();
+    _game.ShouldBeOfType<Game>();
+    _game.ShouldBeAssignableTo<Node3D>();
+  }
+
+  [Test]
+  public void PlayerNodeExists()
+  {
+    var player = _game.GetNode("Player");
+    player.ShouldNotBeNull();
+    player.ShouldBeAssignableTo<CharacterBody3D>();
   }
 }

@@ -2,13 +2,11 @@ namespace SeaAnomaly;
 
 using Godot;
 
-public partial class Game : Control
+/// <summary>
+///   Root of the 3D game scene (src/Game.tscn). The scene owns the world
+///   environment, sun, ground, and player; gameplay behavior lives in the
+///   child nodes, so this class stays minimal.
+/// </summary>
+public partial class Game : Node3D
 {
-  public Button TestButton { get; private set; } = default!;
-  public int ButtonPresses { get; private set; }
-
-  public override void _Ready()
-    => TestButton = GetNode<Button>("%TestButton");
-
-  public void OnTestButtonPressed() => ButtonPresses++;
 }
