@@ -250,18 +250,20 @@ public sealed class RenderingContext
   }
 
   /// <summary>
-  ///   Returns a <see cref="byte[]"/> from the provided int/float values, whose
-  ///   size is rounded up to the nearest multiple of 16 (push constant
-  ///   alignment). Matches encode_s32/encode_float semantics of the GDScript
-  ///   original.
+  ///   Returns a <see cref="byte[]"/> from the provided int/float values.
+  ///   Matches encode_s32/encode_float semantics of the GDScript original.
+  ///   NOTE: The byte count must EXACTLY match the shader's declared
+  ///   push_constant size — Godot 4.7 debug builds strictly validate this
+  ///   ("required=N supplied=M") and reject 16-byte-padded buffers, so no
+  ///   padding is applied here (spectrum_compute=52, spectrum_modulate=20,
+  ///   fft_compute=4, transpose=4, fft_unpack=16).
   /// </summary>
   public static byte[] CreatePushConstant(params object[] values)
   {
     int packedSize = values.Length * 4;
     System.Diagnostics.Debug.Assert(packedSize <= 128, "Push constant size must be at most 128 bytes!");
 
-    int padding = (int)(Mathf.Ceil(packedSize / 16.0f) * 16) - packedSize;
-    var packedData = new byte[packedSize + (padding > 0 ? padding : 0)];
+    var packedData = new byte[packedSize];
 
     for (int i = 0; i < values.Length; i++)
     {
