@@ -39,6 +39,14 @@ public class SaveGridObject : SaveObject
 
   /// <summary>Gets or sets the global Z coordinate of the object.</summary>
   public float PositionZ { get; set; }
+
+  /// <summary>
+  ///   R2 (Iter8p): durability left on load, -1 = invincible/unknown. The
+  ///   property initializer keeps legacy saves working: deserialization runs
+  ///   the default constructor, so files without this key come back as -1.
+  ///   Reserved only — no damage logic this iteration.
+  /// </summary>
+  public int DurabilityRemaining { get; set; } = -1;
 }
 
 /// <summary>Represents a saved object placed freely in the scene.</summary>

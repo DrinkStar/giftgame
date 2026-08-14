@@ -70,6 +70,14 @@ public partial class BuildableResource : Resource
   public int CostAmount { get; set; }
 
   /// <summary>
+  ///   R2 (Iter8p): maximum durability of a placed instance. 0 = invincible.
+  ///   Reserved only — no damage/repair/destruction logic this iteration;
+  ///   the value feeds <see cref="BuildableInstance.CurrentDurability"/>.
+  /// </summary>
+  [Export]
+  public int MaxDurability { get; set; } = 0;
+
+  /// <summary>
   ///   Initializes a new instance of the <see cref="BuildableResource"/>
   ///   class. Empty constructor required for Godot serialization.
   /// </summary>

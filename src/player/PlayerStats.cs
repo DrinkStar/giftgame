@@ -37,6 +37,12 @@ public partial class PlayerStats : Node
   [Export] public float JumpStaminaCost = 10f;
 
   /// <summary>
+  ///   R1 (Iter8p): optional progression service. Null (the shipped default)
+  ///   keeps every rate/max multiplier at ×1; a real talent tree lands later.
+  /// </summary>
+  [Export] public ProgressionService? Progression;
+
+  /// <summary>
   ///   How long stamina regeneration stays suppressed after a
   ///   <see cref="DrainStamina"/> call, in milliseconds. This is a
   ///   simplification of the upstream continuous-drain model: the sprint
@@ -60,13 +66,21 @@ public partial class PlayerStats : Node
   private bool _deathNotified;
   private ulong _staminaDrainUntilMs;
 
+  /// <summary>
+  ///   R1 (Iter8p): max health after the max_health multiplier. The
+  ///   <see cref="MaxHealth"/> field itself stays untouched so field-scaled
+  ///   consumers keep working; this computed property is used wherever health
+  ///   is clamped or set.
+  /// </summary>
+  public float EffectiveMaxHealth => MaxHealth * (Progression?.GetMultiplier("max_health") ?? 1f);
+
   public float Health
   {
     get => _health;
     set
     {
-      _health = Mathf.Clamp(value, 0, MaxHealth);
-      GameEvents.RaiseHealthChanged(_health, MaxHealth);
+      _health = Mathf.Clamp(value, 0, EffectiveMaxHealth);
+      GameEvents.RaiseHealthChanged(_health, EffectiveMaxHealth);
       if (_health <= 0 && !_deathNotified)
       {
         // Upstream bug fix: upstream emitted PlayerDied on every write to
@@ -111,13 +125,13 @@ public partial class PlayerStats : Node
 
   public override void _Ready()
   {
-    _health = MaxHealth;
+    _health = EffectiveMaxHealth;
     _hunger = MaxHunger;
     _thirst = MaxThirst;
     _stamina = StaminaMax;
     _deathNotified = false;
 
-    GameEvents.RaiseHealthChanged(_health, MaxHealth);
+    GameEvents.RaiseHealthChanged(_health, EffectiveMaxHealth);
     GameEvents.RaiseHungerChanged(_hunger, MaxHunger);
     GameEvents.RaiseThirstChanged(_thirst, MaxThirst);
     GameEvents.RaiseStaminaChanged(_stamina, StaminaMax);
@@ -131,8 +145,9 @@ public partial class PlayerStats : Node
     var dt = (float)delta;
 
     // Decrease hunger and thirst over time.
-    Hunger -= HungerDecreaseRate * dt;
-    Thirst -= ThirstDecreaseRate * dt;
+    // R1 (Iter8p): hunger_rate/thirst_rate multipliers (×1 with no service).
+    Hunger -= HungerDecreaseRate * dt * (Progression?.GetMultiplier("hunger_rate") ?? 1f);
+    Thirst -= ThirstDecreaseRate * dt * (Progression?.GetMultiplier("thirst_rate") ?? 1f);
 
     // Apply damage from empty stats.
     if (Hunger <= 0)
@@ -175,14 +190,14 @@ public partial class PlayerStats : Node
   /// </summary>
   public void Revive()
   {
-    _health = MaxHealth;
+    _health = EffectiveMaxHealth;
     _stamina = StaminaMax;
     _hunger = Mathf.Max(_hunger, 30f);
     _thirst = Mathf.Max(_thirst, 30f);
     _slowRemaining = 0f;
     _deathNotified = false;
 
-    GameEvents.RaiseHealthChanged(_health, MaxHealth);
+    GameEvents.RaiseHealthChanged(_health, EffectiveMaxHealth);
     GameEvents.RaiseStaminaChanged(_stamina, StaminaMax);
     GameEvents.RaiseHungerChanged(_hunger, MaxHunger);
     GameEvents.RaiseThirstChanged(_thirst, MaxThirst);
@@ -216,7 +231,9 @@ public partial class PlayerStats : Node
   /// </summary>
   public void DrainStamina(float amount)
   {
-    Stamina -= amount;
+    // R1 (Iter8p): single-point stamina_cost multiplier — every drain
+    // (sprint tick, jump) flows through here (×1 with no service).
+    Stamina -= amount * (Progression?.GetMultiplier("stamina_cost") ?? 1f);
     _staminaDrainUntilMs = Time.GetTicksMsec() + StaminaDrainSuppressionMs;
   }
 

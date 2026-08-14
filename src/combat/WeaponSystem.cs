@@ -48,6 +48,12 @@ public partial class WeaponSystem : Node
   [Export] public float ArrowGravity = 9.8f;
   [Export] public float ProjectileLifetime = 5f;
 
+  /// <summary>
+  ///   R1 (Iter8p): optional progression service. Null (the shipped default)
+  ///   keeps every damage multiplier at ×1; a real talent tree lands later.
+  /// </summary>
+  [Export] public ProgressionService? Progression;
+
   #endregion Exports
 
   private const uint EnemyCollisionMask = 128u;
@@ -157,6 +163,37 @@ public partial class WeaponSystem : Node
 
   private void OnBuildModeChanged(bool enabled) => _buildMode = enabled;
 
+  #region R1 (Iter8p) damage resolution seams
+
+  /// <summary>
+  ///   R1 (Iter8p): base melee damage × the melee_damage multiplier. Bows
+  ///   melee weakly (BowMeleeDamage) just like <see cref="TryMelee"/>. Public
+  ///   test seam — the multiplier is ×1 until a real talent tree is injected.
+  /// </summary>
+  public float ResolveMeleeDamage()
+  {
+    var sel = ResolveEffectiveItem();
+    var baseDamage = sel?.Id.Contains("bow") == true ? BowMeleeDamage : MeleeDamage;
+    return baseDamage * (Progression?.GetMultiplier("melee_damage") ?? 1f);
+  }
+
+  /// <summary>
+  ///   R1 (Iter8p): base spear throw damage × the throw_damage multiplier.
+  ///   Public test seam — the multiplier is ×1 until a real talent tree is
+  ///   injected.
+  /// </summary>
+  public float ResolveThrowDamage() =>
+    SpearThrowDamage * (Progression?.GetMultiplier("throw_damage") ?? 1f);
+
+  /// <summary>
+  ///   R1 (Iter8p): base arrow damage × the ranged_damage multiplier. Public
+  ///   test seam — the multiplier is ×1 until a real talent tree is injected.
+  /// </summary>
+  public float ResolveRangedDamage() =>
+    ArrowDamage * (Progression?.GetMultiplier("ranged_damage") ?? 1f);
+
+  #endregion R1 (Iter8p) damage resolution seams
+
   /// <summary>LMB: melee swing for every tool, weak for bows (Decision 1).</summary>
   private void TryMelee()
   {
@@ -167,8 +204,9 @@ public partial class WeaponSystem : Node
     if (sel == null || sel.Type != ItemType.Tool)
       return;
 
-    // Bows melee weakly; everything else (spear/axe/other tools) hits hard.
-    var damage = sel.Id.Contains("bow") ? BowMeleeDamage : MeleeDamage;
+    // R1 (Iter8p): damage flows through the public resolution seam so the
+    // progression multiplier applies (×1 until a talent tree is wired).
+    var damage = ResolveMeleeDamage();
 
     _attackElapsed = 0f;
     PerformMelee(damage);
@@ -193,7 +231,8 @@ public partial class WeaponSystem : Node
         )
         {
           _attackElapsed = 0f;
-          SpawnProjectile(SpearThrowDamage, SpearSpeed, SpearGravity);
+          // R1 (Iter8p): through the resolution seam (throw_damage multiplier).
+          SpawnProjectile(ResolveThrowDamage(), SpearSpeed, SpearGravity);
         }
         break;
 
@@ -204,7 +243,8 @@ public partial class WeaponSystem : Node
         )
         {
           _attackElapsed = 0f;
-          SpawnProjectile(ArrowDamage, ArrowSpeed, ArrowGravity);
+          // R1 (Iter8p): through the resolution seam (ranged_damage multiplier).
+          SpawnProjectile(ResolveRangedDamage(), ArrowSpeed, ArrowGravity);
         }
         break;
     }

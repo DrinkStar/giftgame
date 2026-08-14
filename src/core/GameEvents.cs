@@ -203,6 +203,24 @@ public static class GameEvents
 
   #endregion Combat
 
+  #region Progression (Iter8p R1)
+
+  /// <summary>
+  ///   A talent was unlocked, carrying its talent id. R1 reserve — raise-only:
+  ///   the event exists so future UI/audio/save systems can subscribe; first
+  ///   raised once a real talent tree replaces the null tree.
+  /// </summary>
+  public static event Action<string>? TalentUnlocked;
+
+  /// <summary>
+  ///   A skill activated, carrying its skill id. R1 reserve — raise-only:
+  ///   the event exists so future UI/audio/save systems can subscribe; first
+  ///   raised once a real skill host replaces the null host.
+  /// </summary>
+  public static event Action<string>? SkillActivated;
+
+  #endregion Progression (Iter8p R1)
+
   #region Quests (Iter7)
 
   /// <summary>
@@ -346,6 +364,12 @@ public static class GameEvents
 
   public static void RaiseWeaponSlotChanged(ItemData? primary, ItemData? secondary) =>
     WeaponSlotChanged?.Invoke(primary, secondary);
+
+  public static void RaiseTalentUnlocked(string talentId) =>
+    TalentUnlocked?.Invoke(talentId);
+
+  public static void RaiseSkillActivated(string skillId) =>
+    SkillActivated?.Invoke(skillId);
 
   public static void RaiseQuestStarted(string questId) =>
     QuestStarted?.Invoke(questId);

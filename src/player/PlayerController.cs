@@ -57,6 +57,13 @@ public partial class PlayerController : CharacterBody3D
   [Export]
   public PlayerStats? Stats { get; set; }
 
+  /// <summary>
+  ///   R1 (Iter8p): optional progression service. Null (the shipped default)
+  ///   keeps the move_speed multiplier at ×1; a real talent tree lands later.
+  /// </summary>
+  [Export]
+  public ProgressionService? Progression { get; set; }
+
   #endregion Exports
 
   /// <summary>
@@ -109,6 +116,12 @@ public partial class PlayerController : CharacterBody3D
     // input (rate read from the stats export, not hardcoded — Decision 2).
     if (Running && input.LengthSquared() > 0f)
       Stats?.DrainStamina(Stats.SprintStaminaDrain * (float)delta);
+
+    // R1 (Iter8p): move_speed multiplier, applied here at the copy point so
+    // the pure PlayerMotion class stays untouched (null service → ×1).
+    // Copied every tick so runtime WalkSpeed changes and progression
+    // multipliers both take effect.
+    _motion.WalkSpeed = WalkSpeed * (Progression?.GetMultiplier("move_speed") ?? 1f);
 
     var velocity = _motion.ComputeVelocity(
       Velocity, input, cameraBasis, (float)delta, Running

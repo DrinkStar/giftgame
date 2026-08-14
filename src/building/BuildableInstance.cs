@@ -14,6 +14,12 @@ public partial class BuildableInstance : Node3D
   /// <summary>Gets the object instance of the buildable resource.</summary>
   public Node3D ObjectInstance { get; private set; } = default!;
 
+  /// <summary>
+  ///   R2 (Iter8p): durability left on this instance. -1 marks invincible
+  ///   (MaxDurability 0). Reserved only — no damage logic this iteration.
+  /// </summary>
+  public int CurrentDurability { get; private set; }
+
   private StaticBody3D _body = default!;
   private CollisionShape3D _collider = default!;
   private MeshInstance3D _demolitionVisual = default!;
@@ -51,6 +57,13 @@ public partial class BuildableInstance : Node3D
     AddChild(ObjectInstance);
     BuildableResource = resource;
     _cells = [];
+
+    // R2 (Iter8p): 0 MaxDurability = invincible, marked -1. No damage/repair
+    // logic this iteration — the value is reserved for 8.x durability work.
+    CurrentDurability = BuildableResource.MaxDurability > 0
+      ? BuildableResource.MaxDurability
+      : -1;
+
     CreateCollider(layerMask);
     CreateDemolishVisual();
   }
