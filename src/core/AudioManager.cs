@@ -29,6 +29,16 @@ public partial class AudioManager : Node
   /// <summary>Number of pooled one-shot players for SFX (round-robin).</summary>
   [Export] public int SfxPoolSize = 8;
 
+  /// <summary>
+  ///   When true, <see cref="AutoBgmId"/> starts looping on <c>_Ready</c>
+  ///   (Game.tscn leaves this true so the island ambient track plays on load,
+  ///   Iter6.1 todo 6).
+  /// </summary>
+  [Export] public bool AutoPlayBgm = true;
+
+  /// <summary>BGM id started by <see cref="AutoPlayBgm"/> (default "island").</summary>
+  [Export] public string AutoBgmId = "island";
+
   private const string BgmPlayerName = "BgmPlayer";
   private const string SfxPlayerPrefix = "SfxPlayer";
 
@@ -53,6 +63,36 @@ public partial class AudioManager : Node
     }
 
     _nextSfxPlayer = 0;
+
+    // Scene-level auto-start (Game.tscn: island BGM). Headless runs (CI
+    // import/smoke/tests) have no audio device; playing there can leave the
+    // playback chain referenced past ObjectDB cleanup in Godot 4.7.1
+    // headless (flaky leaked-instance warnings at exit). Headless audio is
+    // still exercised directly by AudioManagerTest via PlayBgm/PlaySfx.
+    // Unknown ids degrade to a warning via PlayBgm, so an unwired scene
+    // never crashes on ready.
+    if (AutoPlayBgm && DisplayServer.GetName() != "headless")
+      PlayBgm(AutoBgmId);
+  }
+
+  /// <summary>
+  ///   Stops every player when the node leaves the tree or is freed so a
+  ///   playing BGM cannot outlive its node: covers a mid-game scene unload
+  ///   (EXIT_TREE) and the `--quit-after` force-quit path, which only
+  ///   delivers Predelete.
+  /// </summary>
+  public override void _Notification(int what)
+  {
+    if (what == NotificationPredelete || what == NotificationExitTree || what == NotificationWMCloseRequest)
+      StopAll();
+  }
+
+  /// <summary>Stops the BGM player and the whole SFX pool.</summary>
+  public void StopAll()
+  {
+    GetNodeOrNull<AudioStreamPlayer>(BgmPlayerName)?.Stop();
+    for (var i = 0; i < SfxPoolSize; i++)
+      GetNodeOrNull<AudioStreamPlayer>($"{SfxPlayerPrefix}{i}")?.Stop();
   }
 
   /// <summary>

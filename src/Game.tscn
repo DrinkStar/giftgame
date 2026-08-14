@@ -36,6 +36,20 @@
 [ext_resource type="Resource" path="res://assets/items/wooden_spear.tres" id="34_item_spear"]
 [ext_resource type="Resource" path="res://assets/items/wooden_bow.tres" id="35_item_bow"]
 [ext_resource type="Resource" path="res://assets/items/arrow.tres" id="36_item_arrow"]
+[ext_resource type="Script" path="res://src/core/AudioManager.cs" id="37_audiomanager"]
+[ext_resource type="AudioStream" path="res://assets/audio/bgm/island.ogg" id="38_bgm_island"]
+[ext_resource type="AudioStream" path="res://assets/audio/bgm/night.ogg" id="39_bgm_night"]
+[ext_resource type="AudioStream" path="res://assets/audio/bgm/boss.ogg" id="40_bgm_boss"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ocean_waves.ogg" id="41_sfx_ocean_waves"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/storm.ogg" id="42_sfx_storm"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/melee_swing.ogg" id="43_sfx_melee_swing"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/bow_shoot.ogg" id="44_sfx_bow_shoot"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hit.ogg" id="45_sfx_enemy_hit"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_die.ogg" id="46_sfx_enemy_die"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/chop.ogg" id="47_sfx_chop"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_click.ogg" id="48_sfx_ui_click"]
+[ext_resource type="PackedScene" path="res://assets/models/enemies/boar/Pig.glb" id="49_model_boar"]
+[ext_resource type="PackedScene" path="res://assets/models/enemies/wolf/Wolf.gltf" id="50_model_wolf"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -209,24 +223,36 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 8)
 EnemyData = ExtResource("31_boar")
 Player = NodePath("../Player")
 DayNightServicePath = NodePath("../Environment/DayNightService")
+ModelPath = NodePath("BoarModel")
+
+[node name="BoarModel" parent="Boar1" instance=ExtResource("49_model_boar")]
 
 [node name="Boar2" parent="." instance=ExtResource("30_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.5, 8)
 EnemyData = ExtResource("31_boar")
 Player = NodePath("../Player")
 DayNightServicePath = NodePath("../Environment/DayNightService")
+ModelPath = NodePath("BoarModel")
+
+[node name="BoarModel" parent="Boar2" instance=ExtResource("49_model_boar")]
 
 [node name="Wolf1" parent="." instance=ExtResource("30_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.5, 8)
 EnemyData = ExtResource("32_wolf")
 Player = NodePath("../Player")
 DayNightServicePath = NodePath("../Environment/DayNightService")
+ModelPath = NodePath("WolfModel")
+
+[node name="WolfModel" parent="Wolf1" instance=ExtResource("50_model_wolf")]
 
 [node name="Wolf2" parent="." instance=ExtResource("30_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.5, 8)
 EnemyData = ExtResource("32_wolf")
 Player = NodePath("../Player")
 DayNightServicePath = NodePath("../Environment/DayNightService")
+ModelPath = NodePath("WolfModel")
+
+[node name="WolfModel" parent="Wolf2" instance=ExtResource("50_model_wolf")]
 
 [node name="Crab1" parent="." instance=ExtResource("30_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.5, 8)
@@ -238,3 +264,23 @@ DayNightServicePath = NodePath("../Environment/DayNightService")
 Player = NodePath("../Player")
 DayNightService = NodePath("../Environment/DayNightService")
 WeatherService = NodePath("../Environment/WeatherService")
+
+[node name="AudioManager" type="Node" parent="."]
+script = ExtResource("37_audiomanager")
+AutoPlayBgm = true
+AutoBgmId = "island"
+Bgm = {
+"island": ExtResource("38_bgm_island"),
+"night": ExtResource("39_bgm_night"),
+"boss": ExtResource("40_bgm_boss")
+}
+Sfx = {
+"ocean_waves": ExtResource("41_sfx_ocean_waves"),
+"storm": ExtResource("42_sfx_storm"),
+"melee_swing": ExtResource("43_sfx_melee_swing"),
+"bow_shoot": ExtResource("44_sfx_bow_shoot"),
+"enemy_hit": ExtResource("45_sfx_enemy_hit"),
+"enemy_die": ExtResource("46_sfx_enemy_die"),
+"chop": ExtResource("47_sfx_chop"),
+"ui_click": ExtResource("48_sfx_ui_click")
+}
