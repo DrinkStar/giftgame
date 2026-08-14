@@ -201,6 +201,14 @@ public static class GameEvents
   /// </summary>
   public static event Action<ItemData?, ItemData?>? WeaponSlotChanged;
 
+  /// <summary>
+  ///   A melee attack landed on an enemy, carrying the weapon item id (e.g.
+  ///   "stone_axe"). Iter8p W4 (T8p.5, plan Decision 8): raised by
+  ///   <see cref="Combat.WeaponSystem.PerformMelee"/> after a successful hit.
+  ///   Raise-only — consumed by the SfxHook audio subscriber.
+  /// </summary>
+  public static event Action<string>? MeleeHit;
+
   #endregion Combat
 
   #region Progression (Iter8p R1)
@@ -364,6 +372,8 @@ public static class GameEvents
 
   public static void RaiseWeaponSlotChanged(ItemData? primary, ItemData? secondary) =>
     WeaponSlotChanged?.Invoke(primary, secondary);
+
+  public static void RaiseMeleeHit(string weaponId) => MeleeHit?.Invoke(weaponId);
 
   public static void RaiseTalentUnlocked(string talentId) =>
     TalentUnlocked?.Invoke(talentId);

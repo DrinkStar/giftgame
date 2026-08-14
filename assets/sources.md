@@ -51,3 +51,46 @@ Channel notes:
 - freesound.org: site reachable and CC0-filterable, but full downloads require a free account. Strategy: fetch CC0-filtered sounds via (a) freesound's public hq preview direct links (`/data/previews/...-hq.ogg`) — used for ocean_waves, or (b) the CC0 mirror Fris0uman/CDDA-Soundpacks whose per-folder `credits.md` records the exact freesound URL + per-file license — used for storm/melee_swing/bow_shoot/enemy_hit/enemy_die/chop. Only per-file CC0 items were taken (CC-BY items in the same pack were rejected).
 - opengameart.org: Kenney Interface Sounds (CC0, .ogg) used for ui_click; OGA CC0 ocean packs (beach-ocean-waves, water-waves) are FLAC-only, which Godot 4.7 does not import — skipped.
 - The CDDA-Soundpacks repository LICENSE.txt is CC-BY-SA 4.0 for the collection; the per-folder credits.md files (linked above) take precedence per file and mark every file we took as CC0.
+
+## Iter8p art (T8p.5 minimal visual pack)
+
+All assets downloaded 2026-08-14 (plan todo 4 / W4). Every asset below has **status ok** — nothing is pending.
+
+### Models
+
+| Asset | File | Source URL | License | Status |
+|---|---|---|---|---|
+| crab (海蟹) | `models/enemies/crab/Crab.glb` | Quaternius "Crab Enemy" (Easy Enemy pack) via Poly Pizza https://poly.pizza/m/Gs3yfsV5lB; file https://static.poly.pizza/b9bbf6bd-2b21-4013-bc38-0f5e524ac12c.glb | CC0 1.0 | ok (fills the iter8p-plan gap: crab model was missing from the iter6.1 batch) |
+| player (女主) | `models/player/Woman.glb` | Quaternius "Animated Woman" via Poly Pizza https://poly.pizza/m/nIItLV9nxS; file https://static.poly.pizza/46d6db5a-3c9f-4238-8cdf-8eb7194498dc.glb | CC0 1.0 | ok |
+| campfire (篝火) | `models/buildings/campfire/Campfire.glb` | Kenney "Campfire" via Poly Pizza https://poly.pizza/m/i6UFAevfcu; file https://static.poly.pizza/bf4a5ed8-486b-4863-a654-fade1a9eaa39.glb | CC0 1.0 | ok |
+| bed (床) | `models/buildings/bed/Bed.glb` | Quaternius "Bed Single" via Poly Pizza https://poly.pizza/m/ianC28eMOF; file https://static.poly.pizza/eac4fc76-244d-44ff-8848-ef0348379bf6.glb | CC0 1.0 | ok |
+
+### Icons (game-icons.net — CC BY 3.0, attribution required)
+
+All icons are white-on-transparent 512px PNGs fetched from `https://game-icons.net/icons/ffffff/transparent/1x1/<author>/<name>.png`.
+**Attribution: "Game icons by Delapouite and Lorc — https://game-icons.net (CC BY 3.0)".** Add this credit line to the in-game credits screen; keep it in this ledger until then.
+
+| Asset | File | Source (game-icons.net) | License | Status |
+|---|---|---|---|---|
+| icon wood | `icons/wood.png` | delapouite/wood-pile | CC BY 3.0 (Delapouite) | ok |
+| icon stone | `icons/stone.png` | delapouite/stone-pile | CC BY 3.0 (Delapouite) | ok |
+| icon coconut | `icons/coconut.png` | delapouite/palm-tree | CC BY 3.0 (Delapouite) | ok (substitute: game-icons.net has no coconut icon — palm-tree stands for the coconut-palm gatherable) |
+| icon berries | `icons/berries.png` | delapouite/berries-bowl | CC BY 3.0 (Delapouite) | ok |
+| icon stone_axe | `icons/stone_axe.png` | lorc/stone-axe | CC BY 3.0 (Lorc) | ok |
+| icon wooden_spear | `icons/wooden_spear.png` | delapouite/spear-feather | CC BY 3.0 (Delapouite) | ok |
+| icon torch | `icons/torch.png` | delapouite/torch | CC BY 3.0 (Delapouite) | ok |
+
+### Audio (SFX, freesound CC0)
+
+| Asset | File | Source URL | License | Status |
+|---|---|---|---|---|
+| SFX wood_chop | `audio/sfx/wood_chop.ogg` | Reuse of the iter6.1 chop asset (super8ude, freesound 442538) — copied file per plan "chop 已有——补 wood_chop 复用" | CC0 1.0 | ok (reuse) |
+| SFX eat_drink | `audio/sfx/eat_drink.ogg` | freesound.org "Crispy bite" by JoMungus CC0, sound 718593 https://freesound.org/people/JoMungus/sounds/718593/, fetched via public hq preview direct link https://cdn.freesound.org/previews/718/718593_11865776-hq.ogg | CC0 1.0 | ok |
+| SFX place_building | `audio/sfx/place_building.ogg` | freesound.org smash_success_wood by FiveBrosStopMosYT CC0 1.0, sound 676613 https://freesound.org/people/FiveBrosStopMosYT/sounds/676613/, fetched via CC0 mirror Fris0uman/CDDA-Soundpacks https://github.com/Fris0uman/CDDA-Soundpacks/blob/main/sound/CC-Sounds/smash_success/wood_furn/credits.md | CC0 1.0 (per-file credits.md) | ok |
+| SFX melee_hit | `audio/sfx/melee_hit.ogg` | freesound.org unarmed_hit_flesh by deleted_user_7146007 CC0, sound 383882 https://freesound.org/people/deleted_user_7146007/sounds/383882/, fetched via CC0 mirror Fris0uman/CDDA-Soundpacks https://github.com/Fris0uman/CDDA-Soundpacks/blob/main/sound/CC-Sounds/melee_hit_flesh/default/credits.md | CC0 1.0 (per-file credits.md) | ok |
+| SFX death_respawn | `audio/sfx/death_respawn.ogg` | freesound.org zombie_death_3 by bananplyte CC0 1.0, sound 452347 https://freesound.org/people/bananplyte/sounds/452347/, fetched via CC0 mirror Fris0uman/CDDA-Soundpacks https://github.com/Fris0uman/CDDA-Soundpacks/blob/main/sound/CC-Sounds/mon_death/zombie_death/credits.md | CC0 1.0 (per-file credits.md) | ok |
+
+Channel notes (Iter8p):
+- Poly Pizza: the model page embeds the direct file link `https://static.poly.pizza/<uuid>.glb` (CC0 assets only, license re-verified per page); the search API requires an API key, so pages were located via web search.
+- game-icons.net: `/icons/<fg>/transparent/1x1/<author>/<name>.png` renders the white-on-transparent variant (the `000000` background variant is opaque black, rejected).
+- freesound.org: apiv2 now requires an API token; sound pages expose `https://cdn.freesound.org/previews/<id>/<id>_<uid>-hq.ogg` public hq previews (direct, no account) — used for eat_drink. All other SFX came from the iter6.1-proven CDDA-Soundpacks CC0 mirror, per-file CC0 verified in credits.md.
