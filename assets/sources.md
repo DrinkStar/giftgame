@@ -107,3 +107,26 @@ All assets downloaded 2026-08-15. Every asset below has **status ok**.
 | survival building kit (2 pieces used) | `models/buildings/kenney/kenny_survival.glb` + `kenny_survival_colormap.png` | Kenney "Survival" kit (same origin as above) | CC0 1.0 (Kenney) | ok (campfire-pit for cooking_stove/furnace) |
 
 Building visual wiring: `src/building/KenneyBuildingVisual.cs` extracts a named mesh from the GLB at runtime; 13 buildable scenes (storage_box/workbench/workbench_t2/workbench_t3/cooking_stove/drying_rack/water_purifier/furnace/loom/research_table/lighthouse/trap/beehive) mount it. Colormap material rebuilt in code (the glb's original material path points into godot-refs).
+
+### Icons (game-icons.net — CC BY 3.0, attribution required)
+
+All downloaded 2026-08-15 from `https://game-icons.net/icons/ffffff/transparent/1x1/<author>/<name>.png` (white-on-transparent 512px). Attribution: "Game icons by Delapouite and Lorc — https://game-icons.net (CC BY 3.0)" — keep in the in-game credits screen.
+
+| Item | game-icons slug | Item | game-icons slug |
+|---|---|---|---|
+| pickaxe | delapouite/mining-helmet | sickle | delapouite/sickle |
+| fishing_rod | lorc/fishing-hook | arrow | lorc/arrow-flights |
+| wooden_bow / iron_bow | lorc/high-shot | backpack | delapouite/backpack |
+| cloth_armor | delapouite/chest-armor | leather_armor | lorc/leather-boot |
+| iron_armor | delapouite/armor-upgrade | iron_spear | delapouite/spear-feather |
+| raw_meat / grilled_meat / salted_meat | delapouite/steak | cooked_meat | lorc/roast-chicken |
+| raw_fish | lorc/fishing-hook | cooked_fish / fish_soup / vegetable_stew / mushroom_soup | delapouite/cooking-pot |
+| egg | delapouite/fried-eggs | bread / cornbread | delapouite/bread |
+| carrot / carrot_seed | delapouite/carrot | corn / corn_seed | delapouite/corn |
+| potato / potato_seed | delapouite/potato | mushroom | lorc/mushroom |
+| wheat | lorc/wheat | wheat_flour | delapouite/flour |
+| honey | lorc/honeycomb | wool | delapouite/wool |
+| iron_ore | delapouite/stone-pile | iron_ingot | lorc/anvil |
+| berry_juice / berry_seed / fruit_salad | delapouite/berries-bowl | mushroom_seed / wheat_seed | copies of the crop icons (mushroom/wheat) |
+
+`milk` has no matching game-icons asset — HUD falls back to DisplayName. 41 of 49 items now carry icons (7 pre-existing + 34 new).

@@ -11,6 +11,12 @@ using Godot;
 ///   - BuildingPlaced                                            → "place_building"
 ///   - MeleeHit                                                  → "melee_hit"
 ///   - PlayerDied                                                → "death_respawn"
+///   - EnemyDied                                                 → "enemy_die"   (T9.6)
+///   - CraftingCompleted                                         → "ui_click"   (T9.6)
+///   - WeatherChanged (Storm)                                    → "storm"      (T9.6)
+///   - PeriodChanged (Night)                                     → BGM "night"  (T9.6)
+///   - PeriodChanged (Day/Dawn/Dusk)                             → BGM "island" (T9.6)
+///   - BossDefeated                                              → BGM "boss"   (T9.6)
 ///   Audio is optional: the AudioManager is resolved null-safely from the
 ///   current scene root on every call (never cached — the scene can change),
 ///   so a missing manager degrades to a silent no-op. Subscriptions are
@@ -30,12 +36,20 @@ public partial class SfxHook : Node
     "berries"
   };
 
+  /// <summary>BGM id that plays outside of night and boss fights (T9.6).</summary>
+  private const string DayBgmId = "island";
+
   public override void _Ready()
   {
     GameEvents.ItemAdded += OnItemAdded;
     GameEvents.BuildingPlaced += OnBuildingPlaced;
     GameEvents.MeleeHit += OnMeleeHit;
     GameEvents.PlayerDied += OnPlayerDied;
+    GameEvents.EnemyDied += OnEnemyDied;
+    GameEvents.CraftingCompleted += OnCraftingCompleted;
+    GameEvents.WeatherChanged += OnWeatherChanged;
+    GameEvents.PeriodChanged += OnPeriodChanged;
+    GameEvents.BossDefeated += OnBossDefeated;
   }
 
   public override void _ExitTree()
@@ -44,6 +58,11 @@ public partial class SfxHook : Node
     GameEvents.BuildingPlaced -= OnBuildingPlaced;
     GameEvents.MeleeHit -= OnMeleeHit;
     GameEvents.PlayerDied -= OnPlayerDied;
+    GameEvents.EnemyDied -= OnEnemyDied;
+    GameEvents.CraftingCompleted -= OnCraftingCompleted;
+    GameEvents.WeatherChanged -= OnWeatherChanged;
+    GameEvents.PeriodChanged -= OnPeriodChanged;
+    GameEvents.BossDefeated -= OnBossDefeated;
   }
 
   /// <summary>
@@ -67,4 +86,27 @@ public partial class SfxHook : Node
 
   private void OnPlayerDied() =>
     ResolveAudioManager()?.PlaySfx("death_respawn");
+
+  private void OnEnemyDied(string enemyId) =>
+    ResolveAudioManager()?.PlaySfx("enemy_die");
+
+  private void OnCraftingCompleted(string recipeId) =>
+    ResolveAudioManager()?.PlaySfx("ui_click");
+
+  private void OnWeatherChanged(WeatherType weather)
+  {
+    if (weather is WeatherType.Storm or WeatherType.Rain)
+      ResolveAudioManager()?.PlaySfx("storm");
+  }
+
+  private void OnPeriodChanged(DayPeriod period)
+  {
+    // Night BGM while it is dark; back to the island theme otherwise.
+    ResolveAudioManager()?.PlayBgm(
+      period == DayPeriod.Night ? "night" : DayBgmId
+    );
+  }
+
+  private void OnBossDefeated(string bossId) =>
+    ResolveAudioManager()?.PlayBgm("boss");
 }

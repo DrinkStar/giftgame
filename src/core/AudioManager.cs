@@ -64,6 +64,22 @@ public partial class AudioManager : Node
 
     _nextSfxPlayer = 0;
 
+    // T9.6: looping ocean ambience at low volume when the stream is
+    // registered — the sea is always present once the ocean scene is merged.
+    if (Sfx is { } sfx && sfx.TryGetValue("ocean_waves", out var ambient) && ambient != null)
+    {
+      var ambientPlayer = GetNodeOrNull<AudioStreamPlayer>("AmbientPlayer")
+        ?? new AudioStreamPlayer { Name = "AmbientPlayer", VolumeDb = -14f };
+      if (ambientPlayer.GetParent() == null)
+      {
+        AddChild(ambientPlayer);
+      }
+
+      SetLoop(ambient, loop: true);
+      ambientPlayer.Stream = ambient;
+      ambientPlayer.Play();
+    }
+
     // Scene-level auto-start (Game.tscn: island BGM). Headless runs (CI
     // import/smoke/tests) have no audio device; playing there can leave the
     // playback chain referenced past ObjectDB cleanup in Godot 4.7.1
@@ -87,10 +103,11 @@ public partial class AudioManager : Node
       StopAll();
   }
 
-  /// <summary>Stops the BGM player and the whole SFX pool.</summary>
+  /// <summary>Stops the BGM player, the ambient player and the whole SFX pool.</summary>
   public void StopAll()
   {
     GetNodeOrNull<AudioStreamPlayer>(BgmPlayerName)?.Stop();
+    GetNodeOrNull<AudioStreamPlayer>("AmbientPlayer")?.Stop();
     for (var i = 0; i < SfxPoolSize; i++)
       GetNodeOrNull<AudioStreamPlayer>($"{SfxPlayerPrefix}{i}")?.Stop();
   }
