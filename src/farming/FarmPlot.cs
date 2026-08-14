@@ -54,8 +54,9 @@ public partial class FarmPlot : StaticBody3D, IInteractable
     if (_visual != null)
     {
       _visualMaterial =
-        (_visual.GetActiveMaterial(0) as StandardMaterial3D)?.Duplicate()
-        as StandardMaterial3D ?? new StandardMaterial3D();
+        _visual.GetActiveMaterial(0) is StandardMaterial3D existing
+          ? existing.Duplicate() is StandardMaterial3D copy ? copy : new StandardMaterial3D()
+          : new StandardMaterial3D();
       _visual.MaterialOverride = _visualMaterial;
     }
 
@@ -173,7 +174,17 @@ public partial class FarmPlot : StaticBody3D, IInteractable
 
     var seed = GD.Load<ItemData>($"res://assets/items/{crop.SeedItemId}.tres");
     if (seed != null)
-      inventory.AddItem(seed, CropLogic.SeedReturn);
+    {
+      // FIX(iter5-plan): seed add atomicity — no silent loss
+      var seedRemaining = inventory.AddItem(seed, CropLogic.SeedReturn);
+      if (seedRemaining > 0)
+      {
+        // The seed did not fit: roll the produce back out and keep the crop
+        // ready so the player can harvest again with space.
+        inventory.RemoveItem(crop.ProduceItemId, count);
+        return;
+      }
+    }
 
     GameEvents.RaiseCropHarvested(crop.Id);
     _crop = null;
