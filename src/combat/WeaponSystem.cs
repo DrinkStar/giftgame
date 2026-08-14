@@ -283,6 +283,8 @@ public partial class WeaponSystem : Node
     if (sel.Type == ItemType.Tool && sel.ArmorReduction > 0f)
     {
       stats.ArmorReduction = sel.ArmorReduction;
+      // T9.3: the outfit visuals swap on the same event.
+      GameEvents.RaiseArmorEquipped(sel.Id);
       GameEvents.RaiseGuideLine($"装备了 {sel.DisplayName}");
       return;
     }

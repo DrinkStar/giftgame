@@ -90,6 +90,8 @@
 [ext_resource type="PackedScene" path="res://scenes/raft/raft.tscn" id="88_raft"]
 [ext_resource type="Script" path="res://src/world/island/IslandBuilder.cs" id="89_islandbuilder"]
 [ext_resource type="Script" path="res://src/ui/StorageUI.cs" id="90_storageui"]
+[ext_resource type="Script" path="res://src/player/EquipmentVisual.cs" id="91_equipment_visual"]
+[ext_resource type="Script" path="res://src/ui/CreditsUI.cs" id="92_credits"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -167,6 +169,7 @@ shape = SubResource("CapsuleShape3D_player")
 [node name="Camera3D" type="Camera3D" parent="Player/CameraPivot"]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 2, 5)
 current = true
+far = 1000.0
 script = ExtResource("3_camera")
 
 [node name="PlayerStats" type="Node" parent="Player"]
@@ -216,6 +219,10 @@ script = ExtResource("29_weapon")
 CameraPath = NodePath("../CameraPivot/Camera3D")
 InventoryPath = NodePath("../InventorySystem")
 TorchLightPath = NodePath("../TorchLight")
+
+[node name="EquipmentVisual" type="Node" parent="Player"]
+script = ExtResource("91_equipment_visual")
+PlayerModelPath = NodePath("../PlayerModel")
 
 [node name="TorchLight" type="OmniLight3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
@@ -411,3 +418,6 @@ Stats = NodePath("../Player/PlayerStats")
 
 [node name="StorageUI" type="CanvasLayer" parent="."]
 script = ExtResource("90_storageui")
+
+[node name="CreditsUI" type="CanvasLayer" parent="."]
+script = ExtResource("92_credits")

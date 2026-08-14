@@ -209,6 +209,13 @@ public static class GameEvents
   /// </summary>
   public static event Action<string>? MeleeHit;
 
+  /// <summary>
+  ///   T9.3: an armor item was equipped, carrying its item id
+  ///   (cloth_armor/leather_armor/iron_armor). Raised by WeaponSystem's armor
+  ///   equip branch; consumed by the player outfit visuals. Raise-only.
+  /// </summary>
+  public static event Action<string>? ArmorEquipped;
+
   #endregion Combat
 
   #region Progression (Iter8p R1)
@@ -422,6 +429,9 @@ public static class GameEvents
     WeaponSlotChanged?.Invoke(primary, secondary);
 
   public static void RaiseMeleeHit(string weaponId) => MeleeHit?.Invoke(weaponId);
+
+  public static void RaiseArmorEquipped(string itemId) =>
+    ArmorEquipped?.Invoke(itemId);
 
   public static void RaiseTalentUnlocked(string talentId) =>
     TalentUnlocked?.Invoke(talentId);

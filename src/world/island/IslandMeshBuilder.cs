@@ -64,6 +64,19 @@ public static class IslandMeshBuilder
         var surface = new SurfaceTool();
         surface.Begin(Mesh.PrimitiveType.Triangles);
 
+        // T9.5: per-vertex biome gradient — the shore band (h01 ≈ sea level
+        // 0.5) is sand, inland blends to the tier's land color, and the
+        // underwater slope is darkened wet sand. Zero textures needed; the
+        // material uses VertexColorUseAsAlbedo.
+        var sand = new Color(0.87f, 0.80f, 0.62f);
+        var inland = spec.Tier switch
+        {
+            IslandTier.Spawn => new Color(0.32f, 0.55f, 0.30f), // low-risk grass
+            IslandTier.Main => new Color(0.24f, 0.46f, 0.27f),  // forest green
+            IslandTier.Storm => new Color(0.28f, 0.30f, 0.34f), // barren rock
+            _ => new Color(0.5f, 0.5f, 0.5f)
+        };
+
         for (int row = 0; row < resolution; row++)
         {
             float localZ = (row - half) * cell;
@@ -72,6 +85,13 @@ public static class IslandMeshBuilder
                 float localX = (col - half) * cell;
                 float h01 = heightmap[row * resolution + col];
 
+                var color = sand.Lerp(inland, Mathf.Clamp((h01 - 0.55f) / 0.18f, 0f, 1f));
+                if (h01 < 0.5f)
+                {
+                    color = color.Darkened(0.45f); // underwater slope
+                }
+
+                surface.SetColor(color);
                 surface.SetNormal(Vector3.Up);
                 surface.SetUV(new Vector2(spec.Center.X + localX, spec.Center.Y + localZ));
                 surface.AddVertex(new Vector3(localX, Mathf.Lerp(minHeight, maxHeight, h01), localZ));

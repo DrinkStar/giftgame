@@ -130,13 +130,10 @@ public partial class IslandBuilder : Node3D
             // Terrain must be visible from any angle (inside slopes, below
             // the waterline), so back-face culling is disabled.
             CullMode = BaseMaterial3D.CullModeEnum.Disabled,
-            AlbedoColor = tier switch
-            {
-                IslandTier.Spawn => new Color("4C7A34"), // low-risk green
-                IslandTier.Main => new Color("8B6B3E"),  // settlement brown
-                IslandTier.Storm => new Color("3A3D42"), // high-risk gray-black
-                _ => new Color(0.5f, 0.5f, 0.5f)
-            }
+            // T9.5: vertex colors carry the sand→land biome gradient written
+            // by IslandMeshBuilder; albedo stays white so colors show as-is.
+            VertexColorUseAsAlbedo = true,
+            AlbedoColor = Colors.White
         };
     }
 
