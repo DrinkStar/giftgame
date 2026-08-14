@@ -21,6 +21,13 @@
 [ext_resource type="PackedScene" path="res://scenes/building/building_system.tscn" id="19_buildsys"]
 [ext_resource type="Resource" path="res://assets/buildables/buildable_library.tres" id="20_library"]
 [ext_resource type="Script" path="res://src/building/StationLinker.cs" id="21_linker"]
+[ext_resource type="PackedScene" path="res://scenes/farming/chicken.tscn" id="22_chicken"]
+[ext_resource type="PackedScene" path="res://scenes/farming/sheep.tscn" id="23_sheep"]
+[ext_resource type="Resource" path="res://assets/items/berry_seed.tres" id="24_item_berry_seed"]
+[ext_resource type="Resource" path="res://assets/items/wheat_seed.tres" id="25_item_wheat_seed"]
+[ext_resource type="Resource" path="res://assets/items/potato_seed.tres" id="26_item_potato_seed"]
+[ext_resource type="Resource" path="res://assets/recipes/flour.tres" id="27_recipe_flour"]
+[ext_resource type="Resource" path="res://assets/recipes/bread.tres" id="28_recipe_bread"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -112,11 +119,20 @@ StartingItems = Array[Dictionary]([{
 }, {
 "item": ExtResource("15_item_berries"),
 "amount": 3,
+}, {
+"item": ExtResource("24_item_berry_seed"),
+"amount": 3,
+}, {
+"item": ExtResource("25_item_wheat_seed"),
+"amount": 2,
+}, {
+"item": ExtResource("26_item_potato_seed"),
+"amount": 2,
 }])
 
 [node name="CraftingSystem" type="Node" parent="Player"]
 script = ExtResource("7_crafting")
-Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot")])
+Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot"), ExtResource("27_recipe_flour"), ExtResource("28_recipe_bread")])
 
 [node name="Environment" type="Node3D" parent="."]
 
@@ -153,6 +169,18 @@ script = ExtResource("21_linker")
 BuildingSystem = NodePath("../BuildingSystem")
 Player = NodePath("../Player")
 Crafting = NodePath("../Player/CraftingSystem")
+
+[node name="Chicken1" parent="." node_paths=PackedStringArray("BuildingSystem") instance=ExtResource("22_chicken")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0.5, 6)
+BuildingSystem = NodePath("../BuildingSystem")
+
+[node name="Chicken2" parent="." node_paths=PackedStringArray("BuildingSystem") instance=ExtResource("22_chicken")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 6)
+BuildingSystem = NodePath("../BuildingSystem")
+
+[node name="Sheep1" parent="." node_paths=PackedStringArray("BuildingSystem") instance=ExtResource("23_sheep")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 6)
+BuildingSystem = NodePath("../BuildingSystem")
 
 [node name="HUD" parent="." node_paths=PackedStringArray("Player", "DayNightService", "WeatherService") instance=ExtResource("12_hud")]
 Player = NodePath("../Player")
