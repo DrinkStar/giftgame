@@ -203,6 +203,48 @@ public static class GameEvents
 
   #endregion Combat
 
+  #region Quests (Iter7)
+
+  /// <summary>
+  ///   A quest became the active one, carrying its id. Raised by
+  ///   <see cref="Quest.QuestService"/> when it starts a quest. Raise-only.
+  /// </summary>
+  public static event Action<string>? QuestStarted;
+
+  /// <summary>
+  ///   Progress of the active quest changed, carrying (questId, done, need).
+  ///   Raised by <see cref="Quest.QuestService"/>. Raise-only.
+  /// </summary>
+  public static event Action<string, int, int>? QuestProgress;
+
+  /// <summary>
+  ///   A quest was completed, carrying its id. Raised by
+  ///   <see cref="Quest.QuestService"/>. Raise-only.
+  /// </summary>
+  public static event Action<string>? QuestCompleted;
+
+  /// <summary>
+  ///   The player reached a story point trigger, carrying the story point id.
+  ///   Raised by <see cref="Quest.StoryPointTrigger"/> exactly once per
+  ///   trigger. Raise-only.
+  /// </summary>
+  public static event Action<string>? StoryPointReached;
+
+  /// <summary>
+  ///   The guide has a line of narration to show, carrying the text. Raised by
+  ///   <see cref="Quest.GuideService"/>; consumed by the HUD subtitle. Raise-only.
+  /// </summary>
+  public static event Action<string>? GuideLine;
+
+  /// <summary>
+  ///   A buildable object was placed in the world, carrying its library name
+  ///   (e.g. "campfire"). Raised by
+  ///   <see cref="Building.BuildingSystem.TryToPlaceObject"/>. Raise-only.
+  /// </summary>
+  public static event Action<string>? BuildingPlaced;
+
+  #endregion Quests (Iter7)
+
   #region Raise helpers
 
   public static void RaiseGameStarted() => GameStarted?.Invoke();
@@ -304,6 +346,23 @@ public static class GameEvents
 
   public static void RaiseWeaponSlotChanged(ItemData? primary, ItemData? secondary) =>
     WeaponSlotChanged?.Invoke(primary, secondary);
+
+  public static void RaiseQuestStarted(string questId) =>
+    QuestStarted?.Invoke(questId);
+
+  public static void RaiseQuestProgress(string questId, int done, int need) =>
+    QuestProgress?.Invoke(questId, done, need);
+
+  public static void RaiseQuestCompleted(string questId) =>
+    QuestCompleted?.Invoke(questId);
+
+  public static void RaiseStoryPointReached(string storyPointId) =>
+    StoryPointReached?.Invoke(storyPointId);
+
+  public static void RaiseGuideLine(string text) => GuideLine?.Invoke(text);
+
+  public static void RaiseBuildingPlaced(string buildableName) =>
+    BuildingPlaced?.Invoke(buildableName);
 
   #endregion Raise helpers
 }

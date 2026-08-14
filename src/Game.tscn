@@ -50,6 +50,9 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_click.ogg" id="48_sfx_ui_click"]
 [ext_resource type="PackedScene" path="res://assets/models/enemies/boar/Pig.glb" id="49_model_boar"]
 [ext_resource type="PackedScene" path="res://assets/models/enemies/wolf/Wolf.gltf" id="50_model_wolf"]
+[ext_resource type="Script" path="res://src/quest/QuestService.cs" id="51_quest_service"]
+[ext_resource type="Script" path="res://src/quest/GuideService.cs" id="52_guide_service"]
+[ext_resource type="Script" path="res://src/quest/StoryPointTrigger.cs" id="53_story_point"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -172,6 +175,18 @@ Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), E
 script = ExtResource("29_weapon")
 CameraPath = NodePath("../CameraPivot/Camera3D")
 InventoryPath = NodePath("../InventorySystem")
+
+[node name="QuestService" type="Node" parent="."]
+script = ExtResource("51_quest_service")
+PlayerPath = NodePath("../Player")
+
+[node name="GuideService" type="Node" parent="."]
+script = ExtResource("52_guide_service")
+
+[node name="StoryPointTrigger" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 10)
+script = ExtResource("53_story_point")
+StoryPointId = "ruin"
 
 [node name="Environment" type="Node3D" parent="."]
 

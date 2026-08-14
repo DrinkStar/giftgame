@@ -362,6 +362,11 @@ public partial class BuildingSystem : Node3D
 
       AnimatePlacement(buildableInstance.ObjectInstance);
     }
+
+    // FIX(iter7-plan): quest hook — building placed. Both success paths
+    // (snappable grid placement and free placement) converge here; the null
+    // guard above guarantees _selectedObject is set (plan Decision 7).
+    GameEvents.RaiseBuildingPlaced(_selectedObject.Name);
   }
 
   /// <summary>

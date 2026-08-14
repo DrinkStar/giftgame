@@ -18,7 +18,7 @@ using Godot;
 ///   - node paths are resolved from scenes/hud.tscn exactly as upstream
 ///     (the scene file is hand-authored to match, Decision 9).
 ///
-///   SUBSCRIBES eight GameEvents; unsubscribes all of them in _ExitTree
+///   SUBSCRIBES nine GameEvents; unsubscribes all of them in _ExitTree
 ///   (Decision 13).
 /// </summary>
 public partial class HUD : CanvasLayer
@@ -38,10 +38,12 @@ public partial class HUD : CanvasLayer
   private ProgressBar? _staminaBar;
   private Label? _timeLabel;
   private Label? _interactionPrompt;
+  private Label? _guideSubtitle;
   private ProgressBar? _interactionProgress;
   private HBoxContainer? _hotbarContainer;
   private Control? _crosshairNormal;
   private Control? _crosshairInteract;
+  private Tween? _guideTween;
 
   private PlayerStats? _stats;
   private PlayerInteraction? _interaction;
@@ -121,6 +123,10 @@ public partial class HUD : CanvasLayer
     if (_inventory != null)
       OnHotbarSelectionChanged(_inventory.SelectedHotbarSlot);
 
+    // Guide narration subtitle (Iter7): no initial value to pull — lines
+    // only arrive via GuideLine events after this subscription.
+    GameEvents.GuideLine += OnGuideLine;
+
     SetupHotbar();
   }
 
@@ -134,6 +140,7 @@ public partial class HUD : CanvasLayer
     GameEvents.InteractionProgressChanged -= OnInteractionProgressChanged;
     GameEvents.InventoryChanged -= OnInventoryChanged;
     GameEvents.HotbarSelectionChanged -= OnHotbarSelectionChanged;
+    GameEvents.GuideLine -= OnGuideLine;
   }
 
   public override void _Process(double delta)
@@ -171,6 +178,7 @@ public partial class HUD : CanvasLayer
     _interactionProgress = GetNodeOrNull<ProgressBar>(
       "BottomContainer/InteractionProgress"
     );
+    _guideSubtitle = GetNodeOrNull<Label>("BottomContainer/GuideSubtitle");
     _hotbarContainer = GetNodeOrNull<HBoxContainer>("BottomContainer/HotbarContainer");
     _crosshairNormal = GetNodeOrNull<Control>(
       "CenterContainer/Crosshair/CrosshairNormal"
@@ -221,6 +229,33 @@ public partial class HUD : CanvasLayer
 
   private void OnInteractionProgressChanged(float progress) =>
     SetInteractionProgress(progress);
+
+  /// <summary>
+  ///   Guide narration subtitle (Iter7 plan Decision 5): shows the line for
+  ///   5 seconds, then fades it out over 1 second. A new line restarts the
+  ///   fade.
+  /// </summary>
+  private void OnGuideLine(string text)
+  {
+    if (_guideSubtitle == null)
+      return;
+
+    _guideSubtitle.Text = text;
+    _guideSubtitle.Visible = true;
+    _guideSubtitle.Modulate = Colors.White;
+
+    _guideTween?.Kill();
+    _guideTween = CreateTween();
+    _guideTween.TweenInterval(5.0);
+    _guideTween.TweenProperty(_guideSubtitle, "modulate:a", 0f, 1.0);
+    _guideTween.TweenCallback(
+      Callable.From(() =>
+      {
+        if (IsInstanceValid(_guideSubtitle))
+          _guideSubtitle.Visible = false;
+      })
+    );
+  }
 
   private void OnInventoryChanged()
   {
