@@ -271,6 +271,54 @@ public static class GameEvents
 
   #endregion Quests (Iter7)
 
+  #region Save (Iter8)
+
+  /// <summary>
+  ///   Raised by the SaveService F5 handler after a real full save, carrying
+  ///   the overwrite flag (true when an existing slot was overwritten).
+  ///   Raise-only; consumers are future UI/feedback.
+  /// </summary>
+  public static event Action<bool>? GameSaved;
+
+  /// <summary>
+  ///   Raised by the SaveService F9/startup handler only when a save was
+  ///   actually loaded, carrying the real save filename (empty when unknown).
+  ///   Raise-only.
+  /// </summary>
+  public static event Action<string>? GameLoaded;
+
+  #endregion Save (Iter8)
+
+  #region Tutorial (Iter8)
+
+  /// <summary>
+  ///   The forced tutorial advanced to a step, carrying (currentStep,
+  ///   totalSteps) with currentStep starting at 1. Raise-only.
+  /// </summary>
+  public static event Action<int, int>? TutorialStepChanged;
+
+  /// <summary>
+  ///   The forced tutorial finished all steps. Raise-only; CraftUI and other
+  ///   gated systems unlock on this.
+  /// </summary>
+  public static event Action? TutorialCompleted;
+
+  /// <summary>
+  ///   Global gameplay-input lock for modal overlays (tutorial, CraftUI):
+  ///   true = polled actions (move/jump/sprint/build/craft/use) must be
+  ///   ignored by their consumers. Raise-only; consumers apply the gate.
+  /// </summary>
+  public static event Action<bool>? GameplayInputLockChanged;
+
+  /// <summary>
+  ///   Queryable state of the gameplay-input lock, maintained by
+  ///   <see cref="RaiseGameplayInputLockChanged"/>. Polled-input consumers
+  ///   (BuildingSystem, WeaponSystem) check this instead of subscribing.
+  /// </summary>
+  public static bool GameplayInputLocked { get; private set; }
+
+  #endregion Tutorial (Iter8)
+
   #region Raise helpers
 
   public static void RaiseGameStarted() => GameStarted?.Invoke();
@@ -397,6 +445,21 @@ public static class GameEvents
 
   public static void RaiseBuildingPlaced(string buildableName) =>
     BuildingPlaced?.Invoke(buildableName);
+
+  public static void RaiseGameSaved(bool overwrite) => GameSaved?.Invoke(overwrite);
+
+  public static void RaiseGameLoaded(string fileName) => GameLoaded?.Invoke(fileName);
+
+  public static void RaiseTutorialStepChanged(int currentStep, int totalSteps) =>
+    TutorialStepChanged?.Invoke(currentStep, totalSteps);
+
+  public static void RaiseTutorialCompleted() => TutorialCompleted?.Invoke();
+
+  public static void RaiseGameplayInputLockChanged(bool locked)
+  {
+    GameplayInputLocked = locked;
+    GameplayInputLockChanged?.Invoke(locked);
+  }
 
   #endregion Raise helpers
 }
