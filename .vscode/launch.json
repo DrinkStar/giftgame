@@ -14,7 +14,10 @@
       "args": [],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "windows": {
+        "program": "D:\\Godot\\Godot_v4.7.1-stable_mono_win64\\godot.exe"
+      }
     },
     {
       "name": "🕹 Debug Game (VSCodium)",
@@ -71,7 +74,10 @@
       ],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "windows": {
+        "program": "D:\\Godot\\Godot_v4.7.1-stable_mono_win64\\godot.exe"
+      }
     },
     {
       "name": "🧪 Debug Tests",
@@ -86,7 +92,10 @@
       ],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "windows": {
+        "program": "D:\\Godot\\Godot_v4.7.1-stable_mono_win64\\godot.exe"
+      }
     },
     {
       "name": "🔬 Debug Current Test",
@@ -101,7 +110,10 @@
       ],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "windows": {
+        "program": "D:\\Godot\\Godot_v4.7.1-stable_mono_win64\\godot.exe"
+      }
     },
   ]
 }

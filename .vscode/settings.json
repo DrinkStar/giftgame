@@ -9,6 +9,8 @@
     "editor.formatOnSave": true,
     "editor.formatOnType": false
   },
+  "godotTools.lsp.headless": true,
+  "dotnet.defaultSolution": "SeaAnomaly.sln",
   "emeraldwalk.runonsave": {
     "commands": [
       {

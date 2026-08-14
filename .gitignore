@@ -12,3 +12,6 @@ obj/
 
 *.old
 *.translation
+
+# Third-party editor plugin (installed locally by agent tooling, not part of the game)
+addons/agent_tools/

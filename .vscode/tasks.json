@@ -60,6 +60,31 @@
       },
     },
     {
+      "label": "godot-import",
+      "type": "process",
+      "command": "godot",
+      "args": ["--headless", "--path", ".", "--import"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "godot-smoke",
+      "type": "process",
+      "command": "godot",
+      "args": ["--headless", "--path", ".", "--quit-after", "5"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "godot-test",
+      "group": "test",
+      "type": "process",
+      "command": "godot",
+      "args": ["--headless", "--path", ".", "--run-tests", "--quit-on-finish"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
       "label": "build-solutions",
       "group": "test",
       "command": "dotnet restore; ${env:GODOT} --headless --build-solutions --quit || exit 0",
@@ -75,6 +100,6 @@
         "showReuseMessage": false,
         "clear": false
       }
-    },
+    }
   ]
 }
