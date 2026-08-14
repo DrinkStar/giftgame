@@ -228,4 +228,18 @@ public static class CombatLogic
     phase >= 3 ? BossRageCooldownFactor : 1f;
 
   #endregion Iter6.1 boss phases (todo 4)
+
+  #region Iter6.1 dual weapon slots (todo 5)
+
+  /// <summary>
+  ///   The item attacks use (Iter6.1 todo 5): the secondary slot item when
+  ///   the secondary slot is the active one AND equipped, otherwise the
+  ///   primary hotbar item. An empty secondary always falls back to the
+  ///   primary slot. Deterministic for tests.
+  /// </summary>
+  public static ItemData? EffectiveItem(
+    ItemData? primary, ItemData? secondary, bool secondarySlotActive
+  ) => secondarySlotActive && secondary != null ? secondary : primary;
+
+  #endregion Iter6.1 dual weapon slots (todo 5)
 }

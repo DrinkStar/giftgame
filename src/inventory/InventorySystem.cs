@@ -29,6 +29,7 @@ public partial class InventorySystem : Node
   private InventorySlot[,] _inventory = null!;
   private InventorySlot[] _hotbar = null!;
   private int _selectedHotbarSlot;
+  private InventorySlot _secondarySlot = new();
 
   /// <summary>
   ///   Selecting a slot clamps to the hotbar range and publishes
@@ -45,6 +46,27 @@ public partial class InventorySystem : Node
   }
 
   public ItemData? SelectedItem => _hotbar[_selectedHotbarSlot].Item;
+
+  /// <summary>
+  ///   Second weapon slot (Iter6.1 todo 5 / Decision D3). Independent of the
+  ///   hotbar: it holds a single item reference equipped by code at runtime,
+  ///   never stacked or consumed by Add/Remove. Setting it publishes
+  ///   <see cref="GameEvents.SecondarySlotChanged"/> (raise-only).
+  /// </summary>
+  [Export]
+  public ItemData? SecondaryItem
+  {
+    get => _secondarySlot.Item;
+    set
+    {
+      _secondarySlot.Item = value;
+      _secondarySlot.Amount = value == null ? 0 : 1;
+      GameEvents.RaiseSecondarySlotChanged(value);
+    }
+  }
+
+  /// <summary>Slot view of the secondary weapon (hotbar-like accessor).</summary>
+  public InventorySlot SecondarySlot => _secondarySlot;
 
   public override void _Ready()
   {

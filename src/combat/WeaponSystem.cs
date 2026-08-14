@@ -11,6 +11,12 @@ using Godot;
 ///   so the rules stay unit-testable, and all attacks are cooldown-gated by
 ///   <see cref="CombatLogic.IsReady"/>.
 ///
+///   Iter6.1 todo 5 (Decision D3): a second weapon slot on the inventory is
+///   toggled with the <c>weapon_slot_switch</c> input (Q). When active, the
+///   secondary slot item drives attacks instead of the hotbar selection
+///   (empty secondary falls back to primary). The toggle publishes
+///   <see cref="GameEvents.WeaponSlotChanged"/>.
+///
 ///   Decision 11: while build mode is active every attack input is ignored
 ///   (subscribed via GameEvents.BuildModeChanged, unsubscribed in _ExitTree).
 /// </summary>
@@ -20,6 +26,7 @@ public partial class WeaponSystem : Node
 
   public const string AttackAction = "attack";
   public const string SecondaryAttackAction = "secondary_attack";
+  public const string SlotSwitchAction = "weapon_slot_switch";
   public const string ArrowItemId = "arrow";
 
   #endregion Input action names
@@ -48,6 +55,7 @@ public partial class WeaponSystem : Node
   private Camera3D? _camera;
   private InventorySystem? _inventory;
   private bool _buildMode;
+  private bool _secondarySlotActive;
   private float _attackElapsed = 1f;
 
   public override void _Ready()
@@ -70,6 +78,12 @@ public partial class WeaponSystem : Node
 
   public override void _UnhandledInput(InputEvent @event)
   {
+    if (@event.IsActionPressed(SlotSwitchAction))
+    {
+      ToggleWeaponSlot();
+      return;
+    }
+
     // Decision 11: no attack input while build mode is active.
     if (_buildMode)
       return;
@@ -81,13 +95,49 @@ public partial class WeaponSystem : Node
   }
 
   /// <summary>
-  ///   Resolves what the currently selected item can perform (Decision 1
+  ///   True while the secondary weapon slot drives attacks (Iter6.1 todo 5).
+  ///   Flipped by the <c>weapon_slot_switch</c> input (Q) via
+  ///   <see cref="ToggleWeaponSlot"/>; publishing
+  ///   <see cref="GameEvents.WeaponSlotChanged"/> on every change.
+  /// </summary>
+  public bool SecondarySlotActive
+  {
+    get => _secondarySlotActive;
+    set
+    {
+      _secondarySlotActive = value;
+      GameEvents.RaiseWeaponSlotChanged(
+        _inventory?.SelectedItem, _inventory?.SecondaryItem
+      );
+    }
+  }
+
+  /// <summary>Q: toggles between the primary hotbar slot and the secondary slot.</summary>
+  public void ToggleWeaponSlot() => SecondarySlotActive = !_secondarySlotActive;
+
+  /// <summary>
+  ///   The item the next attack uses: the secondary slot item when the
+  ///   secondary slot is active and equipped, otherwise the hotbar's
+  ///   <see cref="InventorySystem.SelectedItem"/>. Pure resolution lives in
+  ///   <see cref="CombatLogic.EffectiveItem"/> (test seam).
+  /// </summary>
+  public ItemData? ResolveEffectiveItem() =>
+    CombatLogic.EffectiveItem(
+      _inventory?.SelectedItem, _inventory?.SecondaryItem, _secondarySlotActive
+    );
+
+  /// <summary>
+  ///   Resolves what the effective item can perform (Decision 1
   ///   ammo-gated dispatch). Public test seam — the input handlers funnel
   ///   through the same rules.
   /// </summary>
   public AttackType ResolveCurrentAttack()
   {
-    if (_inventory?.SelectedItem is not ItemData sel)
+    if (_inventory == null)
+      return AttackType.None;
+
+    var sel = ResolveEffectiveItem();
+    if (sel == null)
       return AttackType.None;
 
     var isTool = sel.Type == ItemType.Tool;
@@ -107,7 +157,7 @@ public partial class WeaponSystem : Node
     if (!CombatLogic.IsReady(_attackElapsed, MeleeCooldown))
       return;
 
-    var sel = _inventory?.SelectedItem;
+    var sel = ResolveEffectiveItem();
     if (sel == null || sel.Type != ItemType.Tool)
       return;
 
@@ -124,7 +174,7 @@ public partial class WeaponSystem : Node
     if (_inventory == null)
       return;
 
-    var sel = _inventory.SelectedItem;
+    var sel = ResolveEffectiveItem();
     if (sel == null)
       return;
 

@@ -77,6 +77,14 @@ public static class GameEvents
   public static event Action<string, int>? ItemAdded;
   public static event Action<string, int>? ItemRemoved;
 
+  /// <summary>
+  ///   The second weapon slot contents changed, carrying the newly equipped
+  ///   item (null = unequipped). Raised by
+  ///   <see cref="Inventory.InventorySystem.SecondaryItem"/> (Iter6.1 todo 5).
+  ///   Raise-only: the event exists for future UI/audio subscribers.
+  /// </summary>
+  public static event Action<ItemData?>? SecondarySlotChanged;
+
   #endregion Inventory
 
   #region Interaction
@@ -185,6 +193,14 @@ public static class GameEvents
   /// </summary>
   public static event Action<string, int>? BossPhaseChanged;
 
+  /// <summary>
+  ///   The active weapon slot toggled, carrying the primary (hotbar) item and
+  ///   the secondary slot item AFTER the switch (Iter6.1 todo 5). Raised by
+  ///   <see cref="Combat.WeaponSystem.SecondarySlotActive"/>. Raise-only: the
+  ///   event exists for future UI/audio subscribers.
+  /// </summary>
+  public static event Action<ItemData?, ItemData?>? WeaponSlotChanged;
+
   #endregion Combat
 
   #region Raise helpers
@@ -224,6 +240,9 @@ public static class GameEvents
 
   public static void RaiseItemRemoved(string itemId, int amount) =>
     ItemRemoved?.Invoke(itemId, amount);
+
+  public static void RaiseSecondarySlotChanged(ItemData? item) =>
+    SecondarySlotChanged?.Invoke(item);
 
   public static void RaiseInteractionPromptChanged(string prompt) =>
     InteractionPromptChanged?.Invoke(prompt);
@@ -282,6 +301,9 @@ public static class GameEvents
 
   public static void RaiseBossPhaseChanged(string bossId, int phase) =>
     BossPhaseChanged?.Invoke(bossId, phase);
+
+  public static void RaiseWeaponSlotChanged(ItemData? primary, ItemData? secondary) =>
+    WeaponSlotChanged?.Invoke(primary, secondary);
 
   #endregion Raise helpers
 }
