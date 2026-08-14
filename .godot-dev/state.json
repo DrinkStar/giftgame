@@ -3,9 +3,9 @@
   "created_at": "2026-08-13T00:00:00+08:00",
   "updated_at": "2026-08-15T00:00:00+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration9",
-  "git_branch": "dev/iteration9",
-  "last_stable_commit": "2127841",
+  "current_iteration": "iteration10",
+  "git_branch": "dev/iteration10",
+  "last_stable_commit": "ae187a5",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
@@ -119,28 +119,23 @@
       ]
     },
     {
-      "name": "iteration9",
+      "name": "iteration10",
       "status": "done",
       "tasks": [
-        {"id": "T9.1", "file": "13 建筑视觉（Kenney 套件复用）", "action": "create", "status": "done"},
-        {"id": "T9.2", "file": "5 武器模型 + WeaponVisual 手持显示", "action": "create", "status": "done"},
-        {"id": "T9.3", "file": "EquipmentVisual 三套换装（材质）", "action": "create", "status": "done"},
-        {"id": "T9.4", "file": "34 新物品图标 + 41 个 .tres 接线", "action": "create", "status": "done"},
-        {"id": "T9.5", "file": "岛屿顶点色群系（沙滩→内陆）", "action": "modify", "status": "done"},
-        {"id": "T9.6", "file": "音频接线（11 音效/配乐）+ 海浪环境", "action": "modify", "status": "done"},
-        {"id": "T9.7", "file": "性能：回读 10→5Hz + 相机 far 1000", "action": "modify", "status": "done"},
-        {"id": "T9.8", "file": "CreditsUI 署名屏 + export_presets.cfg + mono 模板 + Windows 导出", "action": "create", "status": "done"}
+        {"id": "T10.1", "file": "IslandBuilder 按 Tier 投放敌人 + 模型接线（crab/boar/wolf/storm_beast）", "action": "modify", "status": "done"},
+        {"id": "T10.2", "file": ".godot-dev/balance.md 数值平衡初稿（定稿 §12 待定项第一版）", "action": "create", "status": "done"},
+        {"id": "T10.3", "file": "README.md + build-release.ps1 一键发布管线（Release 构建→导入→导出→测试）", "action": "create", "status": "done"}
       ]
     }
   ],
-  "checkpoint": "phase3_iteration9_verified",
+  "checkpoint": "phase3_iteration10_verified",
   "verification": {
     "build": "dotnet build 0 errors (Debug + Release)",
-    "smoke": "Game.tscn --quit-after 5 exit 0",
-    "tests": "GoDotTest Passed 299 Failed 0",
+    "smoke": "Game.tscn --quit-after 8 exit 0（群岛敌人正常生成）",
+    "tests": "GoDotTest Passed 300 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
-    "export": "build/SeaAnomaly.exe (109MB) + SeaAnomaly.pck (61MB) via --export-release（dotnet publish 自动）",
-    "visual_evidence": "headless 环境未截图（冒烟 exit 0 + 299 测试 + 导出产物为准）"
+    "release": "build-release.ps1 一键通过：SeaAnomaly.exe (104MB) + SeaAnomaly.pck (59MB) + 全量测试",
+    "visual_evidence": "headless 环境未截图（冒烟 exit 0 + 300 测试 + 发布管线为准）"
   },
   "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）。建造系统移植自 MarkoDM/GodotInGameBuildingSystem（MIT）；7 上游 bug + 6 集成修复；层 5 Buildings/6 BuildingWalls/7 FreeObjects；建筑存档 user://buildings。种植(6 作物)+产出型驯养自写(无上游)；交互射线掩码 29 + FindInteractable 扩展；作物/驯养状态未持久化(留 Iter 8 GDSave)。自写战斗+敌人框架（概念参考 SurvivalIsland AnimalAI）；敌人层 8；NodePath 型导出不加 node_paths（Godot 4.7 会置空）。敌人模型 Quaternius/PolyPizza(CC0)+OGA/CraftPix 备用；音频 soundimage(BGM署名)/freesound CC0 镜像；螃蟹模型缺失(计划T1表遗漏)已记录；storm_zone 水用暗色平面(headless GPU compute 限制)；T7.0 复活契约(PlayerDied≠GameOver, 停输入/传送/满状态/不 GameOver/不掉包)；DotnetQuestSystem vendored 11 文件到 src/quest/lib（net9 NuGet 冲突弃用）；三章任务骨架+奖励数量表；奖励按物品 Id 表；引导者旁白 GuideLine+字幕。8p-game 玩法债闭环(R1 成长接口预留/R2 耐久字段/吃喝/采木+椰/地面掉落/床跳夜+改复活槽/火把灯)；8p-art 可视包(crab 补遗漏+女主+篝火+床模型, 7 图标, 5 音效, SfxHook+MeleeHit 事件)；资产来源 PolyPizza/Quaternius/Kenney/game-icons(CC-BY 署名)/freesound(CC0)；coconut 图标用 palm-tree 替代"
 }
