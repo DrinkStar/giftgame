@@ -26,6 +26,25 @@ public partial class GameManager : Node
 
   [Export] public PlayerController? Player { get; set; }
 
+  /// <summary>
+  ///   FIX(iter8p-plan): T8p.4 respawn slot — set by the bed. Null until a
+  ///   bed is slept in; RespawnPlayer prefers it over the world spawn point.
+  /// </summary>
+  private Vector3? _respawnSlot;
+
+  /// <summary>
+  ///   Reads the current bed respawn slot (public getter for testability —
+  ///   BedTest asserts the slot through it). Null = never slept in a bed.
+  /// </summary>
+  public Vector3? RespawnSlot => _respawnSlot;
+
+  /// <summary>
+  ///   FIX(iter8p-plan): T8p.4 — moves the respawn slot (the bed sets it to
+  ///   its own position on Interact). Called on the main thread from
+  ///   <see cref="BedInteract"/>, so no deferred/thread-safety concern.
+  /// </summary>
+  public void SetRespawnPoint(Vector3 position) => _respawnSlot = position;
+
   /// <summary>HUD reference (added in W3, per the plan's W1 note).</summary>
   [Export] public HUD? HUD { get; set; }
 
@@ -90,15 +109,83 @@ public partial class GameManager : Node
   /// <summary>
   ///   FIX(iter7-plan): T7.0 — teleports the player to the spawn marker (falling
   ///   back to the current position when no marker is wired) and revives it via
-  ///   <see cref="PlayerStats.Revive"/>. No inventory drop, no GameOver.
+  ///   <see cref="PlayerStats.Revive"/>.
+  ///   FIX(iter8p-plan): T8p.3 death drop — the death position is captured
+  ///   BEFORE the teleport so the loot lands where the player actually died.
   /// </summary>
   private void RespawnPlayer()
   {
     if (Player == null)
       return;
 
-    Player.GlobalPosition = PlayerSpawnPoint?.GlobalPosition ?? Player.GlobalPosition;
+    // Capture the death point first: the drop must land at the death spot,
+    // not at the respawn marker (iter8p-plan Decision 5).
+    var deathPos = Player.GlobalPosition;
+
+    DropDeathLoot(deathPos);
+
+    // T8p.4 (iter8p-plan Decision 6): prefer the bed respawn slot, fall
+    // back to the world spawn marker, then to the current position — the
+    // default fallback keeps the pre-bed behavior (and existing tests).
+    Player.GlobalPosition =
+      _respawnSlot ?? PlayerSpawnPoint?.GlobalPosition ?? Player.GlobalPosition;
     Player.GetNodeOrNull<PlayerStats>("PlayerStats")?.Revive();
+  }
+
+  /// <summary>
+  ///   FIX(iter8p-plan): T8p.3 death drop — tools/equipment stay. Randomly
+  ///   drops 1-3 non-tool stacks: for each iteration a random eligible stack
+  ///   (hotbar + grid, tools and empty slots skipped) loses half its amount
+  ///   (minimum 1) as ground loot at the death position with a small random
+  ///   XZ offset. No eligible stack means that iteration is skipped; an
+  ///   empty inventory drops nothing. Kill drops are untouched (EnemyBase).
+  /// </summary>
+  private void DropDeathLoot(Vector3 deathPos)
+  {
+    var inventory = Player?.GetNodeOrNull<InventorySystem>("InventorySystem");
+    if (inventory == null)
+      return;
+
+    var iterations = GD.RandRange(1, 3);
+    for (var i = 0; i < iterations; i++)
+    {
+      var candidates = new System.Collections.Generic.List<(string Id, int Amount)>();
+
+      for (var slotIndex = 0; slotIndex < inventory.HotbarSize; slotIndex++)
+        CollectCandidate(inventory.GetHotbarSlot(slotIndex), candidates);
+
+      for (var y = 0; y < inventory.InventoryHeight; y++)
+      {
+        for (var x = 0; x < inventory.InventoryWidth; x++)
+          CollectCandidate(inventory.GetInventorySlot(x, y), candidates);
+      }
+
+      if (candidates.Count == 0)
+        continue; // Nothing droppable — this iteration is skipped.
+
+      var (id, amount) = candidates[GD.RandRange(0, candidates.Count - 1)];
+      var dropAmount = Mathf.Max(1, amount / 2);
+
+      inventory.RemoveItem(id, dropAmount);
+
+      var offset = new Vector3(
+        (float)GD.RandRange(-1.5, 1.5), 0f, (float)GD.RandRange(-1.5, 1.5)
+      );
+      GroundLoot.Spawn(id, dropAmount, deathPos + offset);
+    }
+  }
+
+  private static void CollectCandidate(
+    InventorySlot slot, System.Collections.Generic.List<(string Id, int Amount)> candidates
+  )
+  {
+    if (slot.IsEmpty || slot.Item == null)
+      return;
+
+    if (slot.Item.Type == ItemType.Tool)
+      return;
+
+    candidates.Add((slot.Item.Id, slot.Amount));
   }
 
   public override void _Input(InputEvent @event)

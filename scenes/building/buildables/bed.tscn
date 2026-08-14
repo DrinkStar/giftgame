@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://src/building/BedInteract.cs" id="1_bed_script"]
+[ext_resource type="PackedScene" path="res://assets/models/buildings/bed/Bed.glb" id="2_model"]
+
+[node name="Bed" type="Node3D"]
+script = ExtResource("1_bed_script")
+
+[node name="Model" parent="." instance=ExtResource("2_model")]

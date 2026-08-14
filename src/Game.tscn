@@ -48,11 +48,21 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_die.ogg" id="46_sfx_enemy_die"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/chop.ogg" id="47_sfx_chop"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/ui_click.ogg" id="48_sfx_ui_click"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/wood_chop.ogg" id="58_sfx_wood_chop"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/eat_drink.ogg" id="59_sfx_eat_drink"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/place_building.ogg" id="60_sfx_place_building"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/melee_hit.ogg" id="61_sfx_melee_hit"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/death_respawn.ogg" id="62_sfx_death_respawn"]
 [ext_resource type="PackedScene" path="res://assets/models/enemies/boar/Pig.glb" id="49_model_boar"]
 [ext_resource type="PackedScene" path="res://assets/models/enemies/wolf/Wolf.gltf" id="50_model_wolf"]
+[ext_resource type="PackedScene" path="res://assets/models/enemies/crab/Crab.glb" id="56_model_crab"]
+[ext_resource type="PackedScene" path="res://assets/models/player/Woman.glb" id="57_model_player"]
 [ext_resource type="Script" path="res://src/quest/QuestService.cs" id="51_quest_service"]
 [ext_resource type="Script" path="res://src/quest/GuideService.cs" id="52_guide_service"]
 [ext_resource type="Script" path="res://src/quest/StoryPointTrigger.cs" id="53_story_point"]
+[ext_resource type="Script" path="res://src/world/WoodTree.cs" id="54_woodtree"]
+[ext_resource type="Script" path="res://src/world/CoconutPalm.cs" id="55_coconutpalm"]
+[ext_resource type="Script" path="res://src/core/SfxHook.cs" id="63_sfxhook"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -117,7 +127,10 @@ script = ExtResource("2_controller")
 Stats = NodePath("PlayerStats")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
+visible = false
 mesh = SubResource("CapsuleMesh_player")
+
+[node name="PlayerModel" parent="Player" instance=ExtResource("57_model_player")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 shape = SubResource("CapsuleShape3D_player")
@@ -175,6 +188,14 @@ Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), E
 script = ExtResource("29_weapon")
 CameraPath = NodePath("../CameraPivot/Camera3D")
 InventoryPath = NodePath("../InventorySystem")
+TorchLightPath = NodePath("../TorchLight")
+
+[node name="TorchLight" type="OmniLight3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+visible = false
+light_color = Color(1, 0.75, 0.4, 1)
+light_energy = 1.2
+omni_range = 8.0
 
 [node name="QuestService" type="Node" parent="."]
 script = ExtResource("51_quest_service")
@@ -187,6 +208,18 @@ script = ExtResource("52_guide_service")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 10)
 script = ExtResource("53_story_point")
 StoryPointId = "ruin"
+
+[node name="WoodTree1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.5, 5)
+script = ExtResource("54_woodtree")
+
+[node name="WoodTree2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0.5, 7)
+script = ExtResource("54_woodtree")
+
+[node name="CoconutPalm1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.5, 6)
+script = ExtResource("55_coconutpalm")
 
 [node name="Environment" type="Node3D" parent="."]
 
@@ -278,6 +311,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.5, 8)
 EnemyData = ExtResource("33_crab")
 Player = NodePath("../Player")
 DayNightServicePath = NodePath("../Environment/DayNightService")
+ModelPath = NodePath("CrabModel")
+
+[node name="CrabModel" parent="Crab1" instance=ExtResource("56_model_crab")]
 
 [node name="HUD" parent="." node_paths=PackedStringArray("Player", "DayNightService", "WeatherService") instance=ExtResource("12_hud")]
 Player = NodePath("../Player")
@@ -301,5 +337,13 @@ Sfx = {
 "enemy_hit": ExtResource("45_sfx_enemy_hit"),
 "enemy_die": ExtResource("46_sfx_enemy_die"),
 "chop": ExtResource("47_sfx_chop"),
-"ui_click": ExtResource("48_sfx_ui_click")
+"ui_click": ExtResource("48_sfx_ui_click"),
+"wood_chop": ExtResource("58_sfx_wood_chop"),
+"eat_drink": ExtResource("59_sfx_eat_drink"),
+"place_building": ExtResource("60_sfx_place_building"),
+"melee_hit": ExtResource("61_sfx_melee_hit"),
+"death_respawn": ExtResource("62_sfx_death_respawn")
 }
+
+[node name="SfxHook" type="Node" parent="."]
+script = ExtResource("63_sfxhook")

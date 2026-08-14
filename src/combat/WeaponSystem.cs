@@ -27,6 +27,7 @@ public partial class WeaponSystem : Node
   public const string AttackAction = "attack";
   public const string SecondaryAttackAction = "secondary_attack";
   public const string SlotSwitchAction = "weapon_slot_switch";
+  public const string UseItemAction = "use_item";
   public const string ArrowItemId = "arrow";
 
   #endregion Input action names
@@ -54,12 +55,21 @@ public partial class WeaponSystem : Node
   /// </summary>
   [Export] public ProgressionService? Progression;
 
+  /// <summary>
+  ///   T8p.6 (iter8p-plan Decision 7): the torch light node under the
+  ///   player. Resolved null-safely — when the node is missing the torch
+  ///   simply has no light. FIX(iter8p-plan): T8p.6 torch light — still
+  ///   weak melee, matching unchanged (a torch IS a tool).
+  /// </summary>
+  [Export] public NodePath TorchLightPath = new NodePath("../TorchLight");
+
   #endregion Exports
 
   private const uint EnemyCollisionMask = 128u;
 
   private Camera3D? _camera;
   private InventorySystem? _inventory;
+  private OmniLight3D? _torchLight;
   private bool _buildMode;
   private bool _secondarySlotActive;
   private float _attackElapsed = 1f;
@@ -68,6 +78,7 @@ public partial class WeaponSystem : Node
   {
     _camera = GetNodeOrNull<Camera3D>(CameraPath);
     _inventory = GetNodeOrNull<InventorySystem>(InventoryPath);
+    _torchLight = GetNodeOrNull<OmniLight3D>(TorchLightPath);
 
     GameEvents.BuildModeChanged += OnBuildModeChanged;
   }
@@ -80,6 +91,21 @@ public partial class WeaponSystem : Node
   public override void _Process(double delta)
   {
     _attackElapsed += (float)delta;
+    UpdateTorchLight();
+  }
+
+  /// <summary>
+  ///   T8p.6 (iter8p-plan Decision 7): light-update seam — the TorchLight
+  ///   OmniLight3D (a sibling of this node under the player) is visible
+  ///   exactly while the hotbar's SelectedItem is a torch; switching away
+  ///   (or empty hands) turns it off. Torch acquisition is out of scope
+  ///   this iteration (no recipe, no starting item) — tests inject the
+  ///   item directly, per the plan.
+  /// </summary>
+  private void UpdateTorchLight()
+  {
+    if (_torchLight != null)
+      _torchLight.Visible = _inventory?.SelectedItem?.Id == "torch";
   }
 
   public override void _UnhandledInput(InputEvent @event)
@@ -93,6 +119,15 @@ public partial class WeaponSystem : Node
     if (@event.IsActionPressed(SlotSwitchAction))
     {
       ToggleWeaponSlot();
+      return;
+    }
+
+    // T8p.1 (iter8p-plan Decision 3): consume the hotbar-selected item with F.
+    // Placed AFTER the dead check but BEFORE the build-mode guard, so eating
+    // and drinking keep working while build mode is active.
+    if (@event.IsActionPressed(UseItemAction))
+    {
+      TryUseItem();
       return;
     }
 
@@ -194,6 +229,37 @@ public partial class WeaponSystem : Node
 
   #endregion R1 (Iter8p) damage resolution seams
 
+  /// <summary>
+  ///   T8p.1 (iter8p-plan): consume the hotbar's SelectedItem (the primary
+  ///   hotbar slot — NOT the secondary weapon slot). Food feeds hunger (and
+  ///   health when the item restores it), drink quenches thirst; each use
+  ///   consumes one unit. FIX(iter8p-plan): T8p.1 use item — RequiresCooking
+  ///   gate comes later (T8.4b).
+  /// </summary>
+  private void TryUseItem()
+  {
+    var sel = _inventory?.SelectedItem;
+    if (sel == null)
+      return;
+
+    var stats = GetParentOrNull<PlayerController>()?.Stats;
+    if (stats == null)
+      return;
+
+    switch (sel.Type)
+    {
+      case ItemType.Food:
+        stats.Eat(sel.HungerRestore, sel.HealthRestore);
+        _inventory?.RemoveItem(sel.Id, 1);
+        break;
+
+      case ItemType.Drink:
+        stats.Drink(sel.ThirstRestore);
+        _inventory?.RemoveItem(sel.Id, 1);
+        break;
+    }
+  }
+
   /// <summary>LMB: melee swing for every tool, weak for bows (Decision 1).</summary>
   private void TryMelee()
   {
@@ -272,6 +338,8 @@ public partial class WeaponSystem : Node
     )
     {
       enemy.TakeDamage(damage);
+      // FIX(iter8p-plan): T8p.5 sfx hook — melee hit event
+      GameEvents.RaiseMeleeHit(ResolveEffectiveItem()?.Id ?? "");
     }
   }
 

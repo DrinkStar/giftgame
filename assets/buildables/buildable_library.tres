@@ -1,13 +1,14 @@
-[gd_resource type="Resource" script_class="BuildableResourceLibrary" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="BuildableResourceLibrary" load_steps=9 format=3]
 
 [ext_resource type="Resource" path="res://assets/buildables/campfire.tres" id="1_campfire"]
 [ext_resource type="Resource" path="res://assets/buildables/workbench.tres" id="2_workbench"]
 [ext_resource type="Resource" path="res://assets/buildables/storage_box.tres" id="3_storage_box"]
 [ext_resource type="Resource" path="res://assets/buildables/farmland.tres" id="4_farmland"]
 [ext_resource type="Resource" path="res://assets/buildables/taming_pen.tres" id="5_taming_pen"]
-[ext_resource type="Script" path="res://src/building/BuildableResourceLibrary.cs" id="6_library_script"]
-[ext_resource type="Script" path="res://src/building/BuildableResource.cs" id="7_resource_script"]
+[ext_resource type="Resource" path="res://assets/buildables/bed.tres" id="6_bed"]
+[ext_resource type="Script" path="res://src/building/BuildableResourceLibrary.cs" id="7_library_script"]
+[ext_resource type="Script" path="res://src/building/BuildableResource.cs" id="8_resource_script"]
 
 [resource]
-script = ExtResource("6_library_script")
-BuildableObjects = Array[ExtResource("7_resource_script")]([ExtResource("1_campfire"), ExtResource("2_workbench"), ExtResource("3_storage_box"), ExtResource("4_farmland"), ExtResource("5_taming_pen")])
+script = ExtResource("7_library_script")
+BuildableObjects = Array[ExtResource("8_resource_script")]([ExtResource("1_campfire"), ExtResource("2_workbench"), ExtResource("3_storage_box"), ExtResource("4_farmland"), ExtResource("5_taming_pen"), ExtResource("6_bed")])
