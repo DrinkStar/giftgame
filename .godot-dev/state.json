@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260813-001",
   "created_at": "2026-08-13T00:00:00+08:00",
-  "updated_at": "2026-08-13T23:15:46+08:00",
+  "updated_at": "2026-08-14T09:36:38+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration4",
-  "git_branch": "dev/iteration4",
-  "last_stable_commit": "154261d747e9ba11d96820403ea47bc7840650ec",
+  "current_iteration": "iteration5",
+  "git_branch": "dev/iteration5",
+  "last_stable_commit": "348607c2c9d1428cc7ba2a160903f31026203b27",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
@@ -66,15 +66,24 @@
         {"id": "T4.2", "file": "src/building/save/*", "action": "create", "status": "done"},
         {"id": "T4.3", "file": "Game.tscn/StationLinker/GameManager", "action": "create/modify", "status": "done"}
       ]
+    },
+    {
+      "name": "iteration5",
+      "status": "done",
+      "tasks": [
+        {"id": "T5.1", "file": "src/farming/{CropData,CropLogic,FarmPlot,FarmingData}.cs + assets/crops + 13 items + 2 recipes + farmland", "action": "create", "status": "done"},
+        {"id": "T5.2", "file": "src/farming/{LivestockLogic,Livestock}.cs + chicken/sheep/taming_pen + egg/wool/milk", "action": "create", "status": "done"},
+        {"id": "T5.3", "file": "buildable_library.tres + Game.tscn (livestock/seeds/recipes)", "action": "modify", "status": "done"}
+      ]
     }
   ],
-  "checkpoint": "phase3_iteration4_verified",
+  "checkpoint": "phase3_iteration5_verified",
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "Game.tscn --quit-after 5 exit 0",
-    "tests": "GoDotTest Passed 80 Failed 0",
+    "tests": "GoDotTest Passed 97 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
-    "visual_evidence": "evidence/iter4_frame.png (>10KB 非黑帧)"
+    "visual_evidence": "evidence/iter5_frame.png (>10KB 非黑帧)"
   },
-  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）。建造系统移植自 MarkoDM/GodotInGameBuildingSystem（MIT）；7 上游 bug + 6 集成修复；层 5 Buildings/6 BuildingWalls/7 FreeObjects；建筑存档 user://buildings"
+  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）。建造系统移植自 MarkoDM/GodotInGameBuildingSystem（MIT）；7 上游 bug + 6 集成修复；层 5 Buildings/6 BuildingWalls/7 FreeObjects；建筑存档 user://buildings。种植(6 作物)+产出型驯养自写(无上游)；交互射线掩码 29 + FindInteractable 扩展；作物/驯养状态未持久化(留 Iter 8 GDSave)"
 }
