@@ -1,0 +1,68 @@
+[gd_scene load_steps=5 format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.545, 0.353, 0.196, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_post"]
+material = SubResource("StandardMaterial3D_wood")
+top_radius = 0.1
+bottom_radius = 0.1
+height = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_rail_x"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(2.2, 0.08, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rail_z"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(0.08, 0.08, 2.2)
+
+[node name="TamingPen" type="Node3D"]
+
+[node name="PostNE" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, 1)
+mesh = SubResource("CylinderMesh_post")
+
+[node name="PostNW" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, 1)
+mesh = SubResource("CylinderMesh_post")
+
+[node name="PostSE" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, -1)
+mesh = SubResource("CylinderMesh_post")
+
+[node name="PostSW" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, -1)
+mesh = SubResource("CylinderMesh_post")
+
+[node name="RailNorthLow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 1)
+mesh = SubResource("BoxMesh_rail_x")
+
+[node name="RailNorthHigh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 1)
+mesh = SubResource("BoxMesh_rail_x")
+
+[node name="RailSouthLow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, -1)
+mesh = SubResource("BoxMesh_rail_x")
+
+[node name="RailSouthHigh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -1)
+mesh = SubResource("BoxMesh_rail_x")
+
+[node name="RailEastLow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.35, 0)
+mesh = SubResource("BoxMesh_rail_z")
+
+[node name="RailEastHigh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.75, 0)
+mesh = SubResource("BoxMesh_rail_z")
+
+[node name="RailWestLow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.35, 0)
+mesh = SubResource("BoxMesh_rail_z")
+
+[node name="RailWestHigh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.75, 0)
+mesh = SubResource("BoxMesh_rail_z")

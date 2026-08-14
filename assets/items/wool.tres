@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/ItemData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "wool"
+DisplayName = "Wool"
+Description = "Soft fleece sheared from a tamed sheep"
+Type = 0
+MaxStack = 64
+HungerRestore = 0.0
+ThirstRestore = 0.0
+HealthRestore = 0.0
+RequiresCooking = false
+ToolPower = 1.0
+ToolDurability = 100.0
