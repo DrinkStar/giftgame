@@ -1,4 +1,4 @@
-// Original (Iter8) — no upstream port
+// Original (Iter8.5) — no upstream port
 namespace SeaAnomaly;
 
 using System;
@@ -16,10 +16,16 @@ using System.Collections.Generic;
 ///   Step definitions (id + optional condition) are injected at
 ///   construction. The default 6-step order is the T8.3 contract:
 ///   move → gather → drink → campfire → bed → combat.
+///
+///   Iter8.5 (T8.5.10/T8.5.11): the step count is now a constructor
+///   parameter, so chapter 2 (2 steps) and chapter 3 (1 step) forced
+///   tutorials use the same state machine. <see cref="TotalSteps"/> stays 6
+///   as the DEFAULT tutorial's step count (kept for TutorialStateTest);
+///   <see cref="StepCount"/> reports the actual length of any flow.
 /// </summary>
 public sealed class TutorialFlow
 {
-  /// <summary>The fixed number of forced tutorial steps (T8.3).</summary>
+  /// <summary>The step count of the default forced tutorial (T8.3).</summary>
   public const int TotalSteps = 6;
 
   /// <summary>
@@ -33,18 +39,33 @@ public sealed class TutorialFlow
   private bool _started;
 
   /// <summary>
-  ///   Creates the flow with exactly <see cref="TotalSteps"/> steps.
+  ///   Creates the default flow with exactly <see cref="TotalSteps"/> steps
+  ///   (the T8.3 chapter-1 tutorial). Equivalent to
+  ///   <c>new TutorialFlow(TotalSteps, ...)</c> — kept so existing 6-step
+  ///   constructions (TutorialStateTest) compile unchanged.
   /// </summary>
   /// <exception cref="ArgumentException">
   ///   Thrown when the step count differs from <see cref="TotalSteps"/> —
   ///   fail-fast instead of silently mis-sequencing the forced tutorial.
   /// </exception>
-  public TutorialFlow(params Step[] steps)
+  public TutorialFlow(params Step[] steps) : this(TotalSteps, steps) { }
+
+  /// <summary>
+  ///   Iter8.5: creates a flow with exactly <paramref name="totalSteps"/>
+  ///   steps. Chapters 2 and 3 pass their own counts (2 and 1).
+  /// </summary>
+  /// <param name="totalSteps">The number of steps this flow must contain.</param>
+  /// <param name="steps">The step definitions, in order.</param>
+  /// <exception cref="ArgumentException">
+  ///   Thrown when the step count differs from <paramref name="totalSteps"/>
+  ///   — fail-fast instead of silently mis-sequencing a forced tutorial.
+  /// </exception>
+  public TutorialFlow(int totalSteps, params Step[] steps)
   {
-    if (steps.Length != TotalSteps)
+    if (steps.Length != totalSteps)
     {
       throw new ArgumentException(
-        $"TutorialFlow requires exactly {TotalSteps} steps, got {steps.Length}.",
+        $"TutorialFlow requires exactly {totalSteps} steps, got {steps.Length}.",
         nameof(steps)
       );
     }
@@ -53,16 +74,23 @@ public sealed class TutorialFlow
   }
 
   /// <summary>
-  ///   Current step, 1-based: 0 = not started, 1..6 = active step, 7 =
-  ///   complete (see <see cref="IsComplete"/>).
+  ///   Current step, 1-based: 0 = not started, 1..N = active step, N+1 =
+  ///   complete (see <see cref="IsComplete"/>), where N is this flow's own
+  ///   step count.
   /// </summary>
   public int CurrentStep { get; private set; }
 
-  /// <summary>True once all six steps are done.</summary>
-  public bool IsComplete => CurrentStep > TotalSteps;
+  /// <summary>True once all of this flow's steps are done.</summary>
+  public bool IsComplete => CurrentStep > _steps.Length;
 
   /// <summary>The injected step definitions, in order.</summary>
   public IReadOnlyList<Step> Steps => _steps;
+
+  /// <summary>
+  ///   Iter8.5: the number of steps in THIS flow (the default is
+  ///   <see cref="TotalSteps"/>; chapter 2 = 2, chapter 3 = 1).
+  /// </summary>
+  public int StepCount => _steps.Length;
 
   /// <summary>
   ///   Begins the tutorial at step 1. A no-op when already started or
@@ -86,7 +114,7 @@ public sealed class TutorialFlow
   /// </summary>
   public bool TryAdvance()
   {
-    if (!_started || IsComplete || CurrentStep < 1 || CurrentStep > TotalSteps)
+    if (!_started || IsComplete || CurrentStep < 1 || CurrentStep > _steps.Length)
       return false;
 
     var condition = _steps[CurrentStep - 1].Condition;

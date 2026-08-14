@@ -3,9 +3,9 @@
   "created_at": "2026-08-13T00:00:00+08:00",
   "updated_at": "2026-08-15T00:00:00+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration8",
-  "git_branch": "dev/iteration8",
-  "last_stable_commit": "e5c2ec7d7e56e36ffa4e2aa0e8637a6e42cb93bd",
+  "current_iteration": "iteration85",
+  "git_branch": "dev/iteration85",
+  "last_stable_commit": "fca3d3a",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",

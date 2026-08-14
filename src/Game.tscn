@@ -70,6 +70,26 @@
 [ext_resource type="Script" path="res://src/world/ocean/WaterFollow.cs" id="68_waterfollow"]
 [ext_resource type="ArrayMesh" path="res://assets/water/clipmap_high.obj" id="69_clipmap"]
 [ext_resource type="Material" path="res://assets/water/mat_water.tres" id="70_watermat"]
+[ext_resource type="Resource" path="res://assets/recipes/cooked_fish.tres" id="71_recipe_cooked_fish"]
+[ext_resource type="Resource" path="res://assets/recipes/fish_soup.tres" id="72_recipe_fish_soup"]
+[ext_resource type="Resource" path="res://assets/recipes/vegetable_stew.tres" id="73_recipe_stew"]
+[ext_resource type="Resource" path="res://assets/recipes/mushroom_soup.tres" id="74_recipe_msoup"]
+[ext_resource type="Resource" path="res://assets/recipes/cornbread.tres" id="75_recipe_cornbread"]
+[ext_resource type="Resource" path="res://assets/recipes/fruit_salad.tres" id="76_recipe_salad"]
+[ext_resource type="Resource" path="res://assets/recipes/grilled_meat.tres" id="77_recipe_grilled"]
+[ext_resource type="Resource" path="res://assets/recipes/berry_juice.tres" id="78_recipe_juice"]
+[ext_resource type="Resource" path="res://assets/recipes/iron_spear.tres" id="79_recipe_ispear"]
+[ext_resource type="Resource" path="res://assets/recipes/iron_bow.tres" id="80_recipe_ibow"]
+[ext_resource type="Resource" path="res://assets/recipes/pickaxe.tres" id="81_recipe_pickaxe"]
+[ext_resource type="Resource" path="res://assets/recipes/sickle.tres" id="82_recipe_sickle"]
+[ext_resource type="Resource" path="res://assets/recipes/cloth_armor.tres" id="83_recipe_cloth"]
+[ext_resource type="Resource" path="res://assets/recipes/leather_armor.tres" id="84_recipe_leather"]
+[ext_resource type="Resource" path="res://assets/recipes/iron_armor.tres" id="85_recipe_iarmor"]
+[ext_resource type="Resource" path="res://assets/recipes/backpack.tres" id="86_recipe_backpack"]
+[ext_resource type="Resource" path="res://assets/recipes/salted_meat.tres" id="87_recipe_salted"]
+[ext_resource type="PackedScene" path="res://scenes/raft/raft.tscn" id="88_raft"]
+[ext_resource type="Script" path="res://src/world/island/IslandBuilder.cs" id="89_islandbuilder"]
+[ext_resource type="Script" path="res://src/ui/StorageUI.cs" id="90_storageui"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -189,7 +209,7 @@ StartingItems = Array[Dictionary]([{
 
 [node name="CraftingSystem" type="Node" parent="Player"]
 script = ExtResource("7_crafting")
-Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot"), ExtResource("27_recipe_flour"), ExtResource("28_recipe_bread")])
+Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot"), ExtResource("27_recipe_flour"), ExtResource("28_recipe_bread"), ExtResource("71_recipe_cooked_fish"), ExtResource("72_recipe_fish_soup"), ExtResource("73_recipe_stew"), ExtResource("74_recipe_msoup"), ExtResource("75_recipe_cornbread"), ExtResource("76_recipe_salad"), ExtResource("77_recipe_grilled"), ExtResource("78_recipe_juice"), ExtResource("79_recipe_ispear"), ExtResource("80_recipe_ibow"), ExtResource("81_recipe_pickaxe"), ExtResource("82_recipe_sickle"), ExtResource("83_recipe_cloth"), ExtResource("84_recipe_leather"), ExtResource("85_recipe_iarmor"), ExtResource("86_recipe_backpack"), ExtResource("87_recipe_salted")])
 
 [node name="WeaponSystem" type="Node" parent="Player"]
 script = ExtResource("29_weapon")
@@ -375,9 +395,19 @@ script = ExtResource("67_watermesh")
 script = ExtResource("68_waterfollow")
 Target = NodePath("../../Player")
 
+[node name="Raft" parent="." instance=ExtResource("88_raft")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 22)
+WaterMeshPath = NodePath("../Water")
+
+[node name="IslandBuilder" type="Node3D" parent="."]
+script = ExtResource("89_islandbuilder")
+
 [node name="CraftUI" parent="." node_paths=PackedStringArray("Crafting") instance=ExtResource("65_craftui")]
 Crafting = NodePath("../Player/CraftingSystem")
 
 [node name="TutorialUI" parent="." node_paths=PackedStringArray("Player", "Stats") instance=ExtResource("66_tutorial")]
 Player = NodePath("../Player")
 Stats = NodePath("../Player/PlayerStats")
+
+[node name="StorageUI" type="CanvasLayer" parent="."]
+script = ExtResource("90_storageui")
