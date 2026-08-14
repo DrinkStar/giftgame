@@ -25,8 +25,8 @@ public partial class Projectile : Area3D
 
   public override void _Ready()
   {
-    // Decision 4: World (1) | Enemies (8) = 257.
-    CollisionMask = 257u;
+    // Decision 4: World (1) | Enemies (128) = 129.
+    CollisionMask = 129u;
     Monitoring = true;
     BodyEntered += OnBodyEntered;
   }

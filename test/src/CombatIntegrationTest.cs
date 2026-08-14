@@ -87,8 +87,8 @@ public class CombatIntegrationTest : TestClass, IDisposable
   public void EnemySceneInstantiatesOnEnemiesLayer()
   {
     _enemy.ShouldNotBeNull();
-    // Decision 7: collision_layer=8 (Enemies), collision_mask=1 (World).
-    _enemy.CollisionLayer.ShouldBe(8u);
+    // Decision 7: collision_layer=128 (Enemies, editor layer_8), collision_mask=1 (World).
+    _enemy.CollisionLayer.ShouldBe(128u);
     _enemy.CollisionMask.ShouldBe(1u);
     _enemy.GetNodeOrNull<CollisionShape3D>("CollisionShape3D").ShouldNotBeNull();
     _enemy.GetNodeOrNull<MeshInstance3D>("Visual").ShouldNotBeNull();

@@ -43,7 +43,7 @@ public partial class WeaponSystem : Node
 
   #endregion Exports
 
-  private const uint EnemyCollisionMask = 8u;
+  private const uint EnemyCollisionMask = 128u;
 
   private Camera3D? _camera;
   private InventorySystem? _inventory;
