@@ -1,0 +1,114 @@
+[gd_scene load_steps=18 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/combat/enemy.tscn" id="1_enemy"]
+[ext_resource type="Resource" path="res://assets/enemies/shark_king.tres" id="2_sharkking"]
+[ext_resource type="Resource" path="res://assets/enemies/shark.tres" id="3_shark"]
+[ext_resource type="PackedScene" path="res://assets/models/enemies/shark_king/Shark.glb" id="4_sharkglb"]
+[ext_resource type="Script" path="res://src/player/PlayerController.cs" id="5_controller"]
+[ext_resource type="Script" path="res://src/player/PlayerStats.cs" id="6_stats"]
+[ext_resource type="Script" path="res://src/combat/BossPhaseController.cs" id="7_bossphase"]
+[ext_resource type="Script" path="res://src/world/buoyancy/FloatingBody.cs" id="8_floatingbody"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_storm"]
+sky_top_color = Color(0.05, 0.055, 0.09, 1)
+sky_horizon_color = Color(0.12, 0.13, 0.17, 1)
+ground_bottom_color = Color(0.03, 0.04, 0.06, 1)
+ground_horizon_color = Color(0.12, 0.13, 0.17, 1)
+
+[sub_resource type="Sky" id="Sky_storm"]
+sky_material = SubResource("ProceduralSkyMaterial_storm")
+
+[sub_resource type="Environment" id="Environment_storm"]
+background_mode = 2
+sky = SubResource("Sky_storm")
+ambient_light_source = 3
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_water"]
+albedo_color = Color(0.02, 0.06, 0.1, 1)
+roughness = 0.1
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_water"]
+material = SubResource("StandardMaterial3D_water")
+size = Vector2(200, 200)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_raft"]
+albedo_color = Color(0.45, 0.32, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_raft"]
+material = SubResource("StandardMaterial3D_raft")
+size = Vector3(3, 1, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_raft"]
+size = Vector3(3, 1, 3)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 0.5
+height = 2.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
+albedo_color = Color(0.85098, 0.627451, 0.4, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_player"]
+material = SubResource("StandardMaterial3D_player")
+radius = 0.5
+height = 2.0
+
+[node name="StormZone" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_storm")
+
+[node name="StormLight" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, -0.707107, 0, 0.707107, 0.707107, 0, 10, 0)
+light_energy = 0.6
+shadow_enabled = true
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_water")
+
+[node name="Raft" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 5)
+gravity_scale = 0.0
+script = ExtResource("8_floatingbody")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Raft"]
+mesh = SubResource("BoxMesh_raft")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Raft"]
+shape = SubResource("BoxShape3D_raft")
+
+[node name="Player" type="CharacterBody3D" parent="." node_paths=PackedStringArray("Stats")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 5)
+script = ExtResource("5_controller")
+Stats = NodePath("PlayerStats")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Player"]
+mesh = SubResource("CapsuleMesh_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="PlayerStats" type="Node" parent="Player"]
+script = ExtResource("6_stats")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.3420201, 0, 0.3420201, 0.9396926, 0, 8, 20)
+current = true
+
+[node name="SharkKing" parent="." instance=ExtResource("1_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 12)
+EnemyData = ExtResource("2_sharkking")
+Player = NodePath("../Player")
+ModelPath = NodePath("SharkModel")
+
+[node name="SharkModel" parent="SharkKing" instance=ExtResource("4_sharkglb")]
+
+[node name="BossPhaseController" type="Node" parent="SharkKing"]
+script = ExtResource("7_bossphase")
+BossId = "shark_king"
+MinionScene = ExtResource("1_enemy")
+MinionData = ExtResource("3_shark")
+PlayerPath = NodePath("../Player")
+MinionSpawnParentPath = NodePath("..")

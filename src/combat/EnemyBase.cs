@@ -1,6 +1,7 @@
 // Original (Iter6) — no upstream port
 namespace SeaAnomaly;
 
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
@@ -48,6 +49,15 @@ public partial class EnemyBase : CharacterBody3D
   /// <summary>SeaBeast aggro radius around the float target, in meters.</summary>
   [Export] public float FloatAggroRadius = 8f;
 
+  /// <summary>
+  ///   Optional path to a real model node (e.g. a GLB instance child) that
+  ///   replaces the default capsule Visual. When resolved, the capsule is
+  ///   hidden and the override becomes the tint/flash target. Used by
+  ///   storm_zone.tscn to mount the shark model on the boss without changing
+  ///   enemy.tscn; Game.tscn's capsule enemies leave it empty (Iter6.1).
+  /// </summary>
+  [Export] public NodePath ModelPath = new();
+
   #endregion Exports
 
   /// <summary>Slow applied to the player on a webbing hit (Iter6.1 todo 3).</summary>
@@ -64,6 +74,8 @@ public partial class EnemyBase : CharacterBody3D
   private StandardMaterial3D? _material;
   private Color _tintColor = new(0.8f, 0.8f, 0.8f);
   private Node3D? _floatTarget;
+  private MeshInstance3D? _modelVisual;
+  private BossPhaseController? _phaseController;
 
   private float _attackCooldown;
   private float _chargeCooldownRemaining;
@@ -84,6 +96,10 @@ public partial class EnemyBase : CharacterBody3D
     if (!FloatTargetPath.IsEmpty)
       _floatTarget = GetNodeOrNull<Node3D>(FloatTargetPath);
 
+    // Boss phase state machine (Iter6.1 todo 4): attached as a child named
+    // "BossPhaseController"; null for regular enemies (phase reads 0 → 1×).
+    _phaseController = GetNodeOrNull<BossPhaseController>("BossPhaseController");
+
     if (EnemyData != null)
       _health = new EnemyHealth(EnemyData.MaxHealth);
 
@@ -91,6 +107,7 @@ public partial class EnemyBase : CharacterBody3D
     // enemy always bobs on the same sine offset so tests stay reproducible.
     _hoverPhase = GetInstanceId() % 6283 / 6283f * Mathf.Tau;
 
+    ApplyModelOverride();
     ApplyScale();
     SetupMaterial();
   }
@@ -152,14 +169,18 @@ public partial class EnemyBase : CharacterBody3D
 
     if (canAttack && CombatLogic.ShouldAttack(dist, attackRange, _attackCooldown <= 0f))
     {
-      _player.GetNodeOrNull<PlayerStats>("PlayerStats")?.TakeDamage(EnemyData.Damage);
+      // Phase-3 boss rage boosts damage (1× for regular enemies).
+      var rage = CombatLogic.BossRage(BossPhase());
+      _player.GetNodeOrNull<PlayerStats>("PlayerStats")?
+        .TakeDamage(EnemyData.Damage * rage.DamageMultiplier);
 
       // Webbing hit: the spider slows the player for 2 s at 0.5× speed.
       if (behavior == EnemyBehavior.Webbing)
         _player.GetNodeOrNull<PlayerStats>("PlayerStats")
           ?.ApplySlow(WebbingSlowDuration, WebbingSlowFactor);
 
-      _attackCooldown = EnemyData.AttackCooldown;
+      _attackCooldown = EnemyData.AttackCooldown
+        * CombatLogic.BossRageCooldownMultiplier(BossPhase());
     }
   }
 
@@ -226,11 +247,13 @@ public partial class EnemyBase : CharacterBody3D
   ///   (Decision 7: wolf gray / boar brown / crab red / shark cyan /
   ///   shark_king dark-cyan / spider dark-gray / bat black / storm_beast
   ///   blue-gray / mutant purple). The duplicate is kept as the flash
-  ///   reference so the hit flash never leaks across instances.
+  ///   reference so the hit flash never leaks across instances. When a
+  ///   model override is mounted (<see cref="ModelPath"/>) it becomes the
+  ///   tint target instead of the capsule.
   /// </summary>
   private void SetupMaterial()
   {
-    var visual = GetNodeOrNull<MeshInstance3D>("Visual");
+    var visual = _modelVisual ?? GetNodeOrNull<MeshInstance3D>("Visual");
     if (visual == null)
       return;
 
@@ -241,6 +264,63 @@ public partial class EnemyBase : CharacterBody3D
 
     _tintColor = GetTint(EnemyData?.Id ?? "");
     _material.AlbedoColor = _tintColor;
+  }
+
+  /// <summary>
+  ///   Permanently overrides the tint color (BossPhaseController phase 3:
+  ///   dark red). The hit flash afterwards reverts to this color instead of
+  ///   the default tint.
+  /// </summary>
+  public void OverrideTint(Color color)
+  {
+    _tintColor = color;
+    if (_material != null)
+      _material.AlbedoColor = color;
+  }
+
+  /// <summary>
+  ///   Mounts the optional real-model override: hides the capsule Visual and
+  ///   makes the first MeshInstance3D under the resolved node the tint
+  ///   target. Missing/unresolvable overrides fall back to the capsule.
+  /// </summary>
+  private void ApplyModelOverride()
+  {
+    if (ModelPath.IsEmpty)
+      return;
+
+    var visual = FindMeshInstance(GetNodeOrNull<Node>(ModelPath));
+    if (visual == null)
+    {
+      GD.PushWarning(
+        $"EnemyBase: ModelPath '{ModelPath}' resolves to no MeshInstance3D; keeping capsule."
+      );
+      return;
+    }
+
+    GetNodeOrNull<MeshInstance3D>("Visual")?.SetVisible(false);
+    _modelVisual = visual;
+  }
+
+  /// <summary>Breadth-first search for the first MeshInstance3D under a node.</summary>
+  private static MeshInstance3D? FindMeshInstance(Node? root)
+  {
+    if (root == null)
+      return null;
+
+    var queue = new Queue<Node>();
+    queue.Enqueue(root);
+
+    while (queue.Count > 0)
+    {
+      var node = queue.Dequeue();
+      if (node is MeshInstance3D mesh)
+        return mesh;
+
+      foreach (var child in node.GetChildren())
+        queue.Enqueue(child);
+    }
+
+    return null;
   }
 
   private static Color GetTint(string id)
@@ -381,13 +461,22 @@ public partial class EnemyBase : CharacterBody3D
   }
 
   /// <summary>
-  ///   Extra speed multiplier from a mutant rage; other behaviors run at 1f
-  ///   (the boss rage hook lands with the BossPhaseController in Iter6.1).
+  ///   Extra speed multiplier from a mutant rage or a phase-3 boss rage
+  ///   (Iter6.1); other enemies run at 1f.
   /// </summary>
-  private float RageSpeedMultiplier() =>
-    EnemyData!.Behavior == EnemyBehavior.Mutant
-      ? CombatLogic.MutantRage(HealthRatio()).SpeedMultiplier
-      : 1f;
+  private float RageSpeedMultiplier()
+  {
+    if (EnemyData!.Behavior == EnemyBehavior.Mutant)
+      return CombatLogic.MutantRage(HealthRatio()).SpeedMultiplier;
+
+    return CombatLogic.BossRage(BossPhase()).SpeedMultiplier;
+  }
+
+  /// <summary>
+  ///   Boss phase read from the attached <see cref="BossPhaseController"/>
+  ///   child; 0 (no controller) maps to base multipliers.
+  /// </summary>
+  private int BossPhase() => _phaseController?.CurrentPhase ?? 0;
 
   /// <summary>
   ///   SeaBeast aggro (Iter6.1): pursue while the player is on the watched

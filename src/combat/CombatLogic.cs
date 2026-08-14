@@ -171,4 +171,61 @@ public static class CombatLogic
     baseRadius * MutantRage(hpRatio).RangeMultiplier;
 
   #endregion Iter6.1 enemy behaviors (todo 3)
+
+  #region Iter6.1 boss phases (todo 4)
+
+  /// <summary>Phase 2 (minion summons) starts at or below 60% hp.</summary>
+  public const float BossPhase2Threshold = 0.6f;
+
+  /// <summary>Phase 3 (rage) starts below 30% hp.</summary>
+  public const float BossPhase3Threshold = 0.3f;
+
+  public const float BossRageSpeedBoost = 1.8f;
+  public const float BossRageDamageBoost = 1.5f;
+
+  /// <summary>Phase 3 attack interval factor (0.6 = 40% shorter cooldown).</summary>
+  public const float BossRageCooldownFactor = 0.6f;
+
+  /// <summary>Speed/damage multipliers applied by a phase-3 boss rage.</summary>
+  public readonly struct BossRageFactors
+  {
+    public readonly float SpeedMultiplier;
+    public readonly float DamageMultiplier;
+
+    public BossRageFactors(float speedMultiplier, float damageMultiplier)
+    {
+      SpeedMultiplier = speedMultiplier;
+      DamageMultiplier = damageMultiplier;
+    }
+  }
+
+  /// <summary>
+  ///   Boss phase from the hp ratio: 1 above 60%, 2 between 30% and 60%
+  ///   (inclusive at the top), 3 below 30%.
+  /// </summary>
+  public static int BossPhase(float hpRatio) =>
+    hpRatio > BossPhase2Threshold ? 1 : hpRatio > BossPhase3Threshold ? 2 : 3;
+
+  /// <summary>
+  ///   True when the summon timer elapsed its interval AND fewer than
+  ///   <paramref name="max"/> minions are alive (todo 4 phase-2 spawning).
+  /// </summary>
+  public static bool ShouldSpawnMinion(
+    float elapsed, float interval, int alive, int max
+  ) => elapsed >= interval && alive < max;
+
+  /// <summary>
+  ///   Boss rage multipliers: speed ×1.8 and damage ×1.5 in phase 3, base 1f
+  ///   before that (phase 0 = no controller attached).
+  /// </summary>
+  public static BossRageFactors BossRage(int phase) =>
+    phase >= 3
+      ? new BossRageFactors(BossRageSpeedBoost, BossRageDamageBoost)
+      : new BossRageFactors(1f, 1f);
+
+  /// <summary>Phase 3 shortens the boss attack interval (0.6× cooldown).</summary>
+  public static float BossRageCooldownMultiplier(int phase) =>
+    phase >= 3 ? BossRageCooldownFactor : 1f;
+
+  #endregion Iter6.1 boss phases (todo 4)
 }

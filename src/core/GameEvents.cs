@@ -177,6 +177,14 @@ public static class GameEvents
   /// </summary>
   public static event Action<string>? BossDefeated;
 
+  /// <summary>
+  ///   A boss transitioned between phases, carrying the boss id and the new
+  ///   phase (1/2/3). Raised exactly once per transition by
+  ///   <see cref="Combat.BossPhaseController"/> (Iter6.1 todo 4). Raise-only:
+  ///   the event exists so future audio/UI systems can subscribe.
+  /// </summary>
+  public static event Action<string, int>? BossPhaseChanged;
+
   #endregion Combat
 
   #region Raise helpers
@@ -271,6 +279,9 @@ public static class GameEvents
 
   public static void RaiseBossDefeated(string enemyId) =>
     BossDefeated?.Invoke(enemyId);
+
+  public static void RaiseBossPhaseChanged(string bossId, int phase) =>
+    BossPhaseChanged?.Invoke(bossId, phase);
 
   #endregion Raise helpers
 }
