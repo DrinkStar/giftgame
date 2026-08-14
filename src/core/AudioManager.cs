@@ -1,0 +1,116 @@
+// Original (Iter6.1) — no upstream port
+namespace SeaAnomaly;
+
+using Godot;
+using Godot.Collections;
+
+/// <summary>
+///   Global-ish audio playback node (Iter6.1 plan Decision 2 — "autoload 候选";
+///   intentionally NOT registered as an autoload yet, so GameManager/Game.tscn
+///   can instantiate it as a plain child node later).
+///   - <see cref="PlayBgm"/>: switches the single BGM player to the stream and
+///     loops it (immediate switch, no cross-fade — keep v1 simple).
+///   - <see cref="PlaySfx"/>: one-shot playback through a small pool of
+///     AudioStreamPlayer children, round-robin.
+///   - Safe degradation: missing/unknown ids only push a warning, never crash.
+///   All streams live in [Export] dictionaries so the editor (or a later
+///   scene wiring task) can fill them in assets/audio/.
+/// </summary>
+public partial class AudioManager : Node
+{
+  /// <summary>BGM streams keyed by id (e.g. "island", "night", "boss").</summary>
+  [Export]
+  public Dictionary<string, AudioStream> Bgm { get; set; } = new();
+
+  /// <summary>One-shot SFX streams keyed by id (e.g. "melee_swing", "ui_click").</summary>
+  [Export]
+  public Dictionary<string, AudioStream> Sfx { get; set; } = new();
+
+  /// <summary>Number of pooled one-shot players for SFX (round-robin).</summary>
+  [Export] public int SfxPoolSize = 8;
+
+  private const string BgmPlayerName = "BgmPlayer";
+  private const string SfxPlayerPrefix = "SfxPlayer";
+
+  private int _nextSfxPlayer;
+
+  public override void _Ready()
+  {
+    // BGM: one dedicated looping player.
+    if (GetNodeOrNull<AudioStreamPlayer>(BgmPlayerName) is null)
+    {
+      AddChild(new AudioStreamPlayer { Name = BgmPlayerName });
+    }
+
+    // SFX: a pool of one-shot players so rapid hits don't cut each other off.
+    for (var i = 0; i < SfxPoolSize; i++)
+    {
+      var name = $"{SfxPlayerPrefix}{i}";
+      if (GetNodeOrNull<AudioStreamPlayer>(name) is null)
+      {
+        AddChild(new AudioStreamPlayer { Name = name });
+      }
+    }
+
+    _nextSfxPlayer = 0;
+  }
+
+  /// <summary>
+  ///   Switches the BGM player to <paramref name="id"/> and starts looping.
+  ///   Unknown ids (or a null stream) only push a warning.
+  /// </summary>
+  public void PlayBgm(string id)
+  {
+    if (Bgm is null || !Bgm.TryGetValue(id, out var stream) || stream is null)
+    {
+      GD.PushWarning($"AudioManager.PlayBgm: unknown or unset BGM id '{id}'.");
+      return;
+    }
+
+    var player = GetNode<AudioStreamPlayer>(BgmPlayerName);
+    SetLoop(stream, loop: true);
+    player.Stream = stream;
+    player.Play();
+  }
+
+  /// <summary>
+  ///   Godot 4 keeps the loop flag on the stream (not the player), so set it
+  ///   per concrete stream type. Unknown stream types simply stay non-looping.
+  /// </summary>
+  private static void SetLoop(AudioStream stream, bool loop)
+  {
+    switch (stream)
+    {
+      case AudioStreamOggVorbis ogg:
+        ogg.Loop = loop;
+        break;
+      case AudioStreamMP3 mp3:
+        mp3.Loop = loop;
+        break;
+      case AudioStreamWav wav:
+        wav.LoopMode = loop
+          ? AudioStreamWav.LoopModeEnum.Forward
+          : AudioStreamWav.LoopModeEnum.Disabled;
+        break;
+    }
+  }
+
+  /// <summary>
+  ///   Plays a one-shot SFX through the next free pool player.
+  ///   Unknown ids (or a null stream) only push a warning.
+  /// </summary>
+  public void PlaySfx(string id)
+  {
+    if (Sfx is null || !Sfx.TryGetValue(id, out var stream) || stream is null)
+    {
+      GD.PushWarning($"AudioManager.PlaySfx: unknown or unset SFX id '{id}'.");
+      return;
+    }
+
+    var player = GetNode<AudioStreamPlayer>($"{SfxPlayerPrefix}{_nextSfxPlayer}");
+    _nextSfxPlayer = (_nextSfxPlayer + 1) % SfxPoolSize;
+
+    player.Stream = stream;
+    player.Play();
+  }
+}
