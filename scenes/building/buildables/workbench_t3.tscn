@@ -1,14 +1,14 @@
 [gd_scene load_steps=4 format=3]
 
-[sub_resource type="BoxMesh" id="BoxMesh_workbench_t3"]
-size = Vector3(1.4, 1, 0.8)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_workbench_t3"]
-albedo_color = Color(0.35, 0.32, 0.3, 1)
+[ext_resource type="Script" path="res://src/building/KenneyBuildingVisual.cs" id="1_visual"]
+[ext_resource type="PackedScene" path="res://assets/models/buildings/kenney/kenny_sifi.glb" id="2_glb"]
+[ext_resource type="Texture2D" path="res://assets/models/buildings/kenney/kenny_sifi_colormap.png" id="3_colormap"]
 
 [node name="WorkbenchT3" type="Node3D"]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-mesh = SubResource("BoxMesh_workbench_t3")
-surface_material_override/0 = SubResource("StandardMaterial3D_workbench_t3")
+[node name="Visual" type="Node3D" parent="."]
+script = ExtResource("1_visual")
+Source = ExtResource("2_glb")
+MeshName = "structure-panel-big"
+Colormap = ExtResource("3_colormap")
+MeshScale = 1.4

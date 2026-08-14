@@ -94,3 +94,16 @@ Channel notes (Iter8p):
 - Poly Pizza: the model page embeds the direct file link `https://static.poly.pizza/<uuid>.glb` (CC0 assets only, license re-verified per page); the search API requires an API key, so pages were located via web search.
 - game-icons.net: `/icons/<fg>/transparent/1x1/<author>/<name>.png` renders the white-on-transparent variant (the `000000` background variant is opaque black, rejected).
 - freesound.org: apiv2 now requires an API token; sound pages expose `https://cdn.freesound.org/previews/<id>/<id>_<uid>-hq.ogg` public hq previews (direct, no account) — used for eat_drink. All other SFX came from the iter6.1-proven CDDA-Soundpacks CC0 mirror, per-file CC0 verified in credits.md.
+
+## Iter9 art (T9.1 building kit reuse)
+
+All assets downloaded 2026-08-15. Every asset below has **status ok**.
+
+### Models — Kenney building kit (CC0, reused from godot-refs, no download)
+
+| Asset | File | Source URL | License | Status |
+|---|---|---|---|---|
+| sifi building kit (13 pieces used) | `models/buildings/kenney/kenny_sifi.glb` + `kenny_sifi_colormap.png` | Kenney "Sci-fi" kit, vendored inside godot-refs/MarkoDM-GodotInGameBuildingSystem/BuildingSystem/assets (itself from https://kenney.nl/assets) | CC0 1.0 (Kenney) | ok (13 buildings extract named meshes: table/structure-panel/structure-panel-big/rail/computer/table-display-planet) |
+| survival building kit (2 pieces used) | `models/buildings/kenney/kenny_survival.glb` + `kenny_survival_colormap.png` | Kenney "Survival" kit (same origin as above) | CC0 1.0 (Kenney) | ok (campfire-pit for cooking_stove/furnace) |
+
+Building visual wiring: `src/building/KenneyBuildingVisual.cs` extracts a named mesh from the GLB at runtime; 13 buildable scenes (storage_box/workbench/workbench_t2/workbench_t3/cooking_stove/drying_rack/water_purifier/furnace/loom/research_table/lighthouse/trap/beehive) mount it. Colormap material rebuilt in code (the glb's original material path points into godot-refs).
