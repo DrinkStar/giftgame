@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "SeaAnomaly Runtime Architecture",
+    "subtitle": "Godot 4.7 C# product scene vs ocean lab · Iter 7 wiring",
+    "output": "seaanomaly-architecture.html",
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "boot-path",
+        "label": "Boot to player",
+        "focus": ["main", "game", "manager", "player"],
+        "note": "Main chooses tests or Game.tscn; GameManager wires the player cluster."
+      },
+      {
+        "id": "inventory-hub",
+        "label": "Inventory hub",
+        "focus": ["player", "inventory", "building", "farming", "combat"],
+        "note": "InventorySystem is the highest fan-in hub for cost, crops, livestock, and ammo."
+      },
+      {
+        "id": "event-bus",
+        "label": "Event bus",
+        "focus": ["events", "manager", "hud", "quest", "combat"],
+        "note": "Static GameEvents decouples systems; QuestService is the Iter 7 subscriber."
+      }
+    ]
+  },
+  "layout": {
+    "mode": "grid",
+    "cols": 5,
+    "origin": [40, 90],
+    "gapX": 36,
+    "gapY": 72,
+    "cellW": 140,
+    "cellH": 62
+  },
+  "components": [
+    { "id": "main", "type": "frontend", "label": "Main", "sublabel": "Main.tscn entry", "row": 0, "col": 0, "tag": "tests or scene" },
+    { "id": "game", "type": "backend", "label": "Game.tscn", "sublabel": "product root", "row": 0, "col": 1, "tag": "empty Game.cs" },
+    { "id": "manager", "type": "backend", "label": "GameManager", "sublabel": "scene wiring", "row": 0, "col": 2 },
+    { "id": "events", "type": "messagebus", "label": "GameEvents", "sublabel": "static C# bus", "row": 0, "col": 3, "tag": "Decision 13" },
+    { "id": "hud", "type": "frontend", "label": "HUD", "sublabel": "stats + prompts", "row": 0, "col": 4 },
+    { "id": "player", "type": "frontend", "label": "Player", "sublabel": "controller cluster", "row": 1, "col": 1 },
+    { "id": "inventory", "type": "database", "label": "Inventory", "sublabel": "21 callers", "row": 1, "col": 2, "tag": "hub" },
+    { "id": "combat", "type": "backend", "label": "Combat", "sublabel": "weapons + enemies", "row": 1, "col": 3 },
+    { "id": "quest", "type": "backend", "label": "QuestService", "sublabel": "story point IDs", "row": 1, "col": 4, "tag": "Iter 7" },
+    { "id": "ocean", "type": "external", "label": "Ocean lab", "sublabel": "ocean_test.tscn", "row": 2, "col": 0, "tag": "Iter 8.5 merge" },
+    { "id": "building", "type": "backend", "label": "Building", "sublabel": "grid + JSON save", "row": 2, "col": 1 },
+    { "id": "farming", "type": "backend", "label": "Farming", "sublabel": "crops + livestock", "row": 2, "col": 2 }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Product scene  src/Game.tscn", "wraps": ["game", "manager", "hud", "player", "inventory", "quest", "building", "farming", "combat"] }
+  ],
+  "connections": [
+    { "id": "boot", "from": "main", "to": "game", "label": "ChangeScene", "variant": "emphasis", "labelDy": -24 },
+    { "id": "wire", "from": "game", "to": "manager" },
+    { "id": "player-wire", "from": "manager", "to": "player", "variant": "emphasis" },
+    { "id": "player-inv", "from": "player", "to": "inventory" },
+    { "id": "build-cost", "from": "inventory", "to": "building", "fromSide": "bottom", "toSide": "top" },
+    { "id": "farm-inv", "from": "inventory", "to": "farming", "fromSide": "bottom", "toSide": "top" },
+    { "id": "ammo", "from": "inventory", "to": "combat" },
+    { "id": "died", "from": "player", "to": "events", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "revive", "from": "events", "to": "manager", "label": "respawn", "variant": "security" },
+    { "id": "hud-bus", "from": "events", "to": "hud", "variant": "dashed" },
+    { "id": "kill-bus", "from": "combat", "to": "events", "fromSide": "top", "toSide": "bottom" },
+    { "id": "quest-bus", "from": "events", "to": "quest", "variant": "emphasis", "fromSide": "right", "toSide": "top" },
+    { "id": "ocean-dash", "from": "game", "to": "ocean", "label": "not merged", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 54 }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Wiring hub",
+      "items": [
+        "GameManager exports DayNight, Weather, Player, HUD, BuildingSystem",
+        "It is not the event host — GameEvents is static"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Logic split",
+      "items": [
+        "Godot Nodes own I/O; pure *Logic classes own math",
+        ".tres resources drive items, crops, enemies, recipes"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Death contract",
+      "items": [
+        "PlayerDied is the revive hook",
+        "GameOver is reserved for a true ending"
+      ]
+    }
+  ]
+}

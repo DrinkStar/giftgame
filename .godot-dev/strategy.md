@@ -1,17 +1,23 @@
 # SeaAnomaly（海域异变）— 代码初步集成方案
 
 > 生成日期：2026-08-13 ｜ 依据：`游戏设计-定稿.md` + `godot-refs/集成清单.md` + 骨架实测
-> 状态：Phase 1/2 产出，**待用户审批后进入 Phase 3 执行**
+> 更新：2026-08-14 ｜ Iter 6 verified 后只读审查，按 P0/P1/P2 补路线图与缺口清单
+> 更新：2026-08-14 ｜ Grilling 代码审查结论（Q1 允许改路线图；**不重排**，冻结死亡/场景契约）→ `.godot-dev/iter6-code-review.md`
+> 状态：Phase 3 进行中（`phase3_iteration6_verified`，GoDotTest Passed 135）
 
-## 0. 当前状态（骨架已验证）
+## 0. 当前状态（Iter 0–6 已验证）
 
 | 验证项 | 结果 |
 |---|---|
 | 工程骨架 | ✓ chickensoft 模板，重命名 SeaAnomaly（Godot 4.7.1 .NET + net8.0 + Forward Plus） |
+| 已落地系统 | ✓ 玩家/相机、海洋+浮力、生存三指标、库存合成、网格建造、种植驯养、战斗框架 |
 | 编译 | ✓ `dotnet build` 0 错误 |
 | 冒烟测试 | ✓ `godot --headless --path . --quit-after 5` exit 0 |
-| 单元测试 | ✓ GoDotTest 1/1 通过（headless 0.7s） |
-| Git | ✓ main（骨架）+ dev/skeleton 分支 |
+| 单元测试 | ✓ GoDotTest Passed 135 Failed 0 |
+| Git | ✓ `dev/iteration6`，checkpoint `phase3_iteration6_verified` |
+| 明确未做 | 任务/`src/quest/`、GDSave、教程、`IslandGenerator`、世界采集、进食喝水、软惩罚复活 |
+
+**Grilling 2026-08-14（不重排 Iter 7）**：`PlayerDied` ≠ `GameOver`；产品场景=`src/Game.tscn`；吃喝采集不提前。结论：`.godot-dev/iter6-code-review.md`。
 
 **关键发现（已验证）**：Godot 4.7 下 GoDotTest 调用**不能用 `--` 分隔符**，参数直接跟在 godot 选项后：
 ```
@@ -44,7 +50,7 @@ godot --headless --path . -- --run-tests ...             # ✗ 测试静默不�
 | 8 | 存档 | dxdesjardins-GDSave | 复制 .cs 进工程 | C#/MIT | 低 |
 | 9 | 程序化群岛世界 | SurvivalIsland ForestGenerator 思路 | 自写（A1 投放机制） | — | 中 |
 
-*\*视角为待决项：定稿未明确，推荐第三人称（弓/矛战斗 + 女性主角外观展示），见 §7。*
+\*视角已决为第三人称（Iter 1）。矩阵 1–6 已落地；#7→Iter 7，#8→Iter 8，#9→Iter 8.5（见 §5 / §9）。*
 
 ## 3. 目录架构（目标结构）
 
@@ -64,7 +70,9 @@ game/
 │   ├── farming/                     # CropPlot、CropData、AnimalPen(驯养)
 │   ├── combat/                      # WeaponBase、Spear、Bow、EnemyBase、SharkKing(Boss)
 │   ├── quest/                       # 引导者事件流 + DotnetQuestSystem 桥接
+│   ├── progression/                 # 预留：ITalentTree / ISkill / ProgressionService（空实现）
 │   └── ui/                          # HUD、InventoryUI、CraftUI、QuestUI、TutorialUI
+├── assets/progression/              # 预留：talents/*.tres、skills/*.tres（首版可空）
 ├── test/src/                        # 每模块对应测试（GoDotTest）
 └── scenes/                          # 场景文件（或与脚本同目录，随 chickensoft 惯例）
 ```
@@ -76,24 +84,33 @@ game/
 - 世界事件：`OnDayNightChanged / OnWeatherChanged / OnTimeTick`
 - 库存事件：`OnInventoryChanged / OnItemCrafted`
 - 剧情事件：`OnQuestStarted / OnQuestProgress / OnQuestCompleted / OnStoryPointReached`
+- 成长预留：`TalentUnlocked(id)` / `SkillActivated(id)`（raise-only；首版无订阅者）
 各系统只依赖事件，不互相持有引用——这是三章剧情投放（A1 机制）与教程渐进教学的技术基础。
 
 ## 5. 迭代路线图（每迭代 = 计划→实现→验证→提交）
 
+审查锁定顺序：Iter 6 → Iter 7（T7.0 复活槽 + 任务 ID）∥ **R1 成长接口预留** → 8p-game（喝/采/跑尸组件/床）∥ 8p-art（最小可视包）→ Iter 8（教程硬等 8p-game）→ Iter 8.5（群岛绑定剧情点 + 击杀掉落切地面）→ Iter 9。
+
 | 迭代 | 内容 | 依赖 | 产出 | 风险 |
 |---|---|---|---|---|
 | Iter 0 | 骨架 ✅ | — | 已验证 | 已消除 |
-| **Iter 1** | 3D 玩家控制器 + 第三人称相机 + 基础测试场景 | GameDemo | 可跑动的 3D 角色 | 低 |
-| **Iter 2** | 海洋（2Retr0 shader 移植）+ 简单岛屿 + 浮力 | Iter 1 | 可航行的海面 | 中 |
-| **Iter 3** | 生存核心：三指标/库存/合成/昼夜/天气 | Iter 1 | 完整生存循环 | 中 |
-| **Iter 4** | 网格建造（MarkoDM 移植）+ 建造存档 | Iter 3 | 可放置建筑 | 中 |
-| **Iter 5** | 种植 6 作物 + 产出型驯养 | Iter 3/4 | 食物闭环 | 低 |
-| **Iter 6** | 战斗：矛/弓 + 8 敌人 + 鲨鱼王 Boss | Iter 1/3 | 可战斗 | 高 |
-| **Iter 7** | 任务系统 + 引导者 + 三章剧情骨架 | Iter 3-6 | 主线可推进 | 中 |
-| **Iter 8** | 教程（15 分钟强制段）+ GDSave 存档整合 | 全部 | 可玩闭环 | 中 |
-| **Iter 9** | 性能优化 + 导出 + 打磨 | 全部 | 可发布 | 低 |
+| **Iter 1** | 3D 玩家控制器 + 第三人称相机 + 基础测试场景 ✅ | GameDemo | 可跑动的 3D 角色 | 低 |
+| **Iter 2** | 海洋（2Retr0 shader 移植）+ 简单岛屿 + 浮力 ✅ | Iter 1 | 可航行的海面（在 ocean_test） | 中 |
+| **Iter 3** | 生存核心：三指标/库存/合成/昼夜/天气 ✅ | Iter 1 | 生存数值+HUD（进食喝水未接线，见 P0.3） | 中 |
+| **Iter 4** | 网格建造（MarkoDM 移植）+ 建造存档 ✅ | Iter 3 | 可放置建筑（仅建筑 JSON） | 中 |
+| **Iter 5** | 种植 6 作物 + 产出型驯养 ✅ | Iter 3/4 | 食物闭环（状态不持久化） | 低 |
+| **Iter 6** | 战斗：矛/弓 + 8 敌人数据 + 鲨鱼王 Boss 数据 ✅ | Iter 1/3 | 可战斗（4 敌人行为占位） | 高 |
+| **Iter 7** | 最小复活槽（T7.0）+ 任务/引导者/三章骨架（剧情点 ID，无坐标） | Iter 3-6 | 死了能爬起来；主线可订阅；不做跑尸/存档/采集 | 中 |
+| **R1** | 天赋树/技能**接口预留**（空实现，无 UI） | Iter 6 | 战斗/生存可查询修饰符；首版倍率恒 1 | 低 |
+| **8p-game** | 喝水/采集/通用地面掉落/床改复活槽 | Iter 7 | 教程 6 项玩法可走通 | 中 |
+| **8p-art** | 最小可视包（可与 8p-game 并行） | Iter 7 | 教程可辨认；**不硬挡** T8.3 | 低 |
+| **Iter 8** | 教程（15 分钟强制段）+ GDSave 全局存档 | 8p-game | 可玩闭环；作物/驯养/库存/三指标进档 | 中 |
+| **Iter 8.5** | P1 内容补全：群岛生成、木筏升级、剩余建筑/工具/敌人特化 | Iter 8 | 定稿玩法广度达标 | 高 |
+| **Iter 9** | 完整模型/图标/配乐替换 + 性能优化 + 导出 | 全部 | 可发布观感 | 低 |
 
-**依赖关系**：Iter 2、3、6 可并行（不同分支）；Iter 4 依赖 3（合成产出建材）；Iter 7 依赖 3-6（任务目标引用的系统）。
+**依赖关系**：Iter 7 先 T7.0 再接任务。R1 可与 Iter 7 / 8p-art 并行，**不挡教程**。教程 **硬等 8p-game**，不硬等 8p-art / R1。群岛按剧情点 ID 投放在 Iter 8.5；击杀掉落改走地面组件也在 8.5。完整天赋加点不做进首版。
+
+**表现资产两刀（审查已锁）**：Iter 7 继续几何体占位；Iter 8 前补最小可视包；Iter 9 完整替换。不新开独立美术迭代插在 Iter 7 前。
 
 ## 6. 首批迭代详细任务清单（Phase 3 直接可执行）
 
@@ -123,11 +140,62 @@ game/
 | T3.5 | 库存 + 合成（木/石/铁三阶） | `src/inventory/*` | T3.1 | 单测（配方） |
 | T3.6 | HUD 基础显示 | `src/ui/HUD.cs` | T3.2-3.5 | 场景运行 |
 
-> Iter 4-8 的逐任务清单在各迭代开始前按本格式产出（Phase 2 细化）。
+> Iter 4-6 已在各 `.omo/plans/sea-anomaly-iterN-*.md` 落地。以下为 Iter 7 起审查补入的任务清单（执行前仍按该格式出正式计划）。
+
+### Iter 7：最小复活 + 任务骨架（世界继续占位）
+| ID | 任务 | 文件 | 依赖 | 验证 |
+|---|---|---|---|---|
+| T7.0 | 最小复活：Game.tscn 接线 `PlayerSpawnPoint`；**当前复活点槽**（初始=该节点，床以后可改）；死亡停输入；传送当前槽；满血、体力满、饿渴安全线默认 30；**不** `RaiseGameOver`；不掉包 | `GameManager`、`PlayerController`、`PlayerStats`、`Game.tscn` | P0.1 最小集 | 单测：死一次→活着、不发 GameOver、饿渴≥30；槽可被测试替换 |
+| T7.1 | 接入 DotnetQuestSystem + `src/quest/` 桥接 | `src/core/QuestService.cs`、`src/quest/` | T7.0、Iter 3 事件总线 | dotnet build |
+| T7.2 | GameEvents 补 Quest 事件（Started/Progress/Completed/StoryPointReached） | `src/core/GameEvents.cs` | T7.1 | 单测退订 |
+| T7.3 | 引导者旁白流（只闻其声，无 NPC）订阅现有 `EnemyDied`/`CropHarvested`/`BossDefeated` | `src/quest/` | T7.2 | 场景运行 |
+| T7.4 | 三章任务数据：只引用剧情点 ID（如 `ch1.radio` / `ch2.ruin` / `ch3.shark_king`），完成条件走事件；**不写世界坐标** | `assets/quests/` | T7.1 | 单测：按 ID 加载；无 Vector3 |
+| T7.OUT | **禁止死亡=任务失败**；不做跑尸掉包、GDSave、采集、模型、合海、天赋 UI | — | — | 范围保真 |
+
+### R1：天赋树 / 技能接口预留（可与 Iter 7、8p-art 并行，不挡教程）
+
+首版**不开**加点 UI、技能栏、等级、经验。只留契约，默认空实现（倍率恒 1）。完整树留续作/首版后，见定稿 §11。
+
+| ID | 任务 | 文件 | 依赖 | 验证 |
+|---|---|---|---|---|
+| R1.1 | 数据蓝图：`TalentData`（Id/DisplayName/Requires[]/StatModifiers[]）、`SkillData`（Id/StaminaCost/CooldownSeconds/EffectId） | `src/progression/*.cs`、`assets/progression/`（可空目录） | 无 | 可 `GD.Load`；无 UI 资源也可 |
+| R1.2 | 接口：`IModifierSource.GetMultiplier(statId)→float`；`ITalentTree`（`IsUnlocked`/`Unlock`/`AllIds`）；`ISkill`（`CanActivate(SkillContext)`/`Activate`）；`ISkillHost.TryActivate(skillId)`；`SkillContext`（Player/Target/SelectedItem） | `src/progression/` | R1.1 | 单测：Null 实现 Unlock 不抛、倍率=1、TryActivate=false |
+| R1.3 | `ProgressionService`（Node）：持有 `ITalentTree`+`ISkillHost`，默认 `NullTalentTree`/`NullSkillHost`；对外 `GetMultiplier` | `src/progression/ProgressionService.cs` | R1.2 | 未接线时等同恒 1，不崩 |
+| R1.4 | GameEvents raise-only：`TalentUnlocked(string)`、`SkillActivated(string)` | `src/core/GameEvents.cs` | R1.2 | 单测退订；零订阅合法 |
+| R1.5 | 调用点只读接口（不改战斗规则）：近战/投掷/弓伤害、体力消耗乘 `GetMultiplier("melee_damage"|"throw_damage"|"ranged_damage"|"stamina_cost")`；服务未接线则跳过（×1） | `WeaponSystem`、`PlayerStats`/`PlayerController` | R1.3 | 现有 Combat 测试仍全绿；注入假树倍率=2 时伤害翻倍 |
+| R1.OUT | 无天赋 UI、无技能热键、无 XP/等级、不填真实天赋节点、不改敌人 AI | — | — | 范围保真 |
+
+约定 `statId`（接口稳定，首版全部走默认 1）：`melee_damage`、`throw_damage`、`ranged_damage`、`stamina_cost`、`hunger_rate`、`thirst_rate`、`move_speed`、`max_health`。
+
+### 8p-game：教程玩法债（硬挡 T8.3）
+| ID | 任务 | 文件 | 依赖 | 验证 |
+|---|---|---|---|---|
+| T8p.1 | 手持 Food/Drink 使用 → `Eat`/`Drink` 并消耗 1 | `src/player/` 或 HUD 热键 | P0.3 | 单测+场景 |
+| T8p.2 | 最少一种世界采集物（木或椰子）走 `IInteractable` | `src/world/` 或 `src/player/` | P0.3 | 交互射线命中 |
+| T8p.3 | 通用地面掉落组件（场景+拾取）。死亡掉部分背包走它。**击杀仍进背包**，改期 Iter 8.5 | `src/world/` 或 `src/inventory/` | T7.0 | 单测：死→地上有物→捡回；不改 EnemyBase |
+| T8p.4 | 床：跳过夜晚 + 把 T7.0 复活点槽改到该床（教程第 5 项） | `assets/buildables/`、`src/building/` | T7.0 槽 | 造床后死亡落到床；F9 后床仍在 |
+
+### 8p-art：最小可视包（与 8p-game 并行，不硬挡教程）
+| ID | 任务 | 文件 | 依赖 | 验证 |
+|---|---|---|---|---|
+| T8p.5 | 女主角/海蟹/野猪/篝火模型 + 7 个物品图标 + 5 个短音效 | `assets/`，渠道见 §9 P2 | 定稿 §13.5 | 帧非胶囊；state.json 记许可。无资产时 HUD 仍可用 DisplayName |
+
+### Iter 8：教程 + GDSave
+| ID | 任务 | 文件 | 依赖 | 验证 |
+|---|---|---|---|---|
+| T8.1 | 复制 GDSave，`SaveService` 覆盖库存/三指标/昼夜/天气；DTO **预留** `UnlockedTalentIds: []`（可空，不读树） | `src/core/SaveService.cs` | P0.2 | 读档还原；缺字段不崩 |
+| T8.2 | 农田 `_crop/_elapsed/_ready` 与驯养 `_state/_produceElapsed` 进档 | `src/farming/`、Save DTO | T8.1 | 种下→存→读仍在 |
+| T8.3 | 15 分钟强制教程 6 项：移动、采集、喝水、造篝火、造床、基础战斗 | `src/ui/TutorialUI` + 任务 | **8p-game**、T7.0 复活槽 | 出生点/床复活可用；无模型也可跑 |
+
+### Iter 8.5：P1 内容补全（详见 §9 P1）
+群岛生成 + **按剧情点 ID 投放**（绑定 T7.4）、木筏桨/帆/锚、剩余功能建筑、镐/镰/鱼竿、铁级矛弓、护甲三档、4 敌人行为特化、料理扩到 12+、熔炉改接铁锭、**击杀掉落改走 T8p.3 地面组件**。不塞进 Iter 7。
+
+### Iter 9：完整表现 + 打磨
+9 敌人模型、15 建筑、主角三档换装、四群系环境、其余物品图标、配乐；性能与导出。NC/ND 商用前替换。
 
 ## 7. 待决问题（需要用户确认）
 
-1. **视角**：第三人称（推荐，弓/矛战斗 + 女性主角外观展示 + GameDemo 可参考）vs 第一人称（SurvivalIsland 可直接参考）？
+1. **视角**：**已决（Iter 1）**——第三人称（GameDemo 移植，`src/player/PlayerCamera.cs`）。
 2. **SurvivalIsland 授权**：**已决（2026-08-13）**——直接代码级移植，用户决策 2026-08-13（自用非商业化，不申请授权；原无许可仓库，风险已告知并接受；若未来商业化须先取得作者授权）。
 3. **场景组织惯例**：chickensoft 推荐"场景与脚本同目录同名"（利于 VSCode 调试配置）。方案默认采用。
 4. **渲染目标**：Forward Plus 已定，但低端机回退（gl_compatibility）是否要做首版？（海洋 shader 依赖 Forward+，回退即无海——默认首版不做回退。）
@@ -137,3 +205,91 @@ game/
 - 批准本方案 → 进入 Phase 3，按 Iter 1 任务清单执行（每个迭代完成后提交 Git + 更新 state.json + 汇报）。
 - 需要调整 → 指出修改点，我更新方案后重新提交。
 - 视角/授权等 §7 问题请一并表态。
+- Iter 6 之后：7（T7.0→任务 ID）∥ R1（成长接口）→ 8p-game ∥ 8p-art → 8（硬等 8p-game）→ 8.5 → 9。
+- **成长预留**：首版装备成长不变；R1 只做 `ITalentTree`/`ISkill`/修饰符查询 + Null 实现。完整天赋树不做进首版（定稿 §11）。
+- **Grilling 2026-08-14 再审已锁**：① T7.0=可替换复活点槽（初始出生点，床改槽）；② T8p.3=通用地面掉落，击杀仍进包至 8.5；③ 教程不硬等可视包；④ T7.4 只用剧情点 ID。产品场景=`src/Game.tscn`。
+
+## 9. 缺口清单（2026-08-14 Iter6 后只读审查）
+
+对照 `游戏设计-定稿.md`。P0 挡 Iter 8 教程；P1 首版要有但未排期（进 Iter 8.5）；P2 按已锁两刀补资产。证据路径相对 `game/`。
+
+### P0 系统骨架（下一迭代必须面对）
+
+| ID | 缺口 | 定稿 | 现状（证据） | 排入 |
+|---|---|---|---|---|
+| P0.1 | 死亡软惩罚 | §4 基地复活、掉部分背包可跑尸 | 现 GameOver；死后仍可操作 | **T7.0 复活槽**；跑尸=T8p.3 地面组件 |
+| P0.2 | 全局存档 | §13.1 GDSave；Iter 8 | 仅建筑 JSON | Iter 8 T8.1–T8.2 |
+| P0.3 | 喝水 + 采集 | §6 / §9 教程 | Eat/Drink 未接线；无世界采集 | **8p-game** T8p.1–T8p.2 |
+| P0.4 | 床 | §5 复活点+跳过夜晚 | 库里无床 | **8p-game** T8p.4（改 T7.0 槽） |
+| P0.5 | 任务/引导者 | §7 | 无 quest | Iter 7；T7.4 仅 ID |
+| P0.6 | 教程钩子 | §9 | 无 TutorialUI | 复活槽=T7.0；教程 UI=T8.3（硬等 8p-game） |
+| P0.7 | 死亡流契约 | 不可焊成硬结束 | T7.0 起不 RaiseGameOver；禁止死亡=任务失败 | T7.0 + T7.OUT |
+
+**P0 代码质量（不修，只记账；随对应迭代还）：**
+
+- 矛投掷 `RemoveItem` 后热键空，定稿矛应近战+投掷仍在手。
+- 击杀掉落直接进背包（`EnemyBase.TryDropLoot`），与跑尸地上捡冲突。**已锁**：T8p.3 先做通用地面组件（仅死亡用）；击杀切过去 = Iter 8.5。
+- `ResolveAttack` 靠 `Contains("spear"|"bow"|"axe")`，任务发奖应按 Id 表。
+- 火把无光源，且当 Tool 会近战挥砍。
+- 风暴只改雾，不损坏木筏；`BuildableResource` 无耐久字段（定稿说预留）。
+- 储物箱无独立库存。
+- 铁锭配方挂工作台，定稿是熔炉。
+- `Game.tscn` 与 `ocean_test.tscn` 未合并；主场景无海。**Grilling 已锁**：Game.tscn=产品，ocean_test=实验室；合海仍 Iter 8.5，不提前。
+- SurvivalIsland 无许可：商业化前授权或重写。
+
+### P1 玩法广度（首版要有，进 Iter 8.5）
+
+| ID | 缺口 | 定稿 | 现状 | 说明 |
+|---|---|---|---|---|
+| P1.1 | 程序化群岛 + A1 投放 | §3 | 无岛；任务先 ID | Iter 8.5 **按 T7.4 剧情点 ID 投放** |
+| P1.2 | 木筏桨→帆→锚 | §5 | 无木筏；浮力只在 ocean_test 箱子 | 与 P1.1 绑定 |
+| P1.3 | 其余功能建筑 | §5 共 15 | 已有：篝火、储物箱、工作台 T1、驯养栏；另有农田（种植用，不在 15 列表）。缺：烹饪灶、晾晒架、净水器、床（床已抽到 P0.4）、T2/T3、熔炉、纺织机、研究台、灯塔、捕兽陷阱、蜂箱 | 床已提前；其余不进 Iter 7 |
+| P1.4 | 工具/武器/护甲 | §8 | 有石斧、火把、木矛、木弓、箭。缺镐、镰、鱼竿、铁矛铁弓、布/皮/铁甲、背包扩容 | `ItemType` 无 Armor |
+| P1.5 | 双武器槽 | §4 | 5 格热键，无武器槽 | 可用热键冒充，或 Iter 8 HUD 加两格 |
+| P1.6 | 敌人特化 | §4 | 海蟹/野猪/狼/鲨鱼行为可用；蜘蛛/蝙蝠/风暴海兽/异化者=MeleeChase；狼无成群；鲨鱼王无决战场 | 跟群系走 |
+| P1.7 | 料理 12+ | §6 | 5 配方：熟肉、石斧、铁锭、面粉、面包 | 跟烹饪灶 |
+| P1.8 | 四群系/洞穴/远海 | §3 | 无 | 跟岛生成 |
+| P1.9 | 工作台科技闸门 | §5 木→石/金属 | 仅 `RequiresCampfire/Workbench` 布尔 | 熔炉/T2 时扩展 |
+
+### P-reserve 成长接口（首版只预留，R1）
+
+定稿 §8 首版仍装备成长。§11 已加天赋树/技能钩子。R1 **不挡** Iter 7 / 教程。
+
+| ID | 预留 | 接口 | 首版行为 | 明确不做 |
+|---|---|---|---|---|
+| PR.1 | 天赋树 | `TalentData` + `ITalentTree` | `NullTalentTree`：`IsUnlocked`=false，`Unlock` no-op 或仅测缝 | 加点 UI、经验、等级、节点图 |
+| PR.2 | 主动技能 | `SkillData` + `ISkill` / `ISkillHost` + `SkillContext` | `TryActivate`=false | 技能栏、热键、特效 |
+| PR.3 | 数值修饰 | `IModifierSource.GetMultiplier(statId)` | 恒 1；调用点在伤害/体力 | 改写 CombatLogic 公式本身 |
+| PR.4 | 事件 | `TalentUnlocked` / `SkillActivated` | raise-only | 音效/UI 订阅 |
+| PR.5 | 存档槽 | `UnlockedTalentIds: []` | Iter 8 DTO 可空 | 按树结算 |
+
+`statId` 稳定集：`melee_damage`、`throw_damage`、`ranged_damage`、`stamina_cost`、`hunger_rate`、`thirst_rate`、`move_speed`、`max_health`。
+
+### P2 表现资产（两刀）
+
+现状：几乎全是几何体 + `.tres`。唯一成套视觉是 Iter 2 海洋 shader/clipmap。`ItemData.Icon` 有槽未填。无 wav/ogg/glb。`state.json` 无 §13.5 下载记录。
+
+**8p-art 最小可视包（T8p.5）** — 与 8p-game 并行，**不硬挡**教程。渠道：模型 Kenney/Quaternius（CC0 优先）；图标 Kenney 或 game-icons.net（CC-BY 需署名）；音效 freesound/soundimage。每次下载记 URL+许可到 `state.json`。NC/ND 仅原型。
+
+| ID | 资产 | 替换对象 | 用途 |
+|---|---|---|---|
+| P2.m1 | 女性人形 | `src/Game.tscn` 玩家胶囊 | 教程移动可辨认 |
+| P2.m2 | 海蟹、野猪 | `scenes/combat/enemy.tscn` 单胶囊 | 教程基础战斗 |
+| P2.m3 | 可辨认篝火（含光） | `scenes/building/buildables/campfire.tscn` 棕色圆柱 | 造篝火 + 夜间 |
+| P2.m4 | 床模型 | 随 T8p.4 | 造床 |
+| P2.i1 | 物品图标 | `wood` `stone` `coconut` `berries` `stone_axe` `wooden_spear` 的 `ItemData.Icon` | 热键可读 |
+| P2.i2 | 建筑菜单图 | 篝火、床 | 建造 UI |
+| P2.s1 | 短音效 | 采集、喝水/吃、放置、近战命中、死亡/复活 | 挂现有 `ItemAdded`/`EnemyDied`/`PlayerDied` 等 |
+
+**Iter 9 完整替换**
+
+| ID | 资产 | 渠道 |
+|---|---|---|
+| P2.f1 | 9 敌人模型+动画（含鲨鱼王体型） | Quaternius / opengameart |
+| P2.f2 | 15 建筑 + 农田/驯养栏/鸡/羊 | Kenney / Quaternius |
+| P2.f3 | 主角 + 布/皮/铁三套换装 | 定稿 §8 装备改外观 |
+| P2.f4 | 四群系环境套件 | 浅海海滩、森林、洞穴、远海风暴 |
+| P2.f5 | 其余 ~29 物品图标与熔炉等 UI | Kenney / game-icons.net |
+| P2.f6 | 配乐与环境声（海、夜、风暴） | soundimage / freesound / 爱给 |
+
+商用发布前替换一切 NC/ND。

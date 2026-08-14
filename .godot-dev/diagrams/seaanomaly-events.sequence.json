@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "GameEvents Combat and Death Path",
+    "subtitle": "PlayerDied revives; EnemyDied feeds the Iter 7 quest bus",
+    "output": "seaanomaly-events.html",
+    "viewBox": [920, 780],
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "death-revive",
+        "label": "Death then revive",
+        "focus": ["stats", "events", "manager", "player"],
+        "note": "Health hitting zero raises PlayerDied once; GameManager teleports and revives without GameOver."
+      },
+      {
+        "id": "kill-quest",
+        "label": "Kill to quest",
+        "focus": ["weapon", "enemy", "events", "quest"],
+        "note": "A lethal hit raises EnemyDied; QuestService matches story point IDs."
+      },
+      {
+        "id": "guide-line",
+        "label": "Guide narration",
+        "focus": ["events", "quest", "guide"],
+        "note": "The guide voice subscribes to the same events and never treats death as quest failure."
+      }
+    ]
+  },
+  "participants": [
+    { "id": "weapon", "type": "frontend", "label": "Weapon", "sublabel": "WeaponSystem" },
+    { "id": "enemy", "type": "backend", "label": "Enemy", "sublabel": "EnemyBase" },
+    { "id": "stats", "type": "backend", "label": "Stats", "sublabel": "PlayerStats" },
+    { "id": "events", "type": "messagebus", "label": "Events", "sublabel": "GameEvents" },
+    { "id": "manager", "type": "backend", "label": "Manager", "sublabel": "GameManager" },
+    { "id": "player", "type": "frontend", "label": "Player", "sublabel": "CharacterBody3D" },
+    { "id": "quest", "type": "backend", "label": "Quest", "sublabel": "QuestService" },
+    { "id": "guide", "type": "external", "label": "Guide", "sublabel": "narrator" }
+  ],
+  "segments": [
+    { "from": 150, "to": 330, "label": "01 / COMBAT HIT" },
+    { "from": 350, "to": 530, "label": "02 / DEATH REVIVE" },
+    { "from": 550, "to": 700, "label": "03 / QUEST HOOK" }
+  ],
+  "messages": [
+    { "id": "melee", "from": "weapon", "to": "enemy", "y": 185, "label": "TakeDamage", "variant": "emphasis" },
+    { "id": "counter", "from": "enemy", "to": "stats", "y": 230, "label": "TakeDamage" },
+    { "id": "kill-bus", "from": "enemy", "to": "events", "y": 275, "label": "RaiseEnemyDied", "variant": "dashed" },
+    { "id": "died", "from": "stats", "to": "events", "y": 385, "label": "RaisePlayerDied", "variant": "security" },
+    { "id": "mgr", "from": "events", "to": "manager", "y": 430, "label": "OnPlayerDied", "variant": "security" },
+    { "id": "teleport", "from": "manager", "to": "player", "y": 475, "label": "move to slot", "variant": "emphasis" },
+    { "id": "revive", "from": "manager", "to": "stats", "y": 520, "label": "Revive floor 30", "variant": "return" },
+    { "id": "quest-kill", "from": "events", "to": "quest", "y": 590, "label": "EnemyDied", "variant": "emphasis" },
+    { "id": "complete", "from": "quest", "to": "events", "y": 635, "label": "QuestCompleted", "variant": "return" },
+    { "id": "narrate", "from": "events", "to": "guide", "y": 680, "label": "StoryPointReached", "variant": "dashed" }
+  ],
+  "activations": [
+    { "participant": "weapon", "from": 175, "to": 240, "type": "frontend" },
+    { "participant": "enemy", "from": 180, "to": 290, "type": "backend" },
+    { "participant": "stats", "from": 220, "to": 540, "type": "backend" },
+    { "participant": "events", "from": 265, "to": 695, "type": "messagebus" },
+    { "participant": "manager", "from": 420, "to": 530, "type": "backend" },
+    { "participant": "player", "from": 465, "to": 500, "type": "frontend" },
+    { "participant": "quest", "from": 580, "to": 650, "type": "backend" },
+    { "participant": "guide", "from": 670, "to": 700, "type": "external" }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "No GameOver",
+      "items": [
+        "PlayerDied is raised exactly once via _deathNotified",
+        "GameManager must not RaiseGameOver on death",
+        "Hunger and thirst restore to a floor of 30"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Quest hooks",
+      "items": [
+        "EnemyDied, CropHarvested, and BossDefeated complete story points",
+        "Death is never a quest failure"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Guide",
+      "items": [
+        "Voice-only narrator, no NPC",
+        "Subscribes to the same raise-only combat and farming events"
+      ]
+    }
+  ]
+}

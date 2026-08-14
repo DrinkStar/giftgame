@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Player Death Lifecycle T7.0",
+    "subtitle": "PlayerDied is not GameOver; revive at the current spawn slot",
+    "output": "seaanomaly-death.html",
+    "viewBox": [980, 660],
+    "quality_profile": "standard",
+    "views": [
+      {
+        "id": "happy-revive",
+        "label": "Revive path",
+        "focus": ["alive", "player_died", "input_stopped", "teleport", "revived"],
+        "note": "Stop input, teleport to the current slot, restore vitals, resume play."
+      },
+      {
+        "id": "slot",
+        "label": "Respawn slot",
+        "focus": ["player_died", "teleport", "revived"],
+        "note": "The slot starts as PlayerSpawnPoint; a bed later replaces it without changing this machine."
+      },
+      {
+        "id": "forbidden-end",
+        "label": "Reserved GameOver",
+        "focus": ["player_died", "game_over"],
+        "note": "GameOver has no transition from PlayerDied. It is reserved for a true ending."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Revive path" },
+    { "id": "waiting", "label": "Input gate" },
+    { "id": "terminal", "label": "Reserved ending" }
+  ],
+  "states": [
+    { "id": "alive", "type": "start", "label": "Alive", "sublabel": "IsAlive true", "lane": "main", "col": 0, "step": "01", "tag": "play" },
+    { "id": "player_died", "type": "active", "label": "PlayerDied", "sublabel": "raised once", "lane": "main", "col": 1, "step": "02", "tag": "hook" },
+    { "id": "teleport", "type": "active", "label": "Teleport", "sublabel": "current slot", "lane": "main", "col": 2, "step": "04", "tag": "slot" },
+    { "id": "revived", "type": "success", "label": "Revived", "sublabel": "HP full, floor 30", "lane": "main", "col": 3, "step": "05", "tag": "resume" },
+    { "id": "input_stopped", "type": "waiting", "label": "Input stopped", "sublabel": "!IsAlive", "lane": "waiting", "col": 1, "tag": "gate" },
+    { "id": "game_over", "type": "failure", "label": "GameOver", "sublabel": "true ending only", "lane": "terminal", "col": 2, "tag": "unused" }
+  ],
+  "transitions": [
+    { "id": "health-zero", "from": "alive", "to": "player_died", "variant": "emphasis" },
+    { "id": "stop-input", "from": "player_died", "to": "input_stopped", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "to-slot", "from": "input_stopped", "to": "teleport", "fromSide": "right", "toSide": "bottom" },
+    { "id": "restore", "from": "teleport", "to": "revived", "label": "Revive()", "variant": "emphasis", "labelDy": -25 }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Restore rules",
+      "items": [
+        "Health and stamina return to max",
+        "Hunger and thirst are raised to at least 30",
+        "Inventory is not dropped in T7.0"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Slot",
+      "items": [
+        "Initial slot is PlayerSpawnPoint on Game.tscn",
+        "SetRespawnPoint replaces it for beds later"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Forbidden",
+      "items": [
+        "No RaiseGameOver from OnPlayerDied",
+        "No quest failure on death",
+        "No corpse run until T8p.3"
+      ]
+    }
+  ]
+}
