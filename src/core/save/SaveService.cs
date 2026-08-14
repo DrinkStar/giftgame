@@ -113,9 +113,10 @@ public partial class SaveService : Node
       data.Buildings = BuildingSystem.BuildSaveSnapshot();
     }
 
-    // Farm plots are group-registered in FarmPlot._Ready; livestock likewise.
-    // GetTree() can be null when the service is exercised off-tree (unit
-    // tests) — the groups are simply empty then.
+    // Farm plots are group-registered in FarmPlot._Ready; livestock likewise;
+    // storage boxes (T8.5.8) in StorageBox._Ready. GetTree() can be null when
+    // the service is exercised off-tree (unit tests) — the groups are simply
+    // empty then.
     var tree = GetTree();
     if (tree != null)
     {
@@ -132,6 +133,14 @@ public partial class SaveService : Node
         if (node is Livestock animal)
         {
           data.Livestock.Add(animal.GetSaveState());
+        }
+      }
+
+      foreach (var node in tree.GetNodesInGroup("storage_boxes"))
+      {
+        if (node is StorageBox box)
+        {
+          data.StorageBoxes.Add(box.GetSaveState());
         }
       }
     }
@@ -184,9 +193,10 @@ public partial class SaveService : Node
 
   /// <summary>
   ///   Applies a full game snapshot to the wired systems. Restore order
-  ///   matters: buildings FIRST (re-creates the farm plot instances), then
-  ///   farm plots and livestock matched by world position, then the scalar
-  ///   state (inventory / stats / clock / weather).
+  ///   matters: buildings FIRST (re-creates the farm plot and storage box
+  ///   instances), then storage boxes / farm plots / livestock matched by
+  ///   world position, then the scalar state (inventory / stats / clock /
+  ///   weather).
   /// </summary>
   public bool LoadGame(GameSaveData data)
   {
@@ -195,6 +205,9 @@ public partial class SaveService : Node
       BuildingSystem.RestoreFromSnapshot(data.Buildings);
     }
 
+    // Storage boxes must be matched AFTER the building restore has
+    // re-instantiated their scenes (T8.5.8).
+    RestoreStorageBoxes(data.StorageBoxes);
     RestoreFarms(data.Farms);
     RestoreLivestock(data.Livestock);
 
@@ -353,7 +366,7 @@ public partial class SaveService : Node
 
   #endregion Player / clock / weather
 
-  #region Farm plots & livestock
+  #region Farm plots, livestock & storage boxes
 
   private void RestoreFarms(List<FarmSaveData> farms)
   {
@@ -394,6 +407,28 @@ public partial class SaveService : Node
     }
   }
 
+  /// <summary>
+  ///   T8.5.8: re-attaches saved box contents to the rebuilt instances by
+  ///   world position (the building restore above re-created the scenes).
+  /// </summary>
+  private void RestoreStorageBoxes(List<StorageBoxSaveData> boxes)
+  {
+    var tree = GetTree();
+    if (tree == null)
+    {
+      return;
+    }
+
+    foreach (var entry in boxes)
+    {
+      var box = FindNearest<StorageBox>(
+        tree.GetNodesInGroup("storage_boxes"),
+        new Vector3(entry.PositionX, 0, entry.PositionZ)
+      );
+      box?.ApplySaveState(entry);
+    }
+  }
+
   /// <summary>Finds the nearest matching node within the position tolerance.</summary>
   private static T? FindNearest<T>(Godot.Collections.Array<Node> nodes, Vector3 position)
     where T : Node3D
@@ -418,7 +453,7 @@ public partial class SaveService : Node
     return best;
   }
 
-  #endregion Farm plots & livestock
+  #endregion Farm plots, livestock & storage boxes
 
   /// <summary>Strips the folder from a user:// path, leaving the file name.</summary>
   private static string StripFolder(string path)

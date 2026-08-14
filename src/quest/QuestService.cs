@@ -21,12 +21,16 @@ using Godot;
 ///     documentation parity only.
 ///
 ///   Three chapters are defined in code (plan Decision 6): chapter 1
-///   (driftwood: wood ×5 → campfire → cooked meat), chapter 2 (the anomaly:
+///   (radio → wood ×5 → campfire → cooked meat), chapter 2 (the anomaly:
 ///   harvest ×3 → ruin → mutant), chapter 3 (shark king). Quests run
 ///   strictly in order inside a chapter; the next chapter starts after the
 ///   last quest of the current one. The node sits AFTER the Player subtree
 ///   in Game.tscn so the starting inventory's <see cref="GameEvents.ItemAdded"/>
 ///   (raised by the Player subtree _Ready) cannot count toward quest_wood.
+///
+///   T8.5.9: quest_radio ("联系引导者", completed by the story interactable
+///   at the radio tower) opens chapter 1; the shark_king story point is a
+///   chapter-3 beat that only narrates (quest_boss stays BossDefeated-driven).
 ///
 ///   PlayerDied is intentionally NOT subscribed (frozen contract: death is
 ///   never a quest failure — T7.0 respawn).
@@ -41,6 +45,7 @@ public partial class QuestService : Node
   /// </summary>
   private static readonly Dictionary<string, int> Targets = new()
   {
+    ["quest_radio"] = 1,
     ["quest_wood"] = 5,
     ["quest_campfire"] = 1,
     ["quest_cooked_meat"] = 1,
@@ -57,6 +62,8 @@ public partial class QuestService : Node
   private static readonly Dictionary<string, (string ItemId, int Amount)>
     RewardAmounts = new()
     {
+      // T8.5.9: chapter-1 opener — wood ×5 for contacting the guide.
+      ["quest_radio"] = ("wood", 5),
       ["quest_wood"] = ("wood", 3),
       ["quest_campfire"] = ("berries", 5),
       ["quest_cooked_meat"] = ("arrow", 10),
@@ -119,6 +126,12 @@ public partial class QuestService : Node
     {
       new()
       {
+        // T8.5.9: chapter 1 opens with the radio quest — the story
+        // interactable at the radio tower completes it before any wood
+        // gathering starts (quest_radio MUST precede quest_wood).
+        controller.CreateQuest(
+          "quest_radio", "联系引导者", "抵达无线电塔并阅读日志", new ItemReward<string>("wood")
+        ),
         controller.CreateQuest(
           "quest_wood", "收集木材", "收集 5 个木头", new ItemReward<string>("wood")
         ),
@@ -269,10 +282,26 @@ public partial class QuestService : Node
   private void OnCropHarvested(string cropId) =>
     HandleProgress("quest_harvest", Targets["quest_harvest"]);
 
+  /// <summary>
+  ///   T8.5.9: story points drive quests — "ruin" advances quest_ruin
+  ///   (Iter7), "radio" completes the new chapter-1 opener quest_radio, and
+  ///   "shark_king" is a chapter-3 boss beat that only narrates (quest_boss
+  ///   stays BossDefeated-driven so the existing chapter flow is untouched).
+  /// </summary>
   private void OnStoryPointReached(string storyPointId)
   {
-    if (storyPointId == "ruin")
-      HandleProgress("quest_ruin", Targets["quest_ruin"]);
+    switch (storyPointId)
+    {
+      case "ruin":
+        HandleProgress("quest_ruin", Targets["quest_ruin"]);
+        break;
+      case "radio":
+        HandleProgress("quest_radio", Targets["quest_radio"]);
+        break;
+      case "shark_king":
+        GameEvents.RaiseGuideLine("海域之主现身");
+        break;
+    }
   }
 
   private void OnEnemyDied(string enemyId)

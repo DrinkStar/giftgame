@@ -17,6 +17,10 @@ using dotnetquestsystem;
 ///   presence. Setup clears the static quest database (singleton survives
 ///   between tests) and Cleanup unsubscribes the OnQuestCompleate handler —
 ///   the singleton-pollution guard.
+///
+///   Iter8.5 (T8.5.9): chapter 1 now opens with quest_radio, so the tests
+///   below complete it first (RaiseStoryPointReached("radio")) before
+///   exercising the quest_wood chain.
 /// </summary>
 public class QuestServiceTest : TestClass, IDisposable
 {
@@ -136,7 +140,7 @@ public class QuestServiceTest : TestClass, IDisposable
   /// <summary>
   ///   (a) The internal progress counter counts condition events and forwards
   ///   (questId, done, need) on every step — the quest stays Current below
-  ///   its target.
+  ///   its target. quest_radio (chapter-1 opener) is completed first.
   /// </summary>
   [Test]
   public void WoodProgressCountsEventsAndRaisesProgress()
@@ -147,6 +151,10 @@ public class QuestServiceTest : TestClass, IDisposable
     GameEvents.QuestProgress += onProgress;
     try
     {
+      // Iter8.5: chapter 1 starts with quest_radio; complete it so quest_wood
+      // becomes Current, then count wood events.
+      GameEvents.RaiseStoryPointReached("radio");
+
       for (var i = 0; i < 3; i++)
         GameEvents.RaiseItemAdded("wood", 1);
 
@@ -166,6 +174,7 @@ public class QuestServiceTest : TestClass, IDisposable
   ///   (b) Condition met → FinishQuest (library OnQuestCompleate fires) →
   ///   reward granted with the correct ITEM ID AND AMOUNT from the
   ///   QuestService table (wood ×3), asserted via inventory GetItemCount.
+  ///   quest_radio (wood ×5 reward) completes first — chapter 1 order.
   /// </summary>
   [Test]
   public void CompletingWoodQuestFinishesAndGrantsWoodReward()
@@ -179,19 +188,22 @@ public class QuestServiceTest : TestClass, IDisposable
     GameEvents.QuestCompleted += onCompleted;
     try
     {
+      GameEvents.RaiseStoryPointReached("radio"); // quest_radio → wood ×5
+
       for (var i = 0; i < 5; i++)
         GameEvents.RaiseItemAdded("wood", 1);
 
       Quest("quest_wood")!.Status.ShouldBe(QuestStatus.Complete);
 
-      completions.Count.ShouldBe(1);
-      completions[0].Name.ShouldBe("quest_wood");
+      // quest_radio completes first, then quest_wood.
+      completions.Count.ShouldBe(2);
+      completions.ShouldContain(q => q.Name == "quest_wood");
 
-      completedIds.Count.ShouldBe(1);
-      completedIds[0].ShouldBe("quest_wood");
+      completedIds.Count.ShouldBe(2);
+      completedIds.ShouldContain("quest_wood");
 
-      // Reward amount table: quest_wood → (wood, 3).
-      _inventory.GetItemCount("wood").ShouldBe(3);
+      // Reward table: quest_radio → wood ×5, quest_wood → wood ×3.
+      _inventory.GetItemCount("wood").ShouldBe(8);
     }
     finally
     {
@@ -207,6 +219,9 @@ public class QuestServiceTest : TestClass, IDisposable
   [Test]
   public void ChapterGatingBlocksNextQuestUntilCurrentCompletes()
   {
+    // Iter8.5: complete the chapter-1 opener quest_radio first.
+    GameEvents.RaiseStoryPointReached("radio");
+
     Quest("quest_wood")!.Status.ShouldBe(QuestStatus.Current);
 
     GameEvents.RaiseBuildingPlaced("campfire");
@@ -225,6 +240,9 @@ public class QuestServiceTest : TestClass, IDisposable
   [Test]
   public void PlayerDiedDoesNotFailActiveQuest()
   {
+    // Iter8.5: complete the chapter-1 opener quest_radio first.
+    GameEvents.RaiseStoryPointReached("radio");
+
     GameEvents.RaisePlayerDied();
 
     Quest("quest_wood")!.Status.ShouldBe(QuestStatus.Current);
@@ -237,6 +255,7 @@ public class QuestServiceTest : TestClass, IDisposable
   [Test]
   public void BossDefeatedCompletesChapterThree()
   {
+    GameEvents.RaiseStoryPointReached("radio"); // ch1 q0: quest_radio
     for (var i = 0; i < 5; i++)
       GameEvents.RaiseItemAdded("wood", 1); // ch1 q1: quest_wood
     GameEvents.RaiseBuildingPlaced("campfire"); // ch1 q2: quest_campfire

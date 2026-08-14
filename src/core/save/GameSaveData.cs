@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 /// <summary>
 ///   FIX(iter8-plan): T8.1 — unified game save document. One JSON file covers
-///   the player stats, inventory, day/night, weather, buildings, farm plots
-///   and livestock, replacing the previous building-only F5/F9 save. All
-///   sections have default values so a missing field (older save, partial
-///   write) deserializes to a safe default instead of crashing — the same
-///   contract JsonSaveSystem already locks for the building DTOs.
+///   the player stats, inventory, day/night, weather, buildings, farm plots,
+///   livestock and storage boxes, replacing the previous building-only F5/F9
+///   save. All sections have default values so a missing field (older save,
+///   partial write) deserializes to a safe default instead of crashing — the
+///   same contract JsonSaveSystem already locks for the building DTOs.
 /// </summary>
 public sealed class GameSaveData
 {
@@ -40,6 +40,12 @@ public sealed class GameSaveData
   public List<FarmSaveData> Farms { get; set; } = new();
 
   public List<LivestockSaveData> Livestock { get; set; } = new();
+
+  /// <summary>
+  ///   T8.5.8: storage box contents (one entry per placed box, keyed by world
+  ///   position). Empty when no box is placed or the save predates Iter8.5.
+  /// </summary>
+  public List<StorageBoxSaveData> StorageBoxes { get; set; } = new();
 }
 
 /// <summary>Player survival stats (the four Iter3 bars).</summary>
@@ -108,4 +114,18 @@ public sealed class LivestockSaveData
   public string Type { get; set; } = "";
   public LivestockLogic.State State { get; set; } = LivestockLogic.State.Wild;
   public float ProduceElapsedSeconds { get; set; }
+}
+
+/// <summary>
+///   T8.5.8: storage box contents, keyed by world position so a load can
+///   re-attach the state to the freshly rebuilt box instance (buildings
+///   restore first — the same contract as <see cref="FarmSaveData"/>).
+///   Slots is positional (index-aligned with the box's 20 slots; empty
+///   slots carry a null ItemId).
+/// </summary>
+public sealed class StorageBoxSaveData
+{
+  public float PositionX { get; set; }
+  public float PositionZ { get; set; }
+  public List<SlotSaveData> Slots { get; set; } = new();
 }

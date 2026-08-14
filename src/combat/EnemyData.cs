@@ -65,8 +65,9 @@ public partial class EnemyData : Resource
   [Export] public float Scale = 1f;
 
   /// <summary>
-  ///   Item id dropped into the player's inventory on death; empty = no drop.
-  ///   The item resource is loaded from assets/items/&lt;id&gt;.tres.
+  ///   Item id dropped as ground loot (GroundLoot) on death — T8.5.7 switched
+  ///   enemy drops to the world-drop component instead of the inventory; empty
+  ///   = no drop. The item resource is loaded from assets/items/&lt;id&gt;.tres.
   /// </summary>
   [Export] public string DropItemId = "";
 

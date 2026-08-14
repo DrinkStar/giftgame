@@ -228,18 +228,21 @@ public partial class EnemyBase : CharacterBody3D
     QueueFree();
   }
 
+  /// <summary>
+  ///   T8.5.7: kill drops no longer go straight into the player's inventory —
+  ///   they spawn as ground loot at the enemy's position via
+  ///   <see cref="GroundLoot.Spawn"/>, the same flow the player death drop
+  ///   (GameManager.DropDeathLoot) already uses, so the player must walk over
+  ///   and pick them up. Best-effort: a missing loot scene is silently
+  ///   skipped (Spawn returns null). No player/inventory reference is needed
+  ///   anymore, so off-screen or player-less kills still drop.
+  /// </summary>
   private void TryDropLoot()
   {
-    if (string.IsNullOrEmpty(EnemyData!.DropItemId) || _player == null)
+    if (string.IsNullOrEmpty(EnemyData!.DropItemId))
       return;
 
-    var inventory = _player.GetNodeOrNull<InventorySystem>("InventorySystem");
-    if (inventory == null)
-      return;
-
-    var drop = GD.Load<ItemData>($"res://assets/items/{EnemyData.DropItemId}.tres");
-    if (drop != null)
-      inventory.AddItem(drop, EnemyData.DropAmount);
+    GroundLoot.Spawn(EnemyData.DropItemId, EnemyData.DropAmount, GlobalPosition);
   }
 
   private EnemyHealth EnsureHealth() =>
