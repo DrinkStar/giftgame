@@ -2,6 +2,7 @@
 namespace SeaAnomaly;
 
 using System;
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
@@ -148,6 +149,7 @@ public partial class IslandBuilder : Node3D
                 PlaceTrees(spec, body, heightmap, rng, count: 2 + rng.Next(2)); // 2-3
                 PlacePalm(spec, body, heightmap, rng);
                 PlaceStoryPoint(spec, body, heightmap, rng, "radio");
+                PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
             case IslandTier.Main:
@@ -155,12 +157,14 @@ public partial class IslandBuilder : Node3D
                 // owns the ruin trigger; duplicating it would raise the
                 // event from two nodes.
                 PlaceTrees(spec, body, heightmap, rng, MainTreeCount);
+                PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
             case IslandTier.Storm:
                 // The storm island IS the shark-king boss arena. Weather is
                 // handled by WeatherService / the main orchestrator.
                 PlaceStoryPoint(spec, body, heightmap, rng, "shark_king");
+                PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
             default:
@@ -201,6 +205,82 @@ public partial class IslandBuilder : Node3D
             StoryPointId = storyPointId,
             Position = new Vector3(local.X, local.Y + TriggerHeightOffset, local.Z)
         });
+    }
+
+    /// <summary>T9.x enemy roster per island tier (id, model, count).</summary>
+    private static readonly Dictionary<IslandTier, (string EnemyId, string ModelPath, int Count)[]> TierEnemies =
+        new()
+        {
+            [IslandTier.Spawn] = new[] { ("crab", "res://assets/models/enemies/crab/Crab.glb", 2) },
+            [IslandTier.Main] = new[]
+            {
+                ("boar", "res://assets/models/enemies/boar/Pig.glb", 2),
+                ("wolf", "res://assets/models/enemies/wolf/Wolf.gltf", 2)
+            },
+            [IslandTier.Storm] = new[] { ("storm_beast", "res://assets/models/enemies/storm_beast/Squidle.glb", 2) }
+        };
+
+    /// <summary>
+    ///   Places the tier's enemy roster on the island with their models wired
+    ///   (the same enemy.tscn + ModelPath mechanism Game.tscn uses). Fail-closed:
+    ///   without a PlayerController in the scene root there is nothing for the
+    ///   AI to chase, so no enemies are spawned (tests and unwired scenes stay
+    ///   empty). Player/DayNight paths are absolute (/root/&lt;scene&gt;/...) so
+    ///   placement works regardless of the island's tree depth.
+    /// </summary>
+    private void PlaceEnemies(IslandSpec spec, StaticBody3D body, float[] heightmap, Random rng)
+    {
+        // Fail-closed: without a player there is nothing for the AI to chase,
+        // so no enemies are spawned (tests and unwired scenes stay empty).
+        // Paths are resolved from the tree root (absolute) so placement works
+        // regardless of the island's tree depth or the scene's node name.
+        var tree = GetTree();
+        if (tree == null)
+            return;
+
+        var root = tree.Root;
+        var player = root.FindChild("Player", recursive: true, owned: false) as PlayerController;
+        if (player == null)
+            return;
+
+        if (!TierEnemies.TryGetValue(spec.Tier, out var roster))
+            return;
+
+        var packed = GD.Load<PackedScene>("res://scenes/combat/enemy.tscn");
+        if (packed == null)
+            return;
+
+        var playerPath = new NodePath(root.GetPathTo(player));
+        var dayNight = root.FindChild("DayNightService", recursive: true, owned: false);
+        var dayNightPath = dayNight == null
+            ? new NodePath()
+            : new NodePath(root.GetPathTo(dayNight));
+
+        foreach (var (enemyId, modelPath, count) in roster)
+        {
+            var enemyData = GD.Load<EnemyData>($"res://assets/enemies/{enemyId}.tres");
+            for (int i = 0; i < count; i++)
+            {
+                var enemy = packed.Instantiate<EnemyBase>();
+                enemy.Name = $"Enemy_{enemyId}_{i}";
+                enemy.EnemyData = enemyData;
+                enemy.Player = playerPath;
+                enemy.DayNightServicePath = dayNightPath;
+
+                // Mount the real model as a child; EnemyBase hides the capsule
+                // Visual and uses the model as the tint/flash target.
+                var model = GD.Load<PackedScene>(modelPath)?.Instantiate<Node3D>();
+                if (model != null)
+                {
+                    model.Name = "EnemyModel";
+                    enemy.AddChild(model);
+                    enemy.ModelPath = new NodePath("EnemyModel");
+                }
+
+                enemy.Position = GridPointToLocal(spec, PickLandGridPoint(heightmap, rng), heightmap);
+                body.AddChild(enemy);
+            }
+        }
     }
 
     /// <summary>

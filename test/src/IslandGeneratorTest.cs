@@ -41,7 +41,7 @@ public class IslandGeneratorTest : TestClass, IDisposable
     [Cleanup]
     public void Cleanup()
     {
-        if (_builder != null && _builder.IsInsideTree())
+        if (_builder != null && GodotObject.IsInstanceValid(_builder) && _builder.IsInsideTree())
             _builder.GetParent()!.RemoveChild(_builder);
 
         _fixture.Cleanup();
@@ -193,5 +193,49 @@ public class IslandGeneratorTest : TestClass, IDisposable
         FindDescendants<StaticBody3D>(_builder)
             .Count(b => b.Name.ToString().StartsWith("Island_"))
             .ShouldBe(islands.Count);
+    }
+
+    /// <summary>
+    ///   ⑥ T9.x: with a PlayerController in the tree, each tier's islands get
+    ///   their enemy roster with real models wired (crab on spawn islands,
+    ///   boar+wolf on the main island, storm_beast on the storm island);
+    ///   without a player, no enemies are placed (fail-closed).
+    /// </summary>
+    [Test]
+    public async Task BuilderPlacesEnemiesPerTierWhenPlayerExists()
+    {
+        var player = new PlayerController { Name = "Player" };
+        await _fixture.AddToRoot(player, autoRemoveFromRoot: true);
+
+        _builder = new IslandBuilder { WorldSeed = 12345 };
+        await _fixture.AddToRoot(_builder, autoRemoveFromRoot: true);
+
+        var enemies = FindDescendants<EnemyBase>(_builder).ToList();
+        enemies.Count.ShouldBeGreaterThan(0);
+
+        var crab = enemies.Count(e => e.Name.ToString().StartsWith("Enemy_crab_"));
+        var boar = enemies.Count(e => e.Name.ToString().StartsWith("Enemy_boar_"));
+        var wolf = enemies.Count(e => e.Name.ToString().StartsWith("Enemy_wolf_"));
+        var stormBeast = enemies.Count(e => e.Name.ToString().StartsWith("Enemy_storm_beast_"));
+
+        crab.ShouldBeGreaterThan(0);   // every spawn island hosts crabs
+        boar.ShouldBeGreaterThan(0);   // the main island hosts boars + wolves
+        wolf.ShouldBeGreaterThan(0);
+        stormBeast.ShouldBeGreaterThan(0); // the storm island hosts storm beasts
+
+        foreach (var enemy in enemies)
+        {
+            enemy.EnemyData.ShouldNotBeNull();
+            enemy.GetNodeOrNull<Node3D>("EnemyModel").ShouldNotBeNull();
+        }
+
+        // Fail-closed: without a player nothing is spawned — remove the player
+        // and a fresh builder must place no enemies.
+        player.GetParent()?.RemoveChild(player);
+        player.QueueFree();
+
+        var noPlayerBuilder = new IslandBuilder { WorldSeed = 999 };
+        await _fixture.AddToRoot(noPlayerBuilder, autoRemoveFromRoot: true);
+        FindDescendants<EnemyBase>(noPlayerBuilder).Count.ShouldBe(0);
     }
 }
