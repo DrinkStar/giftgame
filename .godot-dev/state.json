@@ -106,7 +106,7 @@
         {"id": "T7.3", "file": "HUD guide subtitle", "action": "modify", "status": "done"},
         {"id": "T7.4", "file": "3-chapter quest data", "action": "create", "status": "done"}
       ]
-    }
+    },
     {
       "name": "iteration8p",
       "status": "done",
