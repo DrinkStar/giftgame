@@ -92,6 +92,7 @@
 [ext_resource type="Script" path="res://src/ui/StorageUI.cs" id="90_storageui"]
 [ext_resource type="Script" path="res://src/player/EquipmentVisual.cs" id="91_equipment_visual"]
 [ext_resource type="Script" path="res://src/ui/CreditsUI.cs" id="92_credits"]
+[ext_resource type="Script" path="res://src/player/WeaponVisual.cs" id="93_weapon_visual"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -223,6 +224,10 @@ TorchLightPath = NodePath("../TorchLight")
 [node name="EquipmentVisual" type="Node" parent="Player"]
 script = ExtResource("91_equipment_visual")
 PlayerModelPath = NodePath("../PlayerModel")
+
+[node name="WeaponVisual" type="Node3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.15, -0.55)
+script = ExtResource("93_weapon_visual")
 
 [node name="TorchLight" type="OmniLight3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)

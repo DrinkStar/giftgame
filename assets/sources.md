@@ -130,3 +130,17 @@ All downloaded 2026-08-15 from `https://game-icons.net/icons/ffffff/transparent/
 | berry_juice / berry_seed / fruit_salad | delapouite/berries-bowl | mushroom_seed / wheat_seed | copies of the crop icons (mushroom/wheat) |
 
 `milk` has no matching game-icons asset — HUD falls back to DisplayName. 41 of 49 items now carry icons (7 pre-existing + 34 new).
+
+### Models — weapon kit (Quaternius CC0, via beep2bleep GitHub mirror)
+
+Downloaded 2026-08-15 from the `FreeAssetsByKenneyNLandQuaternius` mirror (Quaternius "Medieval Weapons Pack - Sept 2018", CC0). The pack is the same source as the existing bow/spear models.
+
+| Item model | File | Source (mirror path) | License | Status |
+|---|---|---|---|---|
+| pickaxe | `models/weapons/pickaxe.fbx` | .../Medieval Weapons Pack - Sept 2018/FBX/Axe_Small.fbx | CC0 (Quaternius) | ok (axe stand-in for the pick) |
+| sickle | `models/weapons/sickle.fbx` | .../FBX/Scythe.fbx | CC0 | ok |
+| fishing_rod | `models/weapons/fishing_rod.fbx` | .../FBX/Spear.fbx | CC0 | ok (pole stand-in) |
+| iron_spear | `models/weapons/iron_spear.fbx` | .../FBX/Spear.fbx | CC0 | ok |
+| iron_bow | `models/weapons/iron_bow.fbx` | .../FBX/Bow_Evil.fbx | CC0 | ok |
+
+Display wiring: `src/player/WeaponVisual.cs` shows the selected weapon/tool's model at a hand offset on the player (hotbar selection + inventory refresh); the pre-existing bow/spear models are now also displayed.

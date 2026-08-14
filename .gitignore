@@ -10,6 +10,9 @@ obj/
 .vs/
 .DS_Store
 
+# Iter9 export output
+build/
+
 *.old
 *.translation
 
