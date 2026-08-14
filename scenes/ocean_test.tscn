@@ -1,10 +1,12 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://src/world/OceanTest.cs" id="1_oceantest"]
 [ext_resource type="Script" path="res://src/world/ocean/WaterMesh.cs" id="2_watermesh"]
 [ext_resource type="Script" path="res://src/world/buoyancy/FloatingBody.cs" id="3_floatingbody"]
 [ext_resource type="ArrayMesh" path="res://assets/water/clipmap_high.obj" id="4_clipmap"]
 [ext_resource type="Material" path="res://assets/water/mat_water.tres" id="5_watermat"]
+[ext_resource type="PackedScene" path="res://scenes/combat/enemy.tscn" id="6_enemy"]
+[ext_resource type="Resource" path="res://assets/enemies/shark.tres" id="7_shark"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -83,3 +85,7 @@ shape = SubResource("BoxShape3D_box")
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.3420201, 0, 0.3420201, 0.9396926, 0, 8, 20)
 current = true
+
+[node name="Shark" parent="." instance=ExtResource("6_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 14)
+EnemyData = ExtResource("7_shark")

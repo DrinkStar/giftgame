@@ -28,6 +28,14 @@
 [ext_resource type="Resource" path="res://assets/items/potato_seed.tres" id="26_item_potato_seed"]
 [ext_resource type="Resource" path="res://assets/recipes/flour.tres" id="27_recipe_flour"]
 [ext_resource type="Resource" path="res://assets/recipes/bread.tres" id="28_recipe_bread"]
+[ext_resource type="Script" path="res://src/combat/WeaponSystem.cs" id="29_weapon"]
+[ext_resource type="PackedScene" path="res://scenes/combat/enemy.tscn" id="30_enemy"]
+[ext_resource type="Resource" path="res://assets/enemies/boar.tres" id="31_boar"]
+[ext_resource type="Resource" path="res://assets/enemies/wolf.tres" id="32_wolf"]
+[ext_resource type="Resource" path="res://assets/enemies/crab.tres" id="33_crab"]
+[ext_resource type="Resource" path="res://assets/items/wooden_spear.tres" id="34_item_spear"]
+[ext_resource type="Resource" path="res://assets/items/wooden_bow.tres" id="35_item_bow"]
+[ext_resource type="Resource" path="res://assets/items/arrow.tres" id="36_item_arrow"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -128,11 +136,25 @@ StartingItems = Array[Dictionary]([{
 }, {
 "item": ExtResource("26_item_potato_seed"),
 "amount": 2,
+}, {
+"item": ExtResource("34_item_spear"),
+"amount": 1,
+}, {
+"item": ExtResource("35_item_bow"),
+"amount": 1,
+}, {
+"item": ExtResource("36_item_arrow"),
+"amount": 10,
 }])
 
 [node name="CraftingSystem" type="Node" parent="Player"]
 script = ExtResource("7_crafting")
 Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot"), ExtResource("27_recipe_flour"), ExtResource("28_recipe_bread")])
+
+[node name="WeaponSystem" type="Node" parent="Player"]
+script = ExtResource("29_weapon")
+CameraPath = NodePath("../CameraPivot/Camera3D")
+InventoryPath = NodePath("../InventorySystem")
 
 [node name="Environment" type="Node3D" parent="."]
 
@@ -181,6 +203,36 @@ BuildingSystem = NodePath("../BuildingSystem")
 [node name="Sheep1" parent="." node_paths=PackedStringArray("BuildingSystem") instance=ExtResource("23_sheep")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 6)
 BuildingSystem = NodePath("../BuildingSystem")
+
+[node name="Boar1" parent="." instance=ExtResource("30_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 8)
+EnemyData = ExtResource("31_boar")
+Player = NodePath("../Player")
+DayNightServicePath = NodePath("../Environment/DayNightService")
+
+[node name="Boar2" parent="." instance=ExtResource("30_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.5, 8)
+EnemyData = ExtResource("31_boar")
+Player = NodePath("../Player")
+DayNightServicePath = NodePath("../Environment/DayNightService")
+
+[node name="Wolf1" parent="." instance=ExtResource("30_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.5, 8)
+EnemyData = ExtResource("32_wolf")
+Player = NodePath("../Player")
+DayNightServicePath = NodePath("../Environment/DayNightService")
+
+[node name="Wolf2" parent="." instance=ExtResource("30_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.5, 8)
+EnemyData = ExtResource("32_wolf")
+Player = NodePath("../Player")
+DayNightServicePath = NodePath("../Environment/DayNightService")
+
+[node name="Crab1" parent="." instance=ExtResource("30_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.5, 8)
+EnemyData = ExtResource("33_crab")
+Player = NodePath("../Player")
+DayNightServicePath = NodePath("../Environment/DayNightService")
 
 [node name="HUD" parent="." node_paths=PackedStringArray("Player", "DayNightService", "WeatherService") instance=ExtResource("12_hud")]
 Player = NodePath("../Player")
