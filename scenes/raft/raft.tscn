@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/world/raft/Raft.cs" id="1_raft"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.45, 0.32, 0.2, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_raft"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(3, 0.3, 2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_raft"]
+size = Vector3(3, 0.3, 2)
+
+[node name="Raft" type="RigidBody3D"]
+gravity_scale = 0.0
+script = ExtResource("1_raft")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_raft")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_raft")

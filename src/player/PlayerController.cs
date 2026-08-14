@@ -134,6 +134,17 @@ public partial class PlayerController : CharacterBody3D
       velocity = _motion.Jump(velocity);
     }
 
+    // T8.5.2 (raft carry): Godot's built-in platform-velocity inheritance
+    // proved unreliable for RigidBody3D floors in this project's tests, so the
+    // carry is done explicitly: a short downward probe from the feet finds a
+    // Raft and its horizontal velocity is ADDED to the movement velocity every
+    // tick (replaced, not accumulated — the player tracks the raft and can
+    // still walk relative to it; walking off clears the carry; vertical
+    // velocity — gravity/jump — is untouched). Fail-closed: no raft below (or
+    // no physics space) → no carry.
+    var carry = ResolveRaftCarry();
+    velocity = new Vector3(velocity.X + carry.X, velocity.Y, velocity.Z + carry.Z);
+
     Velocity = velocity;
     MoveAndSlide();
 
@@ -149,4 +160,45 @@ public partial class PlayerController : CharacterBody3D
     Input.GetVector(
       MoveLeftAction, MoveRightAction, MoveForwardAction, MoveBackAction
     );
+
+  /// <summary>
+  ///   T8.5.2 (raft carry): the horizontal velocity of the Raft under the
+  ///   player's feet (zero when none). A short downward probe from the feet
+  ///   (0.5 m, player body excluded) finds the platform; the raft's
+  ///   LinearVelocity horizontal component is returned so _PhysicsProcess can
+  ///   add it to the movement velocity. Public test seam (like the WeaponSystem
+  ///   Resolve* methods) — the detection logic is unit-tested directly.
+  ///   Fail-closed: no physics space or no raft → Vector3.Zero.
+  /// </summary>
+  public Vector3 ResolveRaftCarry()
+  {
+    var spaceState = GetWorld3D().DirectSpaceState;
+    if (spaceState == null)
+    {
+      return Vector3.Zero;
+    }
+
+    var feet = GlobalPosition - new Vector3(0f, 1f, 0f);
+    var probe = PhysicsRayQueryParameters3D.Create(
+      feet + new Vector3(0f, 0.05f, 0f),
+      feet - new Vector3(0f, 0.45f, 0f)
+    );
+    probe.Exclude = new Godot.Collections.Array<Rid> { GetRid() };
+    var hit = spaceState.IntersectRay(probe);
+    if (hit.Count == 0)
+    {
+      return Vector3.Zero;
+    }
+
+    var collider = hit["collider"].As<Node>();
+    for (var node = collider; node != null; node = node.GetParent())
+    {
+      if (node is Raft raft)
+      {
+        return new Vector3(raft.LinearVelocity.X, 0f, raft.LinearVelocity.Z);
+      }
+    }
+
+    return Vector3.Zero;
+  }
 }
