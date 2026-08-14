@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/EnemyData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "spider"
+DisplayName = "Spider"
+MaxHealth = 35.0
+Damage = 8.0
+MoveSpeed = 3.0
+AttackRange = 1.5
+AttackCooldown = 1.0
+Behavior = 0
+Boss = false
+Scale = 1.0
+DropItemId = ""
+DropAmount = 0

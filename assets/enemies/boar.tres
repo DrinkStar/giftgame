@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/combat/EnemyData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "boar"
+DisplayName = "Boar"
+MaxHealth = 60.0
+Damage = 12.0
+MoveSpeed = 4.0
+AttackRange = 1.5
+AttackCooldown = 1.0
+Behavior = 1
+Boss = false
+Scale = 1.0
+DropItemId = "raw_meat"
+DropAmount = 1

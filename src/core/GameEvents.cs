@@ -160,6 +160,25 @@ public static class GameEvents
 
   #endregion Farming
 
+  #region Combat
+
+  /// <summary>
+  ///   An enemy died, carrying its data id (e.g. "crab"). Raised by
+  ///   <see cref="Combat.EnemyBase.Die"/> exactly once per enemy. Raise-only
+  ///   this iteration (Iter6 plan Decision 9): the event exists so future
+  ///   audio/UI/quest systems can subscribe without touching the enemy nodes.
+  /// </summary>
+  public static event Action<string>? EnemyDied;
+
+  /// <summary>
+  ///   A boss enemy died, carrying its data id (e.g. "shark_king"). Raised in
+  ///   addition to <see cref="EnemyDied"/> for enemies flagged
+  ///   <c>Boss = true</c>. Raise-only this iteration (Iter6 plan Decision 9).
+  /// </summary>
+  public static event Action<string>? BossDefeated;
+
+  #endregion Combat
+
   #region Raise helpers
 
   public static void RaiseGameStarted() => GameStarted?.Invoke();
@@ -247,6 +266,11 @@ public static class GameEvents
 
   public static void RaiseLivestockProduced(string livestockId) =>
     LivestockProduced?.Invoke(livestockId);
+
+  public static void RaiseEnemyDied(string enemyId) => EnemyDied?.Invoke(enemyId);
+
+  public static void RaiseBossDefeated(string enemyId) =>
+    BossDefeated?.Invoke(enemyId);
 
   #endregion Raise helpers
 }
