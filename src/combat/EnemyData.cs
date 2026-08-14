@@ -4,25 +4,34 @@ namespace SeaAnomaly;
 using Godot;
 
 /// <summary>
-///   Enemy movement archetypes (Iter6 plan Decision 5): MeleeChase walks
-///   straight at the player, Charge bursts when close and the cooldown is
-///   ready, Swimmer tracks the player in all three axes without gravity.
-///   Serialized as the int value in .tres files (upstream ItemType layout,
-///   explicit values so file/editor numbers stay stable).
+///   Enemy movement archetypes (Iter6 plan Decision 5 + Iter6.1 todo 3):
+///   MeleeChase walks straight at the player, Charge bursts when close and
+///   the cooldown is ready, Swimmer tracks the player in all three axes
+///   without gravity, Flyer (bat) seeks the player in 3 axes ignoring
+///   gravity, Webbing (spider) chases like MeleeChase but slows the player
+///   on hit, SeaBeast (storm beast) only pursues while the player is on a
+///   floating body, Mutant (mutant) enrages below half health and slams a
+///   short-range AoE. Serialized as the int value in .tres files (upstream
+///   ItemType layout, explicit values so file/editor numbers stay stable).
 /// </summary>
 public enum EnemyBehavior
 {
   MeleeChase = 0,
   Charge = 1,
-  Swimmer = 2
+  Swimmer = 2,
+  Flyer = 3,
+  Webbing = 4,
+  SeaBeast = 5,
+  Mutant = 6
 }
 
 /// <summary>
 ///   Data-only enemy definition serialized in assets/enemies/*.tres (Iter6
 ///   plan Decision 5/6). One resource per enemy; the file name equals
 ///   <see cref="Id"/>. Behavior specializations are applied by
-///   <see cref="EnemyBase"/>; spider/bat/storm_beast/mutant ship as
-///   MeleeChase placeholders until their dedicated behaviors land.
+///   <see cref="EnemyBase"/>; spider (Webbing), bat (Flyer),
+///   storm_beast (SeaBeast) and mutant (Mutant) got their dedicated
+///   behaviors in Iter6.1.
 /// </summary>
 [GlobalClass]
 public partial class EnemyData : Resource

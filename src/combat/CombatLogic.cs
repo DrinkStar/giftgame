@@ -97,4 +97,78 @@ public static class CombatLogic
   /// </summary>
   public static bool ShouldAttack(float dist, float range, bool cooldownReady) =>
     dist <= range && cooldownReady;
+
+  #region Iter6.1 enemy behaviors (todo 3)
+
+  /// <summary>Fixed flyer speed boost over its .tres MoveSpeed (Iter6.1).</summary>
+  public const float FlyerSpeedBoost = 1.25f;
+
+  /// <summary>Mutant rage triggers strictly below half health (Iter6.1).</summary>
+  public const float MutantRageThreshold = 0.5f;
+
+  public const float MutantRageSpeedBoost = 1.5f;
+  public const float MutantRageRangeBoost = 1.5f;
+
+  /// <summary>Speed/range multipliers applied by a mutant rage.</summary>
+  public readonly struct RageFactors
+  {
+    public readonly float SpeedMultiplier;
+    public readonly float RangeMultiplier;
+
+    public RageFactors(float speedMultiplier, float rangeMultiplier)
+    {
+      SpeedMultiplier = speedMultiplier;
+      RangeMultiplier = rangeMultiplier;
+    }
+  }
+
+  /// <summary>
+  ///   Vertical velocity that seeks the target at <paramref name="dy"/>
+  ///   meters above the enemy, capped at <paramref name="speed"/>. Returns
+  ///   the exact closing velocity for the current frame (dy/dt) when the gap
+  ///   is small, so the flyer converges instead of oscillating around the
+  ///   target Y. Zero when dt is not positive.
+  /// </summary>
+  public static float FlyerVerticalSeek(float dy, float speed, float dt)
+  {
+    if (dt <= 0f)
+      return 0f;
+
+    return Mathf.Clamp(dy / dt, -speed, speed);
+  }
+
+  /// <summary>
+  ///   Effective speed multiplier of a slow that has <paramref name="remaining"/>
+  ///   seconds left BEFORE the current <paramref name="dt"/> tick: the imposed
+  ///   <paramref name="factor"/> while time remains after the tick, decaying
+  ///   back to 1f once the timer expires. Deterministic for tests.
+  /// </summary>
+  public static float SlowFactor(float factor, float remaining, float dt) =>
+    remaining > dt ? factor : 1f;
+
+  /// <summary>
+  ///   Whether a sea beast pursues: the player is on the watched float, or no
+  ///   float is wired (<paramref name="defaultAggro"/> — the enemy treats the
+  ///   player as permanently at sea and always chases).
+  /// </summary>
+  public static bool SeaBeastAggro(bool playerOnFloat, bool defaultAggro) =>
+    playerOnFloat || defaultAggro;
+
+  /// <summary>
+  ///   Mutant rage multipliers: below <see cref="MutantRageThreshold"/> health
+  ///   the mutant moves and slams ×1.5, otherwise both are 1f.
+  /// </summary>
+  public static RageFactors MutantRage(float hpRatio) =>
+    hpRatio < MutantRageThreshold
+      ? new RageFactors(MutantRageSpeedBoost, MutantRageRangeBoost)
+      : new RageFactors(1f, 1f);
+
+  /// <summary>
+  ///   Mutant slam radius: the base attack range scaled by the current rage
+  ///   range multiplier (rage widens the AoE slam).
+  /// </summary>
+  public static float MutantAoeRadius(float baseRadius, float hpRatio) =>
+    baseRadius * MutantRage(hpRatio).RangeMultiplier;
+
+  #endregion Iter6.1 enemy behaviors (todo 3)
 }

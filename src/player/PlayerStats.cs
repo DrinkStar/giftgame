@@ -51,6 +51,12 @@ public partial class PlayerStats : Node
   private float _thirst;
   private float _stamina;
 
+  /// <summary>Seconds left on the active slow (0 = no slow).</summary>
+  private float _slowRemaining;
+
+  /// <summary>Speed factor applied while <see cref="_slowRemaining"/> is active.</summary>
+  private float _slowFactor = 1f;
+
   private bool _deathNotified;
   private ulong _staminaDrainUntilMs;
 
@@ -139,6 +145,10 @@ public partial class PlayerStats : Node
     // (simplification — see StaminaDrainSuppressionMs).
     if (Time.GetTicksMsec() >= _staminaDrainUntilMs)
       Stamina += StaminaRegenRate * dt;
+
+    // Weakening slow from enemy hits (Iter6.1: spider webbing) ticks down.
+    if (_slowRemaining > 0f)
+      _slowRemaining = Mathf.Max(0f, _slowRemaining - dt);
   }
 
   public void Eat(float hungerRestore, float healthRestore = 0)
@@ -153,6 +163,28 @@ public partial class PlayerStats : Node
   public void TakeDamage(float damage) => Health -= damage;
 
   public void Heal(float amount) => Health += amount;
+
+  /// <summary>
+  ///   Applies a movement slow for <paramref name="duration"/> seconds at
+  ///   <paramref name="factor"/> speed (e.g. 2 s at 0.5× from spider webbing,
+  ///   Iter6.1). Re-applying overwrites the previous slow; a non-positive
+  ///   duration is ignored.
+  /// </summary>
+  public void ApplySlow(float duration, float factor)
+  {
+    if (duration <= 0f)
+      return;
+
+    _slowRemaining = duration;
+    _slowFactor = factor;
+  }
+
+  /// <summary>
+  ///   Current movement speed multiplier: <see cref="_slowFactor"/> while a
+  ///   slow is active, 1f otherwise. Exposed for PlayerController (and other
+  ///   movement consumers) to read — wiring lands with the dual-weapon task.
+  /// </summary>
+  public float SpeedMultiplier => _slowRemaining > 0f ? _slowFactor : 1f;
 
   /// <summary>
   ///   Spends stamina (sprint tick or jump) and starts the 0.5 s suppression

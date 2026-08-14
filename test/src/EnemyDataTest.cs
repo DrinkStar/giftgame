@@ -22,10 +22,10 @@ public class EnemyDataTest : TestClass
     ("boar", 60f, 12f, 4f, 1.5f, 1f, EnemyBehavior.Charge, false, 1f, "raw_meat", 1),
     ("wolf", 40f, 10f, 4.5f, 1.5f, 1f, EnemyBehavior.MeleeChase, false, 1f, "", 0),
     ("shark", 80f, 15f, 5f, 2f, 1f, EnemyBehavior.Swimmer, false, 1f, "", 0),
-    ("spider", 35f, 8f, 3f, 1.5f, 1f, EnemyBehavior.MeleeChase, false, 1f, "", 0),
-    ("bat", 20f, 6f, 4f, 1.5f, 1f, EnemyBehavior.MeleeChase, false, 1f, "", 0),
-    ("storm_beast", 120f, 20f, 4f, 1.5f, 1f, EnemyBehavior.MeleeChase, false, 1f, "", 0),
-    ("mutant", 100f, 18f, 4f, 1.5f, 1f, EnemyBehavior.MeleeChase, false, 1f, "", 0),
+    ("spider", 35f, 8f, 3f, 1.5f, 1f, EnemyBehavior.Webbing, false, 1f, "", 0),
+    ("bat", 20f, 6f, 4f, 1.5f, 1f, EnemyBehavior.Flyer, false, 1f, "", 0),
+    ("storm_beast", 120f, 20f, 4f, 1.5f, 1f, EnemyBehavior.SeaBeast, false, 1f, "", 0),
+    ("mutant", 100f, 18f, 4f, 1.5f, 1f, EnemyBehavior.Mutant, false, 1f, "", 0),
     ("shark_king", 400f, 30f, 5f, 3f, 1.5f, EnemyBehavior.Swimmer, true, 2f, "", 0)
   };
 

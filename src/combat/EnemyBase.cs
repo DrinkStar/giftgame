@@ -38,18 +38,39 @@ public partial class EnemyBase : CharacterBody3D
   [Export] public float ChargeCooldown = 2f;
   [Export] public float NightSpeedMultiplierValue = 1.5f;
 
+  /// <summary>
+  ///   Optional path to a FloatingBody (or any Node3D) the player stands on.
+  ///   SeaBeast enemies only pursue while the player is within
+  ///   <see cref="FloatAggroRadius"/> of it. Empty path = always pursue.
+  /// </summary>
+  [Export] public NodePath FloatTargetPath = new();
+
+  /// <summary>SeaBeast aggro radius around the float target, in meters.</summary>
+  [Export] public float FloatAggroRadius = 8f;
+
   #endregion Exports
+
+  /// <summary>Slow applied to the player on a webbing hit (Iter6.1 todo 3).</summary>
+  private const float WebbingSlowDuration = 2f;
+  private const float WebbingSlowFactor = 0.5f;
+
+  /// <summary>Small per-enemy hover sine amplitude/frequency (flyer anti-stall).</summary>
+  private const float FlyerHoverAmplitude = 0.15f;
+  private const float FlyerHoverFrequency = 2.5f;
 
   private CharacterBody3D? _player;
   private DayNightService? _dayNight;
   private EnemyHealth? _health;
   private StandardMaterial3D? _material;
   private Color _tintColor = new(0.8f, 0.8f, 0.8f);
+  private Node3D? _floatTarget;
 
   private float _attackCooldown;
   private float _chargeCooldownRemaining;
   private float _chargeRemaining;
   private float _flashRemaining;
+  private float _hoverTime;
+  private float _hoverPhase;
 
   /// <summary>Exposed for tests (null until health is initialized).</summary>
   public EnemyHealth? HealthTracker => _health;
@@ -60,9 +81,15 @@ public partial class EnemyBase : CharacterBody3D
       _player = GetNodeOrNull<CharacterBody3D>(Player);
     if (!DayNightServicePath.IsEmpty)
       _dayNight = GetNodeOrNull<DayNightService>(DayNightServicePath);
+    if (!FloatTargetPath.IsEmpty)
+      _floatTarget = GetNodeOrNull<Node3D>(FloatTargetPath);
 
     if (EnemyData != null)
       _health = new EnemyHealth(EnemyData.MaxHealth);
+
+    // Deterministic per-instance hover phase (flyer anti-stall): the same
+    // enemy always bobs on the same sine offset so tests stay reproducible.
+    _hoverPhase = GetInstanceId() % 6283 / 6283f * Mathf.Tau;
 
     ApplyScale();
     SetupMaterial();
@@ -87,9 +114,13 @@ public partial class EnemyBase : CharacterBody3D
     _attackCooldown = Mathf.Max(0f, _attackCooldown - dt);
     var dist = GlobalPosition.DistanceTo(_player.GlobalPosition);
 
-    switch (EnemyData.Behavior)
+    var behavior = EnemyData.Behavior;
+    var seaBeastAggro = behavior == EnemyBehavior.SeaBeast && IsSeaBeastAggro();
+
+    switch (behavior)
     {
       case EnemyBehavior.MeleeChase:
+      case EnemyBehavior.Webbing:
         MoveMeleeChase(dt);
         break;
       case EnemyBehavior.Charge:
@@ -98,11 +129,36 @@ public partial class EnemyBase : CharacterBody3D
       case EnemyBehavior.Swimmer:
         MoveSwimmer();
         break;
+      case EnemyBehavior.Flyer:
+        MoveFlyer(dt);
+        break;
+      case EnemyBehavior.SeaBeast:
+        if (seaBeastAggro)
+          MoveSwimmer();
+        else
+          Velocity = Vector3.Zero; // Idle until the player boards the float.
+        break;
+      case EnemyBehavior.Mutant:
+        MoveMeleeChase(dt);
+        break;
     }
 
-    if (CombatLogic.ShouldAttack(dist, EnemyData.AttackRange, _attackCooldown <= 0f))
+    // SeaBeast only attacks while aggroed; the mutant's slam widens the
+    // trigger radius into an AoE (CombatLogic.MutantAoeRadius).
+    var canAttack = behavior != EnemyBehavior.SeaBeast || seaBeastAggro;
+    var attackRange = behavior == EnemyBehavior.Mutant
+      ? CombatLogic.MutantAoeRadius(EnemyData.AttackRange, HealthRatio())
+      : EnemyData.AttackRange;
+
+    if (canAttack && CombatLogic.ShouldAttack(dist, attackRange, _attackCooldown <= 0f))
     {
       _player.GetNodeOrNull<PlayerStats>("PlayerStats")?.TakeDamage(EnemyData.Damage);
+
+      // Webbing hit: the spider slows the player for 2 s at 0.5× speed.
+      if (behavior == EnemyBehavior.Webbing)
+        _player.GetNodeOrNull<PlayerStats>("PlayerStats")
+          ?.ApplySlow(WebbingSlowDuration, WebbingSlowFactor);
+
       _attackCooldown = EnemyData.AttackCooldown;
     }
   }
@@ -232,9 +288,12 @@ public partial class EnemyBase : CharacterBody3D
 
   private void MoveMeleeChase(float dt)
   {
-    // Wolves get the night boost (Decision 7/8).
+    // Wolves get the night boost (Decision 7/8); mutants add their rage
+    // speed on top (Iter6.1).
     var boost = CombatLogic.NightSpeedMultiplier(EnemyData!.Id, IsNight());
-    var speed = EnemyData.MoveSpeed * (boost > 1f ? NightSpeedMultiplierValue : 1f);
+    var speed = EnemyData.MoveSpeed
+      * (boost > 1f ? NightSpeedMultiplierValue : 1f)
+      * RageSpeedMultiplier();
 
     var dir = HorizontalDirectionToPlayer();
     Velocity = new Vector3(dir.X * speed, Velocity.Y + Gravity * dt, dir.Z * speed);
@@ -276,11 +335,74 @@ public partial class EnemyBase : CharacterBody3D
     // Track the player Y too; no gravity while swimming (Decision 7).
     var verticalDir = Mathf.Abs(toPlayer.Y) < 0.25f ? 0f : Mathf.Sign(toPlayer.Y);
 
+    var speed = EnemyData!.MoveSpeed * RageSpeedMultiplier();
+
     Velocity = new Vector3(
-      horizontalDir.X * EnemyData!.MoveSpeed,
-      verticalDir * EnemyData.MoveSpeed,
-      horizontalDir.Z * EnemyData.MoveSpeed
+      horizontalDir.X * speed,
+      verticalDir * speed,
+      horizontalDir.Z * speed
     );
     MoveAndSlide();
+  }
+
+  /// <summary>
+  ///   Flyer behavior (Iter6.1): no gravity — the Y velocity is entirely
+  ///   seek-driven toward the player's Y, plus a small deterministic per-enemy
+  ///   sine bob so converging flyers never stall on top of each other.
+  /// </summary>
+  private void MoveFlyer(float dt)
+  {
+    var toPlayer = _player!.GlobalPosition - GlobalPosition;
+
+    var horizontal = new Vector3(toPlayer.X, 0f, toPlayer.Z);
+    var horizontalDir =
+      horizontal.LengthSquared() > 0.0001f ? horizontal.Normalized() : Vector3.Zero;
+
+    var speed = EnemyData!.MoveSpeed * CombatLogic.FlyerSpeedBoost;
+    var verticalVelocity = CombatLogic.FlyerVerticalSeek(toPlayer.Y, speed, dt);
+
+    _hoverTime += dt;
+    var hover = Mathf.Sin(_hoverTime * FlyerHoverFrequency + _hoverPhase)
+      * FlyerHoverAmplitude;
+
+    Velocity = new Vector3(
+      horizontalDir.X * speed,
+      verticalVelocity + hover,
+      horizontalDir.Z * speed
+    );
+    MoveAndSlide();
+  }
+
+  /// <summary>Current hp ratio (1 = full); safe when health is absent.</summary>
+  private float HealthRatio()
+  {
+    var health = EnsureHealth();
+    return health.MaxHealth <= 0f ? 1f : health.Health / health.MaxHealth;
+  }
+
+  /// <summary>
+  ///   Extra speed multiplier from a mutant rage; other behaviors run at 1f
+  ///   (the boss rage hook lands with the BossPhaseController in Iter6.1).
+  /// </summary>
+  private float RageSpeedMultiplier() =>
+    EnemyData!.Behavior == EnemyBehavior.Mutant
+      ? CombatLogic.MutantRage(HealthRatio()).SpeedMultiplier
+      : 1f;
+
+  /// <summary>
+  ///   SeaBeast aggro (Iter6.1): pursue while the player is on the watched
+  ///   float, or always when no float is wired (treated as permanently at
+  ///   sea).
+  /// </summary>
+  private bool IsSeaBeastAggro() =>
+    CombatLogic.SeaBeastAggro(PlayerIsOnFloat(), _floatTarget == null);
+
+  private bool PlayerIsOnFloat()
+  {
+    if (_floatTarget == null || _player == null)
+      return false;
+
+    return _player.GlobalPosition.DistanceTo(_floatTarget.GlobalPosition)
+      <= FloatAggroRadius;
   }
 }
