@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/farming/CropData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "wheat"
+DisplayName = "Wheat"
+SeedItemId = "wheat_seed"
+ProduceItemId = "wheat"
+GrowthSeconds = 80.0
+MinYield = 3
+MaxYield = 5

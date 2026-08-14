@@ -72,9 +72,11 @@ public partial class PlayerInteraction : Node
     var to = from + direction * InteractionDistance;
 
     var query = PhysicsRayQueryParameters3D.Create(from, to);
-    // Layers 1 (World), 3 (Interactables) and 4 (Animals); the player's own
-    // body is excluded by RID so the ray can pass through it.
-    query.CollisionMask = 0b1101;
+    // Layers 1 (World), 3 (Interactables), 4 (Animals) and 5 (Buildings —
+    // FIX(iter5-plan): added so farm plots placed through the building system
+    // are ray-reachable, plan Decision 8); the player's own body is excluded
+    // by RID so the ray can pass through it.
+    query.CollisionMask = 0b11101;
     query.CollideWithAreas = true;
     query.CollideWithBodies = true;
     query.Exclude = new Godot.Collections.Array<Rid> { _player.GetRid() };
@@ -108,6 +110,11 @@ public partial class PlayerInteraction : Node
   /// <summary>
   ///   Walks the collider's parent chain looking for an IInteractable: the
   ///   collider itself first, then every ancestor up to the scene root.
+  ///   FIX(iter5-plan): when an ancestor is a BuildableInstance, its
+  ///   ObjectInstance is checked too (Decision 8) — buildable models like
+  ///   FarmPlot are instantiated as a CHILD of the BuildableInstance, so the
+  ///   plain ancestor walk would never reach them and buildable interactables
+  ///   would stay permanently unreachable.
   /// </summary>
   private static IInteractable? FindInteractable(GodotObject collider)
   {
@@ -122,6 +129,15 @@ public partial class PlayerInteraction : Node
     {
       if (current is IInteractable interactable)
         return interactable;
+
+      // FIX(iter5-plan): reach into buildable model for IInteractable (Decision 8)
+      if (
+        current is BuildableInstance buildable
+        && buildable.ObjectInstance is IInteractable objectInteractable
+      )
+      {
+        return objectInteractable;
+      }
 
       current = current.GetParent();
     }

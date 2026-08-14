@@ -129,6 +129,37 @@ public static class GameEvents
 
   #endregion Building
 
+  #region Farming
+
+  /// <summary>
+  ///   A crop was planted on a farm plot, carrying the crop id (e.g.
+  ///   "potato"). Raise-only this iteration (Iter5 plan Decision 9): the
+  ///   events exist so future audio/UI/stats systems can subscribe without
+  ///   touching the farming nodes.
+  /// </summary>
+  public static event Action<string>? CropPlanted;
+
+  /// <summary>
+  ///   A ready crop was harvested, carrying the crop id. Raise-only this
+  ///   iteration (Iter5 plan Decision 9).
+  /// </summary>
+  public static event Action<string>? CropHarvested;
+
+  /// <summary>
+  ///   A wild animal was tamed, carrying its livestock type id. Raise-only
+  ///   this iteration (Iter5 plan Decision 9); first raised by W2.
+  /// </summary>
+  public static event Action<string>? LivestockTamed;
+
+  /// <summary>
+  ///   A tamed animal produced its produce (egg/wool/milk), carrying the
+  ///   livestock type id. Raise-only this iteration (Iter5 plan Decision 9);
+  ///   first raised by W2.
+  /// </summary>
+  public static event Action<string>? LivestockProduced;
+
+  #endregion Farming
+
   #region Raise helpers
 
   public static void RaiseGameStarted() => GameStarted?.Invoke();
@@ -206,6 +237,16 @@ public static class GameEvents
   public static void RaiseMouseTileBodyEntered() => MouseTileBodyEntered?.Invoke();
 
   public static void RaiseMouseTileBodyExited() => MouseTileBodyExited?.Invoke();
+
+  public static void RaiseCropPlanted(string cropId) => CropPlanted?.Invoke(cropId);
+
+  public static void RaiseCropHarvested(string cropId) => CropHarvested?.Invoke(cropId);
+
+  public static void RaiseLivestockTamed(string livestockId) =>
+    LivestockTamed?.Invoke(livestockId);
+
+  public static void RaiseLivestockProduced(string livestockId) =>
+    LivestockProduced?.Invoke(livestockId);
 
   #endregion Raise helpers
 }

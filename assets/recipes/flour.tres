@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CraftingRecipe" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/CraftingRecipe.cs" id="1_recipe"]
+[ext_resource type="Script" path="res://src/inventory/CraftingIngredient.cs" id="2_ingredient"]
+[ext_resource type="Resource" path="res://assets/items/wheat.tres" id="3_wheat"]
+[ext_resource type="Resource" path="res://assets/items/wheat_flour.tres" id="4_flour"]
+
+[sub_resource type="Resource" id="ing_1"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("3_wheat")
+Amount = 1
+
+[resource]
+script = ExtResource("1_recipe")
+Id = "flour"
+DisplayName = "Flour"
+Result = ExtResource("4_flour")
+ResultAmount = 1
+Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1")])
+RequiresCampfire = false
+RequiresWorkbench = false
+CraftingTime = 5.0
