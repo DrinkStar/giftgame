@@ -43,6 +43,22 @@ public static class BuildingSaveSystem
     string folder = JsonSaveSystem.DEFAULT_FOLDER
   )
   {
+    var saveFile = Snapshot(grids, freeObjects);
+    var fileName = overwrite && currentFile != null ? StripFolder(currentFile) : null;
+    return JsonSaveSystem.Save(saveFile, folder, fileName);
+  }
+
+  /// <summary>
+  ///   FIX(iter8-plan): T8.1 — builds the building <see cref="SaveFile"/> DTO
+  ///   WITHOUT writing it, so the unified SaveService can embed the building
+  ///   snapshot inside the full game save (one file, no double-save). Extracted
+  ///   from <see cref="Save"/>; behavior identical.
+  /// </summary>
+  public static SaveFile Snapshot(
+    List<BuildingSystemGrid> grids,
+    List<BuildableInstance> freeObjects
+  )
+  {
     var saveFile = new SaveFile();
 
     // FIX(iter4-plan): Fix ④: write ALL grids with their list index — upstream only wrote
@@ -59,8 +75,7 @@ public static class BuildingSaveSystem
       saveFile.FreeObjects.Add(ToSaveFreeObject(freeObject));
     }
 
-    var fileName = overwrite && currentFile != null ? StripFolder(currentFile) : null;
-    return JsonSaveSystem.Save(saveFile, folder, fileName);
+    return saveFile;
   }
 
   /// <summary>
@@ -94,6 +109,24 @@ public static class BuildingSaveSystem
       return false;
     }
 
+    return Restore(saveFile, library, grids, freeObjectContainer, freeLayerMask);
+  }
+
+  /// <summary>
+  ///   FIX(iter8-plan): T8.1 — restores a building <see cref="SaveFile"/> DTO
+  ///   (already deserialized) into the grids and free-object container, so the
+  ///   unified SaveService can restore buildings from the embedded snapshot in
+  ///   the full game save. Extracted from <see cref="Load"/>; behavior
+  ///   identical (missing asset → skipped with a warning, never throws).
+  /// </summary>
+  public static bool Restore(
+    SaveFile saveFile,
+    BuildableResourceLibrary library,
+    IReadOnlyList<BuildingSystemGrid> grids,
+    Node freeObjectContainer,
+    uint freeLayerMask
+  )
+  {
     // FIX(iter4-plan): Fix ④: locate each saved grid by its stored Index. The grid list is
     // index-ordered (Index == i for valid files), but a tampered file must
     // never index out of bounds.

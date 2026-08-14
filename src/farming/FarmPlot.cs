@@ -48,6 +48,10 @@ public partial class FarmPlot : StaticBody3D, IInteractable
 
   public override void _Ready()
   {
+    // FIX(iter8-plan): T8.2 — group registration lets SaveService collect the
+    // (dynamically placed) plots for the unified save.
+    AddToGroup("farm_plots");
+
     // Cache the "Visual" child and a per-instance copy of its material so
     // state tinting never mutates the shared sub-resource of the scene.
     _visual = GetNodeOrNull<MeshInstance3D>("Visual");
@@ -60,6 +64,33 @@ public partial class FarmPlot : StaticBody3D, IInteractable
       _visual.MaterialOverride = _visualMaterial;
     }
 
+    ApplyVisualState();
+  }
+
+  /// <summary>
+  ///   FIX(iter8-plan): T8.2 — snapshots the plot state (crop id + growth
+  ///   progress) for the unified save, keyed by world position.
+  /// </summary>
+  public FarmSaveData GetSaveState() =>
+    new()
+    {
+      PositionX = GlobalPosition.X,
+      PositionZ = GlobalPosition.Z,
+      CropId = _crop?.Id ?? "",
+      ElapsedSeconds = _elapsed,
+      Ready = _ready
+    };
+
+  /// <summary>
+  ///   FIX(iter8-plan): T8.2 — restores plot state after a load. Writes the
+  ///   fields directly (no CropPlanted/CropHarvested events) and refreshes the
+  ///   visual; an unknown crop id leaves the plot empty.
+  /// </summary>
+  public void ApplySaveState(FarmSaveData state)
+  {
+    _crop = string.IsNullOrEmpty(state.CropId) ? null : FarmingData.Get(state.CropId);
+    _elapsed = state.ElapsedSeconds;
+    _ready = state.Ready;
     ApplyVisualState();
   }
 

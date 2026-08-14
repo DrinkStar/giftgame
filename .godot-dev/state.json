@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260813-001",
   "created_at": "2026-08-13T00:00:00+08:00",
-  "updated_at": "2026-08-14T16:13:42+08:00",
+  "updated_at": "2026-08-15T00:00:00+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration8p",
-  "git_branch": "dev/iteration8p",
-  "last_stable_commit": "4e3b1e5dcd1ada04c82dceef07b4d1ba2158525f",
+  "current_iteration": "iteration8",
+  "git_branch": "dev/iteration8",
+  "last_stable_commit": "e5c2ec7d7e56e36ffa4e2aa0e8637a6e42cb93bd",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
@@ -108,21 +108,18 @@
       ]
     },
     {
-      "name": "iteration8p",
-      "status": "done",
+      "name": "iteration8",
+      "status": "in_progress",
       "tasks": [
-        {"id": "R1", "file": "src/progression + call-site multipliers", "action": "create", "status": "done"},
-        {"id": "R2", "file": "BuildableResource.MaxDurability + Save DTO", "action": "create", "status": "done"},
-        {"id": "T8p.1", "file": "use_item eat/drink", "action": "create", "status": "done"},
-        {"id": "T8p.2", "file": "WoodTree/CoconutPalm gather", "action": "create", "status": "done"},
-        {"id": "T8p.3", "file": "GroundLoot + death drop", "action": "create", "status": "done"},
-        {"id": "T8p.4", "file": "bed + respawn slot", "action": "create", "status": "done"},
-        {"id": "T8p.6", "file": "torch light", "action": "create", "status": "done"},
-        {"id": "T8p.5", "file": "art pack + SfxHook", "action": "import", "status": "done"}
+        {"id": "T8.1", "file": "src/core/save/{SaveService,GameSaveData}.cs + BuildingSaveSystem Snapshot/Restore + F5/F9 迁移 + GameEvents GameSaved/GameLoaded", "action": "create/modify", "status": "in_progress"},
+        {"id": "T8.2", "file": "FarmPlot/Livestock GetSaveState/ApplySaveState + farm_plots/livestock groups", "action": "modify", "status": "in_progress"},
+        {"id": "T8.3", "file": "src/ui/{TutorialFlow,TutorialUI}.cs + scenes/ui/tutorial.tscn + DayDurationMinutes=25", "action": "create/modify", "status": "pending"},
+        {"id": "T8.4", "file": "src/ui/CraftUI.cs + scenes/ui/craft_ui.tscn", "action": "create", "status": "pending"},
+        {"id": "T8.4b", "file": "src/combat/WeaponSystem.cs RequiresCooking gate", "action": "modify", "status": "in_progress"}
       ]
     }
   ],
-  "checkpoint": "phase3_iteration8p_verified",
+  "checkpoint": "phase3_iteration8_started",
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "Game.tscn --quit-after 5 exit 0",

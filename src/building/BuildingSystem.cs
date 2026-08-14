@@ -261,6 +261,13 @@ public partial class BuildingSystem : Node3D
   /// <inheritdoc/>
   public override void _Input(InputEvent @event)
   {
+    // FIX(iter8-plan): T8.4 — a modal overlay (CraftUI) may lock gameplay
+    // input; the building hotkeys must not fire underneath it.
+    if (GameEvents.GameplayInputLocked)
+    {
+      return;
+    }
+
     if (@event.IsActionPressed("build_mode"))
     {
       SetBuildMode(!_isBuildModeActive);
@@ -276,17 +283,9 @@ public partial class BuildingSystem : Node3D
       }
     }
 
-    // FIX(iter4-plan): Decision 7: F5/F9 quick save/load seams — the real save system lands
-    // in W2, so for now they only raise GameEvents placeholders.
-    if (@event.IsActionPressed("quick_save"))
-    {
-      OnQuickSave();
-    }
-
-    if (@event.IsActionPressed("quick_load"))
-    {
-      OnQuickLoad();
-    }
+    // FIX(iter8-plan): T8.1 — F5/F9 quick save/load moved to SaveService
+    // (src/core/save/SaveService.cs), which owns the unified game save.
+    // BuildingInput still registers the actions; SaveService handles them.
 
     if (!GetTree().Paused)
     {
@@ -613,36 +612,39 @@ public partial class BuildingSystem : Node3D
   #region Save system
 
   /// <summary>
-  ///   FIX(iter4-plan): Decision 7: F5 handler, wired to the W2 BuildingSaveSystem. Overwrites
-  ///   the current save file when one exists, otherwise creates a new one.
-  ///   The free-object list is passed EMPTY on purpose — free objects are out
-  ///   of scope this iteration (plan OUT list) and the tracked list can hold
-  ///   dangling references after demolitions, so the save stays grid-only.
+  ///   FIX(iter8-plan): T8.1 — builds the building snapshot DTO WITHOUT
+  ///   writing, so the unified SaveService can embed it in the full game save
+  ///   (one file, no double-save). Grid-only, matching the previous F5
+  ///   behavior (free objects are out of scope this iteration).
   /// </summary>
-  private void OnQuickSave()
-  {
-    _currentSaveFile = BuildingSaveSystem.Save(
-      true,
-      _currentSaveFile,
-      Grids.ToList(),
-      [],
-      JsonSaveSystem.DEFAULT_FOLDER
-    );
-    GameEvents.RaiseBuildingSaved(true);
-  }
+  public SaveFile BuildSaveSnapshot() =>
+    BuildingSaveSystem.Snapshot(Grids.ToList(), []);
 
   /// <summary>
-  ///   FIX(iter4-plan): Decision 7: F9 handler. Loads the most recent save and raises the
-  ///   BuildingLoaded event only when something was actually loaded — a
-  ///   missing or corrupt save reports nothing (W2 fix ③ guarantees the load
-  ///   itself never throws).
+  ///   FIX(iter8-plan): T8.1 — restores building state from an already
+  ///   deserialized <see cref="SaveFile"/> (embedded in the unified save).
+  ///   Resets the current scene first so the load is a faithful snapshot,
+  ///   then restores. Fails closed (returns false, touches nothing) when the
+  ///   library is not wired.
   /// </summary>
-  private void OnQuickLoad()
+  public bool RestoreFromSnapshot(SaveFile saveFile)
   {
-    if (LoadMostRecent())
+    if (BuildableObjectLibrary == null)
     {
-      GameEvents.RaiseBuildingLoaded(_currentSaveFile ?? "");
+      GD.PushWarning(
+        "BuildingSystem: RestoreFromSnapshot skipped — BuildableObjectLibrary not wired."
+      );
+      return false;
     }
+
+    Reset();
+    return BuildingSaveSystem.Restore(
+      saveFile,
+      BuildableObjectLibrary,
+      Grids,
+      _freeObjectsContainer,
+      FreeLayerMask
+    );
   }
 
   /// <summary>

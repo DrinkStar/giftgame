@@ -63,6 +63,9 @@
 [ext_resource type="Script" path="res://src/world/WoodTree.cs" id="54_woodtree"]
 [ext_resource type="Script" path="res://src/world/CoconutPalm.cs" id="55_coconutpalm"]
 [ext_resource type="Script" path="res://src/core/SfxHook.cs" id="63_sfxhook"]
+[ext_resource type="Script" path="res://src/core/save/SaveService.cs" id="64_saveservice"]
+[ext_resource type="PackedScene" path="res://scenes/ui/craft_ui.tscn" id="65_craftui"]
+[ext_resource type="PackedScene" path="res://scenes/ui/tutorial.tscn" id="66_tutorial"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -227,6 +230,7 @@ script = ExtResource("55_coconutpalm")
 script = ExtResource("9_daynight")
 SunPath = NodePath("../../Sun")
 EnvironmentPath = NodePath("../../WorldEnvironment")
+DayDurationMinutes = 25.0
 
 [node name="WeatherService" type="Node" parent="Environment"]
 script = ExtResource("10_weather")
@@ -243,13 +247,22 @@ Levels = 1
 [node name="GridContainer" parent="BuildingSystem" index="0"]
 position = Vector3(0, 0.5, 0)
 
-[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("DayNightService", "WeatherService", "PlayerSpawnPoint", "Player", "HUD", "BuildingSystem")]
+[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("DayNightService", "WeatherService", "PlayerSpawnPoint", "Player", "HUD", "BuildingSystem", "SaveService")]
 script = ExtResource("11_manager")
 DayNightService = NodePath("../Environment/DayNightService")
 WeatherService = NodePath("../Environment/WeatherService")
 PlayerSpawnPoint = NodePath("../PlayerSpawnPoint")
 Player = NodePath("../Player")
 HUD = NodePath("../HUD")
+BuildingSystem = NodePath("../BuildingSystem")
+SaveService = NodePath("../SaveService")
+
+[node name="SaveService" type="Node" parent="." node_paths=PackedStringArray("PlayerStats", "Inventory", "DayNight", "Weather", "BuildingSystem")]
+script = ExtResource("64_saveservice")
+PlayerStats = NodePath("../Player/PlayerStats")
+Inventory = NodePath("../Player/InventorySystem")
+DayNight = NodePath("../Environment/DayNightService")
+Weather = NodePath("../Environment/WeatherService")
 BuildingSystem = NodePath("../BuildingSystem")
 
 [node name="StationLinker" type="Node" parent="." node_paths=PackedStringArray("BuildingSystem", "Player", "Crafting")]
@@ -347,3 +360,10 @@ Sfx = {
 
 [node name="SfxHook" type="Node" parent="."]
 script = ExtResource("63_sfxhook")
+
+[node name="CraftUI" parent="." node_paths=PackedStringArray("Crafting") instance=ExtResource("65_craftui")]
+Crafting = NodePath("../Player/CraftingSystem")
+
+[node name="TutorialUI" parent="." node_paths=PackedStringArray("Player", "Stats") instance=ExtResource("66_tutorial")]
+Player = NodePath("../Player")
+Stats = NodePath("../Player/PlayerStats")

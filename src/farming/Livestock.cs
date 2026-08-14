@@ -43,6 +43,37 @@ public partial class Livestock : StaticBody3D, IInteractable
   private LivestockLogic.State _state = LivestockLogic.State.Wild;
   private float _produceElapsed;
 
+  public override void _Ready()
+  {
+    // FIX(iter8-plan): T8.2 — group registration lets SaveService collect the
+    // animals for the unified save.
+    AddToGroup("livestock");
+  }
+
+  /// <summary>
+  ///   FIX(iter8-plan): T8.2 — snapshots the animal state (state machine +
+  ///   production timer) for the unified save, keyed by world position.
+  /// </summary>
+  public LivestockSaveData GetSaveState() =>
+    new()
+    {
+      PositionX = GlobalPosition.X,
+      PositionZ = GlobalPosition.Z,
+      Type = LivestockType,
+      State = _state,
+      ProduceElapsedSeconds = _produceElapsed
+    };
+
+  /// <summary>
+  ///   FIX(iter8-plan): T8.2 — restores the animal state after a load. Writes
+  ///   the fields directly (no LivestockTamed/Produced events).
+  /// </summary>
+  public void ApplySaveState(LivestockSaveData state)
+  {
+    _state = state.State;
+    _produceElapsed = state.ProduceElapsedSeconds;
+  }
+
   /// <summary>
   ///   Decision 6: Producing is the only timed state. A Ready animal stays
   ///   Ready until collected — <see cref="LivestockLogic.Tick"/> leaves it

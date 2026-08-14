@@ -55,6 +55,14 @@ public partial class GameManager : Node
   /// </summary>
   [Export] public BuildingSystem? BuildingSystem { get; set; }
 
+  /// <summary>
+  ///   FIX(iter8-plan): T8.1 — the unified save service. When wired, it owns
+  ///   the startup auto-read (buildings + everything else) and F5/F9; the
+  ///   <see cref="BuildingSystem"/> fallback below only covers scenes wired
+  ///   without a SaveService (tests).
+  /// </summary>
+  [Export] public SaveService? SaveService { get; set; }
+
   public bool IsPaused { get; private set; }
 
   public override void _Ready()
@@ -91,8 +99,19 @@ public partial class GameManager : Node
   ///   BuildingSystem is wired. A missing save file or an unwired library is
   ///   handled inside LoadMostRecent (returns false), so there is no
   ///   exception path here.
+  ///
+  ///   FIX(iter8-plan): T8.1 — when a SaveService is wired it owns the startup
+  ///   auto-read (via its own deferred call, which covers buildings plus all
+  ///   the other systems); this method then only acts as the fallback for
+  ///   scenes/tests wired without a SaveService.
   /// </summary>
-  private void AutoLoadBuildings() => BuildingSystem?.LoadMostRecent();
+  private void AutoLoadBuildings()
+  {
+    if (SaveService != null)
+      return;
+
+    BuildingSystem?.LoadMostRecent();
+  }
 
   public override void _ExitTree() => GameEvents.PlayerDied -= OnPlayerDied;
 
@@ -190,7 +209,9 @@ public partial class GameManager : Node
 
   public override void _Input(InputEvent @event)
   {
-    if (@event.IsActionPressed("ui_cancel"))
+    // FIX(iter8-plan): T8.4 — a modal overlay (CraftUI) owns Esc while it is
+    // open; the pause key must not fire underneath it.
+    if (@event.IsActionPressed("ui_cancel") && !GameEvents.GameplayInputLocked)
       TogglePause();
   }
 

@@ -285,4 +285,20 @@ public partial class DayNightService : Node
     // WeatherService's cached hour stays consistent with the new time.
     GameEvents.RaiseTimeChanged(_currentTime);
   }
+
+  /// <summary>
+  ///   FIX(iter8-plan): T8.1 — restores BOTH the hour and the day counter from
+  ///   a save. <see cref="SetTime"/> intentionally never touches
+  ///   <see cref="_currentDay"/> (the bed's skip-night depends on that), so
+  ///   loading a save needs this separate entry point.
+  /// </summary>
+  public void RestoreTime(float hour, int day)
+  {
+    _currentTime = Mathf.Clamp(hour, 0, 24);
+    _currentDay = Mathf.Max(1, day);
+    UpdatePeriod();
+    UpdateLighting();
+    GameEvents.RaiseTimeChanged(_currentTime);
+    GameEvents.RaiseDayChanged(_currentDay);
+  }
 }

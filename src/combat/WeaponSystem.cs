@@ -116,6 +116,11 @@ public partial class WeaponSystem : Node
     if (GetParentOrNull<PlayerController>()?.Stats is { IsAlive: false })
       return;
 
+    // FIX(iter8-plan): T8.4 — a modal overlay (CraftUI) may lock gameplay
+    // input; consume/attack must not fire underneath it.
+    if (GameEvents.GameplayInputLocked)
+      return;
+
     if (@event.IsActionPressed(SlotSwitchAction))
     {
       ToggleWeaponSlot();
@@ -249,6 +254,15 @@ public partial class WeaponSystem : Node
     switch (sel.Type)
     {
       case ItemType.Food:
+        // FIX(iter8-plan): T8.4b — cooking gate: raw food cannot be eaten raw.
+        // The hint rides the existing GuideLine subtitle so the player sees
+        // why the item was refused (no new UI).
+        if (sel.RequiresCooking)
+        {
+          GameEvents.RaiseGuideLine($"需要烹饪：{sel.DisplayName}");
+          return;
+        }
+
         stats.Eat(sel.HungerRestore, sel.HealthRestore);
         _inventory?.RemoveItem(sel.Id, 1);
         break;
