@@ -6,10 +6,12 @@ namespace SeaAnomaly;
 using Godot;
 
 /// <summary>
-///   Polls the building grids for campfire/workbench ground objects within 5
-///   meters of the player and mirrors the result into the CraftingSystem
-///   proximity flags (IsNearCampfire / IsNearWorkbench), which gate the Iter 3
-///   recipes through CraftingRecipe.RequiresCampfire / RequiresWorkbench.
+///   Polls the building grids for campfire/workbench/furnace ground objects
+///   within 5 meters of the player and mirrors the result into the
+///   CraftingSystem proximity flags (IsNearCampfire / IsNearWorkbench /
+///   IsNearFurnace), which gate the recipes through
+///   CraftingRecipe.RequiresCampfire / RequiresWorkbench / RequiresFurnace
+///   (furnace added Iter8.5, T8.5.6).
 ///
 ///   Plan Decision 10 rationale: buildings can appear and disappear through
 ///   several paths (placement, demolition, save-game load, grid reset), none
@@ -51,10 +53,10 @@ public partial class StationLinker : Node
   }
 
   /// <summary>
-  ///   Scans every grid cell for placed ground objects named "campfire" or
-  ///   "workbench" within <see cref="StationRange"/> of the player. Any
-  ///   unwired export clears both flags instead of crashing — the linker is
-  ///   optional scene wiring and must never take the game down.
+  ///   Scans every grid cell for placed ground objects named "campfire",
+  ///   "workbench" or "furnace" within <see cref="StationRange"/> of the
+  ///   player. Any unwired export clears all three flags instead of crashing —
+  ///   the linker is optional scene wiring and must never take the game down.
   /// </summary>
   private void RefreshProximity()
   {
@@ -67,6 +69,7 @@ public partial class StationLinker : Node
       {
         Crafting.IsNearCampfire = false;
         Crafting.IsNearWorkbench = false;
+        Crafting.IsNearFurnace = false;
       }
 
       return;
@@ -74,6 +77,7 @@ public partial class StationLinker : Node
 
     var nearCampfire = false;
     var nearWorkbench = false;
+    var nearFurnace = false;
     var playerPosition = Player.GlobalPosition;
 
     foreach (var grid in BuildingSystem.Grids)
@@ -107,11 +111,15 @@ public partial class StationLinker : Node
           case "workbench":
             nearWorkbench = true;
             break;
+          case "furnace":
+            nearFurnace = true;
+            break;
         }
       }
     }
 
     Crafting.IsNearCampfire = nearCampfire;
     Crafting.IsNearWorkbench = nearWorkbench;
+    Crafting.IsNearFurnace = nearFurnace;
   }
 }

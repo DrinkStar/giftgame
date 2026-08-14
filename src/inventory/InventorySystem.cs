@@ -287,6 +287,45 @@ public partial class InventorySystem : Node
 
   public InventorySlot GetInventorySlot(int x, int y) => _inventory[x, y];
 
+  /// <summary>
+  ///   T8.5.4: true once <see cref="ExpandInventory"/> has been applied, so
+  ///   the backpack item only widens the grid once (guarded in WeaponSystem's
+  ///   use-item branch).
+  /// </summary>
+  public bool BackpackExpanded { get; private set; }
+
+  /// <summary>
+  ///   T8.5.4: widens the grid to <paramref name="newWidth"/> columns, copying
+  ///   every existing slot 1:1 into the new array (content keeps its position;
+  ///   the extra columns are fresh empty slots). The hotbar is untouched. A
+  ///   no-op when <paramref name="newWidth"/> is not wider than the current
+  ///   width. Marks <see cref="BackpackExpanded"/> and publishes
+  ///   <see cref="GameEvents.RaiseInventoryChanged"/> so the UI refreshes.
+  /// </summary>
+  public void ExpandInventory(int newWidth)
+  {
+    if (newWidth <= InventoryWidth)
+      return;
+
+    var expanded = new InventorySlot[newWidth, InventoryHeight];
+    for (var x = 0; x < newWidth; x++)
+    {
+      for (var y = 0; y < InventoryHeight; y++)
+        expanded[x, y] = new InventorySlot();
+    }
+
+    for (var x = 0; x < InventoryWidth; x++)
+    {
+      for (var y = 0; y < InventoryHeight; y++)
+        expanded[x, y] = _inventory[x, y];
+    }
+
+    _inventory = expanded;
+    InventoryWidth = newWidth;
+    BackpackExpanded = true;
+    GameEvents.RaiseInventoryChanged();
+  }
+
   public void SwapSlots(InventorySlot slot1, InventorySlot slot2)
   {
     (slot1.Item, slot2.Item) = (slot2.Item, slot1.Item);

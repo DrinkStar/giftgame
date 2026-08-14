@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3]
+
+[sub_resource type="BoxMesh" id="BoxMesh_drying_rack"]
+size = Vector3(1.2, 1.2, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_drying_rack"]
+albedo_color = Color(0.62, 0.45, 0.25, 1)
+
+[node name="DryingRack" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("BoxMesh_drying_rack")
+surface_material_override/0 = SubResource("StandardMaterial3D_drying_rack")

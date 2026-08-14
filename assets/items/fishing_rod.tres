@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/ItemData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "fishing_rod"
+DisplayName = "Fishing Rod"
+Description = "Cast it out and wait for a bite"
+Type = 1
+MaxStack = 1
+HungerRestore = 0.0
+ThirstRestore = 0.0
+HealthRestore = 0.0
+RequiresCooking = false
+ToolPower = 0.0
+ToolDurability = 200.0
+ArmorReduction = 0.0

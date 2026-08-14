@@ -6,7 +6,8 @@ using Godot;
 /// <summary>
 ///   Weapon controller mounted under the player (Iter6 plan Decision 1/2/3):
 ///   tools ARE weapons. LMB melee-swings (weak for bows), RMB throws the held
-///   spear (consumes 1) or fires an arrow (consumes 1); no ammo, no attack.
+///   spear (T8.5.4: the spear is NOT consumed — it stays in the inventory)
+///   or fires an arrow (consumes 1 arrow); no ammo, no attack.
 ///   Dispatch is delegated to the pure <see cref="CombatLogic.ResolveAttack"/>
 ///   so the rules stay unit-testable, and all attacks are cooldown-gated by
 ///   <see cref="CombatLogic.IsReady"/>.
@@ -31,6 +32,22 @@ public partial class WeaponSystem : Node
   public const string ArrowItemId = "arrow";
 
   #endregion Input action names
+
+  #region T8.5.4 new item use branches
+
+  /// <summary>Id of the fishing rod item (T8.5.4 use-item branch).</summary>
+  public const string FishingRodItemId = "fishing_rod";
+
+  /// <summary>Id of the backpack item (T8.5.4 use-item branch).</summary>
+  public const string BackpackItemId = "backpack";
+
+  /// <summary>Per-cast chance the fishing rod lands a raw fish (T8.5.4).</summary>
+  private const float FishingRodCatchChance = 0.5f;
+
+  /// <summary>Resource path of the raw fish item the rod can catch (T8.5.4).</summary>
+  private const string RawFishItemPath = "res://assets/items/raw_fish.tres";
+
+  #endregion T8.5.4 new item use branches
 
   #region Exports (Decision 2)
 
@@ -238,8 +255,18 @@ public partial class WeaponSystem : Node
   ///   T8p.1 (iter8p-plan): consume the hotbar's SelectedItem (the primary
   ///   hotbar slot — NOT the secondary weapon slot). Food feeds hunger (and
   ///   health when the item restores it), drink quenches thirst; each use
-  ///   consumes one unit. FIX(iter8p-plan): T8p.1 use item — RequiresCooking
-  ///   gate comes later (T8.4b).
+  ///   consumes one unit.
+  ///
+  ///   T8.5.4: three tool branches run BEFORE the Food/Drink switch (the
+  ///   switch only handles Food/Drink — tools are handled here):
+  ///   - armor (a Tool with <see cref="ItemData.ArmorReduction"/> &gt; 0) is
+  ///     EQUIPPED with F: the reduction is copied onto
+  ///     <see cref="PlayerStats.ArmorReduction"/> and the armor is NOT consumed;
+  ///   - the fishing rod starts a 50% chance to add a raw fish and is never
+  ///     consumed;
+  ///   - the backpack widens the inventory grid by two columns exactly once
+  ///     (guarded by <see cref="InventorySystem.BackpackExpanded"/>) and is
+  ///     not consumed.
   /// </summary>
   private void TryUseItem()
   {
@@ -250,6 +277,38 @@ public partial class WeaponSystem : Node
     var stats = GetParentOrNull<PlayerController>()?.Stats;
     if (stats == null)
       return;
+
+    // T8.5.4: armor equip — a Tool with armor reduction equips on F and stays
+    // in the inventory (not consumed). Re-equipping overwrites the reduction.
+    if (sel.Type == ItemType.Tool && sel.ArmorReduction > 0f)
+    {
+      stats.ArmorReduction = sel.ArmorReduction;
+      GameEvents.RaiseGuideLine($"装备了 {sel.DisplayName}");
+      return;
+    }
+
+    // T8.5.4: fishing rod — 50% chance to land a raw fish; the rod is never
+    // consumed. The outcome is deliberately random (GD.Randf) so tests assert
+    // the guide line rather than a deterministic catch.
+    if (sel.Id == FishingRodItemId)
+    {
+      GameEvents.RaiseGuideLine("钓鱼中…");
+      if (GD.Randf() < FishingRodCatchChance)
+        _inventory?.AddItem(GD.Load<ItemData>(RawFishItemPath), 1);
+      return;
+    }
+
+    // T8.5.4: backpack — widens the grid once (guarded by
+    // InventorySystem.BackpackExpanded); the backpack itself is not consumed.
+    if (sel.Id == BackpackItemId)
+    {
+      if (_inventory != null && !_inventory.BackpackExpanded)
+      {
+        _inventory.ExpandInventory(_inventory.InventoryWidth + 2);
+        GameEvents.RaiseGuideLine("背包扩容了");
+      }
+      return;
+    }
 
     switch (sel.Type)
     {
@@ -305,10 +364,10 @@ public partial class WeaponSystem : Node
     switch (ResolveCurrentAttack())
     {
       case AttackType.Throw:
-        if (
-          CombatLogic.IsReady(_attackElapsed, MeleeCooldown)
-          && _inventory.RemoveItem(sel.Id, 1)
-        )
+        // T8.5.4: throwing no longer consumes the spear — the projectile is
+        // spawned and the held spear stays in the inventory. Only the cooldown
+        // gate remains; the bow's arrow consumption below is unchanged.
+        if (CombatLogic.IsReady(_attackElapsed, MeleeCooldown))
         {
           _attackElapsed = 0f;
           // R1 (Iter8p): through the resolution seam (throw_damage multiplier).

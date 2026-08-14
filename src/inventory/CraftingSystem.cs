@@ -44,6 +44,10 @@ public partial class CraftingSystem : Node
 
   public bool IsNearWorkbench { get; set; }
 
+  // Iter8.5 (T8.5.6): furnace proximity flag, wired by StationLinker like the
+  // campfire/workbench flags; gates recipes with CraftingRecipe.RequiresFurnace.
+  public bool IsNearFurnace { get; set; }
+
   /// <summary>Called once after the player's InventorySystem is ready.</summary>
   public void Initialize(InventorySystem inventory) => _inventory = inventory;
 
@@ -78,6 +82,9 @@ public partial class CraftingSystem : Node
       return false;
 
     if (recipe.RequiresWorkbench && !IsNearWorkbench)
+      return false;
+
+    if (recipe.RequiresFurnace && !IsNearFurnace)
       return false;
 
     foreach (var ingredient in recipe.Ingredients)

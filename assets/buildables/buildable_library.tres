@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BuildableResourceLibrary" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="BuildableResourceLibrary" load_steps=20 format=3]
 
 [ext_resource type="Resource" path="res://assets/buildables/campfire.tres" id="1_campfire"]
 [ext_resource type="Resource" path="res://assets/buildables/workbench.tres" id="2_workbench"]
@@ -6,9 +6,20 @@
 [ext_resource type="Resource" path="res://assets/buildables/farmland.tres" id="4_farmland"]
 [ext_resource type="Resource" path="res://assets/buildables/taming_pen.tres" id="5_taming_pen"]
 [ext_resource type="Resource" path="res://assets/buildables/bed.tres" id="6_bed"]
-[ext_resource type="Script" path="res://src/building/BuildableResourceLibrary.cs" id="7_library_script"]
-[ext_resource type="Script" path="res://src/building/BuildableResource.cs" id="8_resource_script"]
+[ext_resource type="Resource" path="res://assets/buildables/cooking_stove.tres" id="7_cooking_stove"]
+[ext_resource type="Resource" path="res://assets/buildables/drying_rack.tres" id="8_drying_rack"]
+[ext_resource type="Resource" path="res://assets/buildables/water_purifier.tres" id="9_water_purifier"]
+[ext_resource type="Resource" path="res://assets/buildables/workbench_t2.tres" id="10_workbench_t2"]
+[ext_resource type="Resource" path="res://assets/buildables/workbench_t3.tres" id="11_workbench_t3"]
+[ext_resource type="Resource" path="res://assets/buildables/furnace.tres" id="12_furnace"]
+[ext_resource type="Resource" path="res://assets/buildables/loom.tres" id="13_loom"]
+[ext_resource type="Resource" path="res://assets/buildables/research_table.tres" id="14_research_table"]
+[ext_resource type="Resource" path="res://assets/buildables/lighthouse.tres" id="15_lighthouse"]
+[ext_resource type="Resource" path="res://assets/buildables/trap.tres" id="16_trap"]
+[ext_resource type="Resource" path="res://assets/buildables/beehive.tres" id="17_beehive"]
+[ext_resource type="Script" path="res://src/building/BuildableResourceLibrary.cs" id="18_library_script"]
+[ext_resource type="Script" path="res://src/building/BuildableResource.cs" id="19_resource_script"]
 
 [resource]
-script = ExtResource("7_library_script")
-BuildableObjects = Array[ExtResource("8_resource_script")]([ExtResource("1_campfire"), ExtResource("2_workbench"), ExtResource("3_storage_box"), ExtResource("4_farmland"), ExtResource("5_taming_pen"), ExtResource("6_bed")])
+script = ExtResource("18_library_script")
+BuildableObjects = Array[ExtResource("19_resource_script")]([ExtResource("1_campfire"), ExtResource("2_workbench"), ExtResource("3_storage_box"), ExtResource("4_farmland"), ExtResource("5_taming_pen"), ExtResource("6_bed"), ExtResource("7_cooking_stove"), ExtResource("8_drying_rack"), ExtResource("9_water_purifier"), ExtResource("10_workbench_t2"), ExtResource("11_workbench_t3"), ExtResource("12_furnace"), ExtResource("13_loom"), ExtResource("14_research_table"), ExtResource("15_lighthouse"), ExtResource("16_trap"), ExtResource("17_beehive")])

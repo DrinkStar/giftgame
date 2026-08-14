@@ -2,21 +2,22 @@
 
 [ext_resource type="Script" path="res://src/inventory/CraftingRecipe.cs" id="1_recipe"]
 [ext_resource type="Script" path="res://src/inventory/CraftingIngredient.cs" id="2_ingredient"]
-[ext_resource type="Resource" path="res://assets/items/iron_ore.tres" id="3_iron_ore"]
-[ext_resource type="Resource" path="res://assets/items/iron_ingot.tres" id="4_iron_ingot"]
+[ext_resource type="Resource" path="res://assets/items/iron_ingot.tres" id="3_iron_ingot"]
+[ext_resource type="Resource" path="res://assets/items/iron_armor.tres" id="4_iron_armor"]
 
 [sub_resource type="Resource" id="ing_1"]
 script = ExtResource("2_ingredient")
-Item = ExtResource("3_iron_ore")
-Amount = 2
+Item = ExtResource("3_iron_ingot")
+Amount = 6
 
 [resource]
 script = ExtResource("1_recipe")
-Id = "iron_ingot"
-DisplayName = "Iron Ingot"
-Result = ExtResource("4_iron_ingot")
+Id = "iron_armor"
+DisplayName = "Iron Armor"
+Result = ExtResource("4_iron_armor")
 ResultAmount = 1
 Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1")])
 RequiresCampfire = false
+RequiresWorkbench = false
 RequiresFurnace = true
 CraftingTime = 5.0

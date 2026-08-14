@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/ItemData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "leather_armor"
+DisplayName = "Leather Armor"
+Description = "Tough cured hides that absorb more damage"
+Type = 1
+MaxStack = 1
+HungerRestore = 0.0
+ThirstRestore = 0.0
+HealthRestore = 0.0
+RequiresCooking = false
+ToolPower = 1.0
+ToolDurability = 100.0
+ArmorReduction = 10.0

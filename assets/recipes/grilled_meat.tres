@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CraftingRecipe" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/CraftingRecipe.cs" id="1_recipe"]
+[ext_resource type="Script" path="res://src/inventory/CraftingIngredient.cs" id="2_ingredient"]
+[ext_resource type="Resource" path="res://assets/items/raw_meat.tres" id="3_raw_meat"]
+[ext_resource type="Resource" path="res://assets/items/berries.tres" id="4_berries"]
+[ext_resource type="Resource" path="res://assets/items/grilled_meat.tres" id="5_grilled_meat"]
+
+[sub_resource type="Resource" id="ing_1"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("3_raw_meat")
+Amount = 1
+
+[sub_resource type="Resource" id="ing_2"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("4_berries")
+Amount = 2
+
+[resource]
+script = ExtResource("1_recipe")
+Id = "grilled_meat"
+DisplayName = "Grilled Meat"
+Result = ExtResource("5_grilled_meat")
+ResultAmount = 1
+Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1"), SubResource("ing_2")])
+RequiresCampfire = true
+RequiresWorkbench = false
+RequiresFurnace = false
+CraftingTime = 10.0

@@ -20,5 +20,9 @@ public partial class CraftingRecipe : Resource
   [Export] public Array<CraftingIngredient> Ingredients = new();
   [Export] public bool RequiresCampfire;
   [Export] public bool RequiresWorkbench;
+
+  // Iter8.5 (T8.5.6): furnace gate — true gates the recipe behind
+  // CraftingSystem.IsNearFurnace (wired by StationLinker "furnace" case).
+  [Export] public bool RequiresFurnace;
   [Export] public float CraftingTime = 1.0f;
 }

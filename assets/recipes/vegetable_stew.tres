@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="CraftingRecipe" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/CraftingRecipe.cs" id="1_recipe"]
+[ext_resource type="Script" path="res://src/inventory/CraftingIngredient.cs" id="2_ingredient"]
+[ext_resource type="Resource" path="res://assets/items/potato.tres" id="3_potato"]
+[ext_resource type="Resource" path="res://assets/items/carrot.tres" id="4_carrot"]
+[ext_resource type="Resource" path="res://assets/items/berries.tres" id="5_berries"]
+[ext_resource type="Resource" path="res://assets/items/vegetable_stew.tres" id="6_stew"]
+
+[sub_resource type="Resource" id="ing_1"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("3_potato")
+Amount = 1
+
+[sub_resource type="Resource" id="ing_2"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("4_carrot")
+Amount = 1
+
+[sub_resource type="Resource" id="ing_3"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("5_berries")
+Amount = 2
+
+[resource]
+script = ExtResource("1_recipe")
+Id = "vegetable_stew"
+DisplayName = "Vegetable Stew"
+Result = ExtResource("6_stew")
+ResultAmount = 1
+Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1"), SubResource("ing_2"), SubResource("ing_3")])
+RequiresCampfire = true
+RequiresWorkbench = false
+RequiresFurnace = false
+CraftingTime = 10.0

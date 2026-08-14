@@ -37,6 +37,13 @@ public partial class PlayerStats : Node
   [Export] public float JumpStaminaCost = 10f;
 
   /// <summary>
+  ///   T8.5.4: flat damage reduction of the currently equipped armor. Set by
+  ///   WeaponSystem's use-item equip branch (F with an armor Tool selected);
+  ///   every point subtracts from incoming damage before it reaches health.
+  /// </summary>
+  [Export] public float ArmorReduction;
+
+  /// <summary>
   ///   R1 (Iter8p): optional progression service. Null (the shipped default)
   ///   keeps every rate/max multiplier at ×1; a real talent tree lands later.
   /// </summary>
@@ -175,7 +182,14 @@ public partial class PlayerStats : Node
 
   public void Drink(float thirstRestore) => Thirst += thirstRestore;
 
-  public void TakeDamage(float damage) => Health -= damage;
+  /// <summary>
+  ///   Applies <paramref name="damage"/> after the equipped armor's flat
+  ///   <see cref="ArmorReduction"/> (T8.5.4). The result is clamped at zero so
+  ///   armor never heals; <see cref="Health"/> itself clamps to
+  ///   [0, EffectiveMaxHealth].
+  /// </summary>
+  public void TakeDamage(float damage) =>
+    Health -= Mathf.Max(0f, damage - ArmorReduction);
 
   public void Heal(float amount) => Health += amount;
 

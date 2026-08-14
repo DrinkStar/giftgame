@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CraftingRecipe" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/CraftingRecipe.cs" id="1_recipe"]
+[ext_resource type="Script" path="res://src/inventory/CraftingIngredient.cs" id="2_ingredient"]
+[ext_resource type="Resource" path="res://assets/items/berries.tres" id="3_berries"]
+[ext_resource type="Resource" path="res://assets/items/coconut.tres" id="4_coconut"]
+[ext_resource type="Resource" path="res://assets/items/fruit_salad.tres" id="5_fruit_salad"]
+
+[sub_resource type="Resource" id="ing_1"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("3_berries")
+Amount = 3
+
+[sub_resource type="Resource" id="ing_2"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("4_coconut")
+Amount = 1
+
+[resource]
+script = ExtResource("1_recipe")
+Id = "fruit_salad"
+DisplayName = "Fruit Salad"
+Result = ExtResource("5_fruit_salad")
+ResultAmount = 1
+Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1"), SubResource("ing_2")])
+RequiresCampfire = false
+RequiresWorkbench = false
+RequiresFurnace = false
+CraftingTime = 5.0

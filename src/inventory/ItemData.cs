@@ -43,6 +43,10 @@ public partial class ItemData : Resource
   [Export] public float ToolPower = 1.0f;
   [Export] public float ToolDurability = 100f;
 
+  // For armor (T8.5.4): flat damage reduction applied by the player's armor.
+  // Armor items (Type == Tool) with a value &gt; 0 are equippable with F.
+  [Export] public float ArmorReduction;
+
   // For buildables
   [Export] public PackedScene? BuildableScene;
 }

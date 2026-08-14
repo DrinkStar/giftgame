@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3]
+
+[sub_resource type="BoxMesh" id="BoxMesh_furnace"]
+size = Vector3(1, 1.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_furnace"]
+albedo_color = Color(0.4, 0.38, 0.36, 1)
+
+[node name="Furnace" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("BoxMesh_furnace")
+surface_material_override/0 = SubResource("StandardMaterial3D_furnace")
