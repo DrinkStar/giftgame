@@ -21,7 +21,7 @@ public partial class GameManager : Node
   [Export] public DayNightService? DayNightService { get; set; }
   [Export] public WeatherService? WeatherService { get; set; }
 
-  /// <summary>Optional spawn marker (no spawn marker node in Game.tscn).</summary>
+  /// <summary>Spawn marker the player respawns at (T7.0; wired in Game.tscn).</summary>
   [Export] public Node3D? PlayerSpawnPoint { get; set; }
 
   [Export] public PlayerController? Player { get; set; }
@@ -79,8 +79,26 @@ public partial class GameManager : Node
 
   private void OnPlayerDied()
   {
-    GD.Print("Game Over - Player died!");
-    GameEvents.RaiseGameOver();
+    // FIX(iter7-plan): T7.0 respawn contract — PlayerDied is the character
+    // death hook, NOT game over. GameOver stays reserved for the true ending
+    // (post-shark-king epilogue) and must never be raised from here. Respawn
+    // is deferred to avoid re-entering from inside the death event handler.
+    GD.Print("Player died - respawning at spawn point.");
+    CallDeferred(nameof(RespawnPlayer));
+  }
+
+  /// <summary>
+  ///   FIX(iter7-plan): T7.0 — teleports the player to the spawn marker (falling
+  ///   back to the current position when no marker is wired) and revives it via
+  ///   <see cref="PlayerStats.Revive"/>. No inventory drop, no GameOver.
+  /// </summary>
+  private void RespawnPlayer()
+  {
+    if (Player == null)
+      return;
+
+    Player.GlobalPosition = PlayerSpawnPoint?.GlobalPosition ?? Player.GlobalPosition;
+    Player.GetNodeOrNull<PlayerStats>("PlayerStats")?.Revive();
   }
 
   public override void _Input(InputEvent @event)

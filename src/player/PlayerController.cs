@@ -86,6 +86,15 @@ public partial class PlayerController : CharacterBody3D
 
   public override void _PhysicsProcess(double delta)
   {
+    // FIX(iter7-plan): T7.0 respawn contract — a dead player takes no input:
+    // zero velocity, no sprint drain, no jump, no MoveAndSlide. Respawn
+    // (GameManager.RespawnPlayer → PlayerStats.Revive) re-enables movement.
+    if (Stats is { IsAlive: false })
+    {
+      Velocity = Vector3.Zero;
+      return;
+    }
+
     // Sprint: the action is held AND stamina allows it (plan Decision 2).
     // With no stats node wired (Stats == null) sprinting stays ungated.
     Running = Input.IsActionPressed(SprintAction)

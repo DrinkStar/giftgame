@@ -105,6 +105,9 @@ shape = SubResource("BoxShape3D_ground")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
 mesh = SubResource("BoxMesh_ground")
 
+[node name="PlayerSpawnPoint" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
 [node name="Player" type="CharacterBody3D" parent="." node_paths=PackedStringArray("Stats")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 script = ExtResource("2_controller")
@@ -192,10 +195,11 @@ Levels = 1
 [node name="GridContainer" parent="BuildingSystem" index="0"]
 position = Vector3(0, 0.5, 0)
 
-[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("DayNightService", "WeatherService", "Player", "HUD", "BuildingSystem")]
+[node name="GameManager" type="Node" parent="." node_paths=PackedStringArray("DayNightService", "WeatherService", "PlayerSpawnPoint", "Player", "HUD", "BuildingSystem")]
 script = ExtResource("11_manager")
 DayNightService = NodePath("../Environment/DayNightService")
 WeatherService = NodePath("../Environment/WeatherService")
+PlayerSpawnPoint = NodePath("../PlayerSpawnPoint")
 Player = NodePath("../Player")
 HUD = NodePath("../HUD")
 BuildingSystem = NodePath("../BuildingSystem")

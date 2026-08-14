@@ -78,6 +78,12 @@ public partial class WeaponSystem : Node
 
   public override void _UnhandledInput(InputEvent @event)
   {
+    // FIX(iter7-plan): T7.0 — no attacks while dead. WeaponSystem's parent IS
+    // the Player node, so no new export is needed to reach the controller's
+    // stats; unrelated parents (test fixtures) resolve to null and pass through.
+    if (GetParentOrNull<PlayerController>()?.Stats is { IsAlive: false })
+      return;
+
     if (@event.IsActionPressed(SlotSwitchAction))
     {
       ToggleWeaponSlot();

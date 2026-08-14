@@ -165,6 +165,30 @@ public partial class PlayerStats : Node
   public void Heal(float amount) => Health += amount;
 
   /// <summary>
+  ///   FIX(iter7-plan): T7.0 respawn contract — death is recoverable. Restores
+  ///   full health and stamina, raises hunger/thirst to the 30-point safety
+  ///   line, clears any active movement slow (spider webbing) and re-arms the
+  ///   death hook so PlayerDied can fire again on the next death. Values are
+  ///   written directly and the four stat events are raised once each, mirroring
+  ///   <see cref="_Ready"/>. This method does NOT raise GameOver — the death
+  ///   contract keeps GameOver reserved for the true ending.
+  /// </summary>
+  public void Revive()
+  {
+    _health = MaxHealth;
+    _stamina = StaminaMax;
+    _hunger = Mathf.Max(_hunger, 30f);
+    _thirst = Mathf.Max(_thirst, 30f);
+    _slowRemaining = 0f;
+    _deathNotified = false;
+
+    GameEvents.RaiseHealthChanged(_health, MaxHealth);
+    GameEvents.RaiseStaminaChanged(_stamina, StaminaMax);
+    GameEvents.RaiseHungerChanged(_hunger, MaxHunger);
+    GameEvents.RaiseThirstChanged(_thirst, MaxThirst);
+  }
+
+  /// <summary>
   ///   Applies a movement slow for <paramref name="duration"/> seconds at
   ///   <paramref name="factor"/> speed (e.g. 2 s at 0.5× from spider webbing,
   ///   Iter6.1). Re-applying overwrites the previous slow; a non-positive

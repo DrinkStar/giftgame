@@ -124,4 +124,31 @@ public class PlayerStatsTest : TestClass, IDisposable
     _stats.DrainStamina(1000f);
     _stats.CanSprint().ShouldBeFalse();
   }
+
+  /// <summary>
+  ///   T7.0 respawn contract: Revive re-arms the death hook, so PlayerDied
+  ///   fires again on the next death (death is recoverable, not terminal).
+  /// </summary>
+  [Test]
+  public void ReviveAllowsPlayerDiedToFireAgain()
+  {
+    var deathCount = 0;
+    Action onDeath = () => deathCount++;
+    GameEvents.PlayerDied += onDeath;
+    try
+    {
+      _stats.TakeDamage(200f);
+      deathCount.ShouldBe(1);
+
+      _stats.Revive();
+      _stats.IsAlive.ShouldBeTrue();
+
+      _stats.TakeDamage(200f);
+      deathCount.ShouldBe(2);
+    }
+    finally
+    {
+      GameEvents.PlayerDied -= onDeath;
+    }
+  }
 }
