@@ -24,8 +24,11 @@ public static class CombatLogic
   /// <summary>Fixed charge speed multiplier (Decision 7/8).</summary>
   public const float ChargeSpeedBoost = 3f;
 
-  /// <summary>Fixed night speed multiplier for wolves (Decision 7/8).</summary>
+  /// <summary>Wolf-specific night speed boost (Decision 7/8).</summary>
   public const float NightSpeedBoost = 1.5f;
+
+  /// <summary>General night speed/damage multiplier for all enemies (T8.5.5).</summary>
+  public const float NightMultiplier = 1.25f;
 
   /// <summary>
   ///   True when <paramref name="elapsed"/> seconds since the last attack are
@@ -86,10 +89,19 @@ public static class CombatLogic
   ) => dist <= chargeRange && cooldownReady ? ChargeSpeedBoost : 1f;
 
   /// <summary>
-  ///   1.5f for wolves at night, otherwise 1f (Decision 7/8).
+  ///   T8.5.5: night speed boost — wolves keep their 1.5× hunt boost
+  ///   (Decision 7/8), every other enemy gets the default 1.25×; day = 1.
   /// </summary>
   public static float NightSpeedMultiplier(string enemyId, bool isNight) =>
-    enemyId == "wolf" && isNight ? NightSpeedBoost : 1f;
+    !isNight ? 1f : enemyId == "wolf" ? NightSpeedBoost : NightMultiplier;
+
+  /// <summary>
+  ///   T8.5.5: night damage multiplier (default 1.25), day = 1. The constant
+  ///   value is exported on EnemyBase (NightDamageMultiplierValue) and applied
+  ///   through this pure helper so the gate is unit-testable.
+  /// </summary>
+  public static float NightDamageMultiplier(bool isNight, float value) =>
+    isNight ? value : 1f;
 
   /// <summary>
   ///   True when the target is inside <paramref name="range"/> AND the attack

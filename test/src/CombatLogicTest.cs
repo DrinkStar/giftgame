@@ -128,12 +128,30 @@ public class CombatLogicTest : TestClass
     CombatLogic.NightSpeedMultiplier("wolf", true).ShouldBe(1.5f);
   }
 
+  /// <summary>
+  ///   T8.5.5: every enemy gets the general 1.25× at night; day = 1.
+  /// </summary>
   [Test]
-  public void NightSpeedMultiplier_WolfAtDayOrOtherEnemy_ReturnsOne()
+  public void NightSpeedMultiplier_OtherEnemiesAtNight_ReturnsOnePointTwoFive()
+  {
+    CombatLogic.NightSpeedMultiplier("boar", true).ShouldBe(1.25f);
+    CombatLogic.NightSpeedMultiplier("crab", true).ShouldBe(1.25f);
+    CombatLogic.NightSpeedMultiplier("shark", true).ShouldBe(1.25f);
+  }
+
+  [Test]
+  public void NightSpeedMultiplier_Day_ReturnsOne()
   {
     CombatLogic.NightSpeedMultiplier("wolf", false).ShouldBe(1f);
-    CombatLogic.NightSpeedMultiplier("boar", true).ShouldBe(1f);
-    CombatLogic.NightSpeedMultiplier("crab", true).ShouldBe(1f);
+    CombatLogic.NightSpeedMultiplier("boar", false).ShouldBe(1f);
+  }
+
+  /// <summary>T8.5.5: the night damage gate is 1.25 at night and 1 by day.</summary>
+  [Test]
+  public void NightDamageMultiplier_NightAndDay()
+  {
+    CombatLogic.NightDamageMultiplier(true, 1.25f).ShouldBe(1.25f);
+    CombatLogic.NightDamageMultiplier(false, 1.25f).ShouldBe(1f);
   }
 
   [Test]

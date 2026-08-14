@@ -3,6 +3,7 @@
 // godot-refs/ManickYoj-godot-ocean-waves-buoyancy/LICENSE
 namespace SeaAnomaly;
 
+using System;
 using Godot;
 
 /// <summary>
@@ -38,6 +39,14 @@ public partial class WaterMesh : MeshInstance3D
   private readonly RandomNumberGenerator _rng = new();
   private double _time;
   private double _nextUpdateTime;
+
+  /// <summary>
+  ///   FIX(iter8.5): false when the RenderingDevice is unavailable (headless
+  ///   runs, CI, tests) and the ocean GPU pipeline could not start. The wave
+  ///   simulation and readback are skipped; GetWaveHeight returns 0 so
+  ///   buoyancy keeps working on a flat sea.
+  /// </summary>
+  private bool _gpuEnabled;
 
   private readonly Texture2DArrayRD _displacementMaps = new();
   private readonly Texture2DArrayRD _normalMaps = new();
@@ -117,17 +126,39 @@ public partial class WaterMesh : MeshInstance3D
     RenderingServer.GlobalShaderParameterSet("water_color", WaterColor.SrgbToLinear());
     RenderingServer.GlobalShaderParameterSet("foam_color", FoamColor.SrgbToLinear());
 
-    SetupWaveGenerator();
-    UpdateScalesUniform();
+    // FIX(iter8.5): headless runs have no RenderingDevice — the FFT pipeline
+    // cannot start and must not take the whole scene down (GameTest loads
+    // Game.tscn under GoDotTest). Degrade to a flat, no-simulation sea.
+    _gpuEnabled = true;
+    try
+    {
+      SetupWaveGenerator();
+      UpdateScalesUniform();
 
-    _readbackUpdateRate = 1.0 / DisplacementReadbackPerSecond;
-    _cachedDisplacementImage = _waveGenerator!.RetrieveDisplacementImage(0);
-    _imgWidth = _cachedDisplacementImage.GetWidth();
-    _imgHeight = _cachedDisplacementImage.GetHeight();
+      _readbackUpdateRate = 1.0 / DisplacementReadbackPerSecond;
+      _cachedDisplacementImage = _waveGenerator!.RetrieveDisplacementImage(0);
+      _imgWidth = _cachedDisplacementImage.GetWidth();
+      _imgHeight = _cachedDisplacementImage.GetHeight();
+    }
+    catch (Exception e)
+    {
+      GD.PushWarning($"WaterMesh: ocean GPU init failed ({e.Message}); simulation disabled.");
+      _gpuEnabled = false;
+      if (_waveGenerator != null)
+      {
+        RemoveChild(_waveGenerator);
+        _waveGenerator.QueueFree();
+        _waveGenerator = null;
+      }
+    }
   }
 
   public override void _Process(double delta)
   {
+    // FIX(iter8.5): without the GPU pipeline there is nothing to simulate.
+    if (!_gpuEnabled)
+      return;
+
     // Update waves once every 1.0/updates_per_second.
     if (UpdatesPerSecond == 0 || _time >= _nextUpdateTime)
     {

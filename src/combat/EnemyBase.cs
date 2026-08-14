@@ -37,7 +37,14 @@ public partial class EnemyBase : CharacterBody3D
   [Export] public float ChargeRange = 6f;
   [Export] public float ChargeSpeedMultiplierValue = 3f;
   [Export] public float ChargeCooldown = 2f;
-  [Export] public float NightSpeedMultiplierValue = 1.5f;
+
+  /// <summary>
+  ///   T8.5.5: damage multiplier while it is night (default 1.25), applied at
+  ///   the attack damage calculation via
+  ///   <see cref="CombatLogic.NightDamageMultiplier"/>. Day = 1. Speed uses
+  ///   <see cref="CombatLogic.NightSpeedMultiplier"/> (wolf 1.5, others 1.25).
+  /// </summary>
+  [Export] public float NightDamageMultiplierValue = 1.25f;
 
   /// <summary>
   ///   Optional path to a FloatingBody (or any Node3D) the player stands on.
@@ -169,10 +176,15 @@ public partial class EnemyBase : CharacterBody3D
 
     if (canAttack && CombatLogic.ShouldAttack(dist, attackRange, _attackCooldown <= 0f))
     {
-      // Phase-3 boss rage boosts damage (1× for regular enemies).
+      // Phase-3 boss rage boosts damage (1× for regular enemies); T8.5.5:
+      // night multiplies damage for every enemy (default 1.25), day = 1.
       var rage = CombatLogic.BossRage(BossPhase());
       _player.GetNodeOrNull<PlayerStats>("PlayerStats")?
-        .TakeDamage(EnemyData.Damage * rage.DamageMultiplier);
+        .TakeDamage(
+          EnemyData.Damage
+          * rage.DamageMultiplier
+          * CombatLogic.NightDamageMultiplier(IsNight(), NightDamageMultiplierValue)
+        );
 
       // Webbing hit: the spider slows the player for 2 s at 0.5× speed.
       if (behavior == EnemyBehavior.Webbing)
@@ -368,11 +380,11 @@ public partial class EnemyBase : CharacterBody3D
 
   private void MoveMeleeChase(float dt)
   {
-    // Wolves get the night boost (Decision 7/8); mutants add their rage
-    // speed on top (Iter6.1).
-    var boost = CombatLogic.NightSpeedMultiplier(EnemyData!.Id, IsNight());
+    // T8.5.5: night speed — wolves keep their 1.5× hunt boost, every other
+    // melee chaser gets the general 1.25× (CombatLogic.NightSpeedMultiplier);
+    // mutants add their rage speed on top (Iter6.1).
     var speed = EnemyData.MoveSpeed
-      * (boost > 1f ? NightSpeedMultiplierValue : 1f)
+      * CombatLogic.NightSpeedMultiplier(EnemyData!.Id, IsNight())
       * RageSpeedMultiplier();
 
     var dir = HorizontalDirectionToPlayer();
@@ -397,7 +409,9 @@ public partial class EnemyBase : CharacterBody3D
       _chargeCooldownRemaining = ChargeCooldown;
     }
 
-    var speed = EnemyData!.MoveSpeed * (_chargeRemaining > 0f ? ChargeSpeedMultiplierValue : 1f);
+    var speed = EnemyData!.MoveSpeed
+      * CombatLogic.NightSpeedMultiplier(EnemyData.Id, IsNight())
+      * (_chargeRemaining > 0f ? ChargeSpeedMultiplierValue : 1f);
 
     var dir = HorizontalDirectionToPlayer();
     Velocity = new Vector3(dir.X * speed, Velocity.Y + Gravity * dt, dir.Z * speed);
@@ -415,7 +429,9 @@ public partial class EnemyBase : CharacterBody3D
     // Track the player Y too; no gravity while swimming (Decision 7).
     var verticalDir = Mathf.Abs(toPlayer.Y) < 0.25f ? 0f : Mathf.Sign(toPlayer.Y);
 
-    var speed = EnemyData!.MoveSpeed * RageSpeedMultiplier();
+    var speed = EnemyData!.MoveSpeed
+      * CombatLogic.NightSpeedMultiplier(EnemyData.Id, IsNight())
+      * RageSpeedMultiplier();
 
     Velocity = new Vector3(
       horizontalDir.X * speed,
@@ -438,7 +454,9 @@ public partial class EnemyBase : CharacterBody3D
     var horizontalDir =
       horizontal.LengthSquared() > 0.0001f ? horizontal.Normalized() : Vector3.Zero;
 
-    var speed = EnemyData!.MoveSpeed * CombatLogic.FlyerSpeedBoost;
+    var speed = EnemyData!.MoveSpeed
+      * CombatLogic.FlyerSpeedBoost
+      * CombatLogic.NightSpeedMultiplier(EnemyData.Id, IsNight());
     var verticalVelocity = CombatLogic.FlyerVerticalSeek(toPlayer.Y, speed, dt);
 
     _hoverTime += dt;

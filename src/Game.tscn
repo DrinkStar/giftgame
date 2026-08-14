@@ -66,6 +66,10 @@
 [ext_resource type="Script" path="res://src/core/save/SaveService.cs" id="64_saveservice"]
 [ext_resource type="PackedScene" path="res://scenes/ui/craft_ui.tscn" id="65_craftui"]
 [ext_resource type="PackedScene" path="res://scenes/ui/tutorial.tscn" id="66_tutorial"]
+[ext_resource type="Script" path="res://src/world/ocean/WaterMesh.cs" id="67_watermesh"]
+[ext_resource type="Script" path="res://src/world/ocean/WaterFollow.cs" id="68_waterfollow"]
+[ext_resource type="ArrayMesh" path="res://assets/water/clipmap_high.obj" id="69_clipmap"]
+[ext_resource type="Material" path="res://assets/water/mat_water.tres" id="70_watermat"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -360,6 +364,16 @@ Sfx = {
 
 [node name="SfxHook" type="Node" parent="."]
 script = ExtResource("63_sfxhook")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+material_override = ExtResource("70_watermat")
+mesh = ExtResource("69_clipmap")
+script = ExtResource("67_watermesh")
+
+[node name="WaterFollow" type="Node" parent="Water" node_paths=PackedStringArray("Target")]
+script = ExtResource("68_waterfollow")
+Target = NodePath("../../Player")
 
 [node name="CraftUI" parent="." node_paths=PackedStringArray("Crafting") instance=ExtResource("65_craftui")]
 Crafting = NodePath("../Player/CraftingSystem")
