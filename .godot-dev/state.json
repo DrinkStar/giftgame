@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260813-001",
   "created_at": "2026-08-13T00:00:00+08:00",
-  "updated_at": "2026-08-14T12:48:00+08:00",
+  "updated_at": "2026-08-14T14:35:39+08:00",
   "stage": "phase3",
-  "current_iteration": "iteration6.1",
-  "git_branch": "dev/iteration6.1",
-  "last_stable_commit": "f42b4f4508a6525e9061db33317eebb98a536a32",
+  "current_iteration": "iteration7",
+  "git_branch": "dev/iteration7",
+  "last_stable_commit": "d7319de92c92023f3107873f458a22a0d3e8b5d9",
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
@@ -95,16 +95,26 @@
         {"id": "T6.1.5", "file": "InventorySystem.SecondarySlot + WeaponSystem dual slot", "action": "create", "status": "done"},
         {"id": "T6.1.6", "file": "Game.tscn models/audio wiring", "action": "modify", "status": "done"}
       ]
+    },
+    {
+      "name": "iteration7",
+      "status": "done",
+      "tasks": [
+        {"id": "T7.0", "file": "GameManager/PlayerController/PlayerStats/WeaponSystem/Game.tscn", "action": "modify", "status": "done"},
+        {"id": "T7.1", "file": "src/quest/lib (vendored) + QuestService + GuideService + StoryPointTrigger", "action": "create", "status": "done"},
+        {"id": "T7.2", "file": "GameEvents +6 quest events", "action": "modify", "status": "done"},
+        {"id": "T7.3", "file": "HUD guide subtitle", "action": "modify", "status": "done"},
+        {"id": "T7.4", "file": "3-chapter quest data", "action": "create", "status": "done"}
+      ]
     }
   ],
-  "checkpoint": "phase3_iteration6.1_verified",
+  "checkpoint": "phase3_iteration7_verified",
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "Game.tscn --quit-after 5 exit 0",
-    "tests": "GoDotTest Passed 173 Failed 0",
+    "tests": "GoDotTest Passed 190 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
-    "visual_evidence": "evidence/iter6.1_frame.png (storm_zone 非黑帧)",
-    "audio_evidence": "AudioManagerTest 资源加载+播放断言"
+    "visual_evidence": "evidence/iter7_frame.png (>10KB 非黑帧)"
   },
-  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）。建造系统移植自 MarkoDM/GodotInGameBuildingSystem（MIT）；7 上游 bug + 6 集成修复；层 5 Buildings/6 BuildingWalls/7 FreeObjects；建筑存档 user://buildings。种植(6 作物)+产出型驯养自写(无上游)；交互射线掩码 29 + FindInteractable 扩展；作物/驯养状态未持久化(留 Iter 8 GDSave)。自写战斗+敌人框架（概念参考 SurvivalIsland AnimalAI）；敌人层 8；NodePath 型导出不加 node_paths（Godot 4.7 会置空）。敌人模型 Quaternius/PolyPizza(CC0)+OGA/CraftPix 备用；音频 soundimage(BGM署名)/freesound CC0 镜像；螃蟹模型缺失(计划T1表遗漏)已记录；storm_zone 水用暗色平面(headless GPU compute 限制)"
+  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）。建造系统移植自 MarkoDM/GodotInGameBuildingSystem（MIT）；7 上游 bug + 6 集成修复；层 5 Buildings/6 BuildingWalls/7 FreeObjects；建筑存档 user://buildings。种植(6 作物)+产出型驯养自写(无上游)；交互射线掩码 29 + FindInteractable 扩展；作物/驯养状态未持久化(留 Iter 8 GDSave)。自写战斗+敌人框架（概念参考 SurvivalIsland AnimalAI）；敌人层 8；NodePath 型导出不加 node_paths（Godot 4.7 会置空）。敌人模型 Quaternius/PolyPizza(CC0)+OGA/CraftPix 备用；音频 soundimage(BGM署名)/freesound CC0 镜像；螃蟹模型缺失(计划T1表遗漏)已记录；storm_zone 水用暗色平面(headless GPU compute 限制)；T7.0 复活契约(PlayerDied≠GameOver, 停输入/传送/满状态/不 GameOver/不掉包)；DotnetQuestSystem vendored 11 文件到 src/quest/lib（net9 NuGet 冲突弃用）；三章任务骨架+奖励数量表；奖励按物品 Id 表；引导者旁白 GuideLine+字幕"
 }
