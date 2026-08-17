@@ -104,8 +104,11 @@ public partial class GameManager : Node
   ///   auto-read (via its own deferred call, which covers buildings plus all
   ///   the other systems); this method then only acts as the fallback for
   ///   scenes/tests wired without a SaveService.
+  ///
+  ///   FIX(release): PUBLIC — Godot's source generator only registers public
+  ///   methods for CallDeferred(nameof(...)) lookup.
   /// </summary>
-  private void AutoLoadBuildings()
+  public void AutoLoadBuildings()
   {
     if (SaveService != null)
       return;
@@ -131,8 +134,11 @@ public partial class GameManager : Node
   ///   <see cref="PlayerStats.Revive"/>.
   ///   FIX(iter8p-plan): T8p.3 death drop — the death position is captured
   ///   BEFORE the teleport so the loot lands where the player actually died.
+  ///
+  ///   FIX(release): PUBLIC — Godot's source generator only registers public
+  ///   methods for CallDeferred(nameof(...)) lookup.
   /// </summary>
-  private void RespawnPlayer()
+  public void RespawnPlayer()
   {
     if (Player == null)
       return;

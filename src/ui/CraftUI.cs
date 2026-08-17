@@ -55,6 +55,12 @@ public partial class CraftUI : CanvasLayer
   private bool _tutorialDone;
   private bool _gateHintShown;
 
+  /// <summary>
+  ///   True between Close() and the next ProcessFrame — guards the one-shot
+  ///   lock-release subscription so a second Close() cannot double-subscribe.
+  /// </summary>
+  private bool _lockReleasePending;
+
   public override void _Ready()
   {
     BuildUi();
@@ -62,7 +68,17 @@ public partial class CraftUI : CanvasLayer
     Subscribe();
   }
 
-  public override void _ExitTree() => Unsubscribe();
+  public override void _ExitTree()
+  {
+    Unsubscribe();
+    // FIX(release/P2-23): a panel torn down mid-game (scene switch) must not
+    // leave the static lock held — release it synchronously here, and drop
+    // any pending frame callback (a CallDeferred in the engine queue could
+    // not be cancelled and would throw "Method not found" on the freed
+    // object).
+    CancelLockRelease();
+    GameEvents.RaiseGameplayInputLockChanged(false);
+  }
 
   public override void _Input(InputEvent @event)
   {
@@ -174,14 +190,53 @@ public partial class CraftUI : CanvasLayer
     IsOpen = false;
     Visible = false;
     Input.MouseMode = Input.MouseModeEnum.Captured;
-    // FIX(code-review): release the gameplay-input lock DEFERRED — _Input
-    // dispatches in reverse tree order, so GameManager sees this node's Esc
-    // handling first; if the lock dropped synchronously, GameManager would
-    // then toggle pause in the SAME input pass (Esc = close panel + pause).
-    CallDeferred(nameof(ReleaseInputLock));
+    // FIX(code-review): release the gameplay-input lock DEFERRED to the next
+    // frame — _Input dispatches in reverse tree order, so GameManager sees
+    // this node's Esc handling first; if the lock dropped synchronously,
+    // GameManager would then toggle pause in the SAME input pass (Esc =
+    // close panel + pause).
+    // FIX(release): a C# ProcessFrame subscription instead of
+    // CallDeferred(nameof(...)) — the engine message queue cannot be
+    // cancelled, so a deferred call whose object was freed first throws
+    // "Method not found" (looked up on the static base type CanvasLayer) in
+    // exported/release builds. A signal subscription is plain C#, is dropped
+    // in _ExitTree, and behaves identically in every build.
+    ScheduleLockRelease();
   }
 
-  private void ReleaseInputLock() => GameEvents.RaiseGameplayInputLockChanged(false);
+  private void ScheduleLockRelease()
+  {
+    var tree = GetTree();
+    if (tree == null)
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+      return;
+    }
+
+    if (_lockReleasePending)
+      return;
+    _lockReleasePending = true;
+    tree.ProcessFrame += ReleaseInputLock;
+  }
+
+  private void ReleaseInputLock()
+  {
+    _lockReleasePending = false;
+    var tree = GetTree();
+    if (tree != null)
+      tree.ProcessFrame -= ReleaseInputLock;
+    GameEvents.RaiseGameplayInputLockChanged(false);
+  }
+
+  private void CancelLockRelease()
+  {
+    if (!_lockReleasePending)
+      return;
+    _lockReleasePending = false;
+    var tree = GetTree();
+    if (tree != null)
+      tree.ProcessFrame -= ReleaseInputLock;
+  }
 
   private void Subscribe()
   {

@@ -73,7 +73,12 @@ public partial class SaveService : Node
     }
   }
 
-  private void AutoLoad()
+  /// <summary>
+  ///   Deferred startup auto-read (called via CallDeferred from _Ready).
+  ///   FIX(release): PUBLIC — Godot's source generator only registers public
+  ///   methods for CallDeferred(nameof(...)) lookup.
+  /// </summary>
+  public void AutoLoad()
   {
     // Skip the startup auto-read under GoDotTest: test scenes must start from
     // a clean state, never from whatever is in the real user:// save folder.

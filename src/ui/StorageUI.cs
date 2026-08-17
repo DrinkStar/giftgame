@@ -39,6 +39,9 @@ public partial class StorageUI : CanvasLayer
   private GridContainer? _chestSlots;
   private GridContainer? _playerSlots;
 
+  /// <summary>True between Close() and the next ProcessFrame (one-shot lock release).</summary>
+  private bool _lockReleasePending;
+
   public override void _Ready()
   {
     BuildUi();
@@ -46,7 +49,17 @@ public partial class StorageUI : CanvasLayer
     GameEvents.InventoryChanged += OnInventoryChanged;
   }
 
-  public override void _ExitTree() => GameEvents.InventoryChanged -= OnInventoryChanged;
+  public override void _ExitTree()
+  {
+    GameEvents.InventoryChanged -= OnInventoryChanged;
+    // FIX(release/P2-23): a panel torn down mid-game (scene switch) must not
+    // leave the static lock held — release it synchronously here, and drop
+    // any pending frame callback (a CallDeferred in the engine queue could
+    // not be cancelled and would throw "Method not found" on the freed
+    // object).
+    CancelLockRelease();
+    GameEvents.RaiseGameplayInputLockChanged(false);
+  }
 
   public override void _Input(InputEvent @event)
   {
@@ -88,13 +101,52 @@ public partial class StorageUI : CanvasLayer
     IsOpen = false;
     Visible = false;
     Input.MouseMode = Input.MouseModeEnum.Captured;
-    // FIX(code-review): release the lock DEFERRED — _Input dispatches in
-    // reverse tree order; a synchronous release would let GameManager toggle
-    // pause in the same Esc pass (Esc = close panel + pause).
-    CallDeferred(nameof(ReleaseInputLock));
+    // FIX(code-review): release the lock DEFERRED to the next frame — _Input
+    // dispatches in reverse tree order; a synchronous release would let
+    // GameManager toggle pause in the same Esc pass (Esc = close panel +
+    // pause).
+    // FIX(release): C# ProcessFrame subscription instead of
+    // CallDeferred(nameof(...)) — the engine message queue cannot be
+    // cancelled, so a deferred call whose object was freed first throws
+    // "Method not found" (looked up on the static base type CanvasLayer) in
+    // exported/release builds. A signal subscription is plain C#, is dropped
+    // in _ExitTree, and behaves identically in every build.
+    ScheduleLockRelease();
   }
 
-  private void ReleaseInputLock() => GameEvents.RaiseGameplayInputLockChanged(false);
+  private void ScheduleLockRelease()
+  {
+    var tree = GetTree();
+    if (tree == null)
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+      return;
+    }
+
+    if (_lockReleasePending)
+      return;
+    _lockReleasePending = true;
+    tree.ProcessFrame += ReleaseInputLock;
+  }
+
+  private void ReleaseInputLock()
+  {
+    _lockReleasePending = false;
+    var tree = GetTree();
+    if (tree != null)
+      tree.ProcessFrame -= ReleaseInputLock;
+    GameEvents.RaiseGameplayInputLockChanged(false);
+  }
+
+  private void CancelLockRelease()
+  {
+    if (!_lockReleasePending)
+      return;
+    _lockReleasePending = false;
+    var tree = GetTree();
+    if (tree != null)
+      tree.ProcessFrame -= ReleaseInputLock;
+  }
 
   /// <summary>
   ///   Rebuilds both slot grids from the current box/inventory contents.
