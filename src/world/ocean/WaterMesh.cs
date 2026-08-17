@@ -18,19 +18,20 @@ public partial class WaterMesh : MeshInstance3D
 
   /// <summary>How many times the wave simulation should update per second.</summary>
   [Export(PropertyHint.Range, "0, 60")]
-  public float UpdatesPerSecond { get; set; } = 50.0f;
+  public float UpdatesPerSecond { get; set; } = 30.0f;
 
   /// <summary>How many times per second the displacement map is read back to CPU.</summary>
   /// <remarks>
-  ///   T9.7: lowered from 10 to 5 — each readback is a synchronous
-  ///   TextureGetData that stalls the render thread for a frame; 5 Hz is
-  ///   still far above the buoyancy sampling needs (raft smoothing lerps).
+  ///   FIX(perf): lowered from 5 to 2 — each readback is a synchronous
+  ///   TextureGetData that stalls the render thread for a frame; 2 Hz is still
+  ///   far above the buoyancy sampling needs (raft smoothing lerps), and it
+  ///   cuts the per-frame stall frequency by 60%.
   /// </remarks>
   [Export(PropertyHint.Range, "1, 60")]
-  public int DisplacementReadbackPerSecond { get; set; } = 5;
+  public int DisplacementReadbackPerSecond { get; set; } = 2;
 
   [Export]
-  public int MapSize { get; set; } = 1024;
+  public int MapSize { get; set; } = 512;
 
   [Export]
   public Color WaterColor { get; set; } = new(0.1f, 0.15f, 0.18f);

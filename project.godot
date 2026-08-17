@@ -149,6 +149,9 @@ sprint={
 [rendering]
 
 renderer/rendering_method="forward_plus"
+scaling_3d/mode=1
+scaling_3d/scale=0.75
+lights_and_shadows/directional_shadow/size=2048
 
 [shader_globals]
 

@@ -291,6 +291,13 @@ public sealed class RenderingContext
   /// </summary>
   public void Free()
   {
+    // FIX(code-review): headless runs have no RenderingDevice —
+    // CreateLocalRenderingDevice() returns null, so Device is null and the
+    // cleanup below must fail closed (the WaveGenerator teardown otherwise
+    // throws an NRE at exit). Nothing to free in that case.
+    if (Device == null)
+      return;
+
     for (int i = _deletionQueue.Count - 1; i >= 0; i--)
     {
       var rid = _deletionQueue[i];
