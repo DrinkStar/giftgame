@@ -47,27 +47,29 @@
 
 ## 4. P2 —— 报告清单（32 项）
 
-> **P2 高价值项修复（2026-08-15，提交 5082857，验证 310/0）**：以下 12 项已修复并配测试——
-> P2-05（Boss 召唤物类型守卫+夜间继承+生成点抬升）、P2-06（Projectile 连续碰撞+木筏拦截）、
-> P2-08/P2-08b（spider 减速真正生效）、P2-17（RestoreWeather 读档必发事件）、
-> P2-18（RestoreTime 仅天数变化才 raise DayChanged）、P2-19（AudioManager 除零+GetNode 守卫）、
-> P2-24（F5/F9 按输入锁门控）、P2-25（LoadGame(null) fail-closed）、P2-27（SecondaryItem 清除）、
-> P2-28（存档版本校验拒绝未来版）、P2-30 部分（CraftUI.Open 互斥 + HUD Tab 尊重锁）、
-> P2-30b（SpawnProjectile 先 AddChild 后设 GlobalPosition）。
-> 其余 20 项仍只报告不修。
+> **P2 高价值项修复（第一轮 2026-08-15，提交 5082857，验证 310/0）**：P2-05、P2-06、
+> P2-08/P2-08b、P2-17、P2-18、P2-19、P2-24、P2-25、P2-27、P2-28、P2-30 部分、P2-30b——见 §4.2-4.6 标注。
+>
+> **P2 高价值项修复（第二轮 2026-08-15，提交 f30ac22，验证 313/0）**：
+> P2-04（EnemyBase 单次解析缓存 PlayerStats）、P2-07（死亡门覆盖热栏+交互）、
+> P2-01（WeaponVisual 加载失败隐藏而非陈旧网格）、P2-20（PlayBgm 同轨免重播）、
+> P2-22（移除 BuildingSaved/BuildingLoaded 死 API）、P2-26（复核：FindNearest
+> 自 P1-3 起已有 `node is not T` 类型校验，无需改动）。
+>
+> 其余 14 项仍只报告不修。
 
 ### 4.1 视觉 / 表现
-- **P2-01** `WeaponVisual` 模型加载失败时显示陈旧网格（无失败回退）。
+- **P2-01** ~~`WeaponVisual` 模型加载失败时显示陈旧网格~~ → ✅ 已修（f30ac22：失败即隐藏+警告）
 - **P2-02** `MouseObject` 墙体 0×0 幽灵瓦片（选中瞬间碰撞/网格为空）。
 - **P2-03** `Main` 岛敌人与 Ground 盒/建造网格的整合仍依赖 P1-7 压低后的地形（已缓解，未做敌人路径与地形坡度的贴合）。
 
 ### 4.2 战斗 / 敌人
-- **P2-04** `EnemyBase` 双寻址：既按节点名找 `PlayerStats` 又缓存字段，读取路径不一致。
-- **P2-05** `BossPhaseController` 召唤物不继承夜间伤害乘数；`Instantiate<EnemyBase>` 无类型守卫（换模型即崩）；生成点可能卡在地形里。
-- **P2-06** `Projectile` 不停 `RigidBody3D`（木筏）且无连续碰撞（高速穿透木筏）。
-- **P2-07** 死亡门未覆盖 E 键/热栏切换（仅覆盖主攻击）。
-- **P2-08** spider 减速 `ApplySlow` 无消费者（效果永不到达敌人）。
-- **P2-08b** `PlayerStats.SpeedMultiplier` 无消费者（与 P2-08 同一根因：减速/加速修饰符无读取方）。
+- **P2-04** ~~`EnemyBase` 双寻址~~ → ✅ 已修（f30ac22：`_Ready` 单次解析缓存 `_playerStats`）
+- **P2-05** ~~`BossPhaseController` 召唤物~~ → ✅ 已修（5082857：类型守卫+夜间继承+生成点抬升）
+- **P2-06** ~~`Projectile` 木筏/隧穿~~ → ✅ 已修（5082857：射线扫掠连续碰撞+木筏拦截）
+- **P2-07** ~~死亡门未覆盖 E 键/热栏切换~~ → ✅ 已修（f30ac22：InventorySystem 热栏 + PlayerInteraction 均按存活门控）
+- **P2-08** ~~spider 减速无消费者~~ → ✅ 已修（5082857：PlayerController 折入 SpeedMultiplier）
+- **P2-08b** ~~`SpeedMultiplier` 无消费者~~ → ✅ 已修（同 P2-08）
 
 ### 4.3 建造 / 存档
 - **P2-09** `BuildingSystem._currentSaveFile` / `LoadMostRecent` 死代码；`RaiseBuildingLoaded` 永不触发（无订阅者）。
@@ -82,23 +84,23 @@
 - **P2-16** `WorldLayout` 用 `System.Random`，跨运行时确定性无保证（仅同运行时确定）。
 
 ### 4.5 服务 / 事件
-- **P2-17** `WeatherService.SetWeather` 同值早退不发事件（读档恢复相同天气时无事件通知）。
-- **P2-18** `DayNightService.RestoreTime` 无条件 raise `DayChanged`（读档可能误报）。
-- **P2-19** `AudioManager.SfxPoolSize=0` 除零风险；`GetNode` 非守卫。
-- **P2-20** `PlayBgm` 每次重播（昼夜三连重开 island 场景会重置 BGM）。
+- **P2-17** ~~`WeatherService.SetWeather` 同值早退不发事件~~ → ✅ 已修（5082857：新增 `RestoreWeather` 读档必发）
+- **P2-18** ~~`DayNightService.RestoreTime` 无条件 raise `DayChanged`~~ → ✅ 已修（5082857：仅天数变化才发）
+- **P2-19** ~~`AudioManager.SfxPoolSize=0` 除零 + `GetNode` 非守卫~~ → ✅ 已修（5082857）
+- **P2-20** ~~`PlayBgm` 每次重播~~ → ✅ 已修（f30ac22：同轨正在播放则 no-op）
 - **P2-21** `SfxHook` Storm 注释与 Rain 代码漂移（注释描述与实际挂载不符）。
-- **P2-22** `GameEvents.BuildingSaved/BuildingLoaded` 死 API（无触发方/无订阅方）。
+- **P2-22** ~~`GameEvents.BuildingSaved/BuildingLoaded` 死 API~~ → ✅ 已修（f30ac22：移除）
 
 ### 4.6 输入 / UI / 模态
 - **P2-23** `GameplayInputLocked` 跨场景残留（静态 bool 在场景切换时不显式复位，依赖各 UI Cleanup）。
-- **P2-24** `SaveService` F5/F9 未按 `GameplayInputLocked` 门控（模态打开时可存档）。
-- **P2-25** `SaveService.LoadGame(null)` 无守卫（外部传入 null 即 NRE）。
-- **P2-26** 位置匹配容差 1.0m `<=` 无 Type 校验（`FarmPlot`/`StorageBox` 同位置冲突时取到错误类型）。
-- **P2-27** `SaveService` SecondaryItemId 恢复后不清（复用对象残留）。
-- **P2-28** `GameSaveData.Version` 不校验（版本升级迁移无入口）。
+- **P2-24** ~~`SaveService` F5/F9 未按 `GameplayInputLocked` 门控~~ → ✅ 已修（5082857）
+- **P2-25** ~~`SaveService.LoadGame(null)` 无守卫~~ → ✅ 已修（5082857）
+- **P2-26** ~~位置匹配无 Type 校验~~ → ✅ 复核无需改（FindNearest 自 P1-3 起有 `node is not T` 校验）
+- **P2-27** ~~`SaveService` SecondaryItemId 恢复后不清~~ → ✅ 已修（5082857）
+- **P2-28** ~~`GameSaveData.Version` 不校验~~ → ✅ 已修（5082857：拒绝未来版本）
 - **P2-29** `GuideService` 去重误吞（相同文本多次触发只显示一次；0.5s 窗口还会吞普通敌人台词）。
-- **P2-30** `HUD` Tab 绕过输入锁并抢 MouseMode；`WeaponSystem` Q 键（副槽切换）在模态锁下仍可用；`FinalizeTutorial` 无条件 Captured 鼠标；`BuildChapters` 重入重复；`StorageUI` 守卫不对称（`Refresh` 未守卫 `_box`/`_playerInventory` 裸引用）；奖励假推进教程 step2（quest_radio 奖励 wood 触发教程 item 步骤）；`StoryInteractable` 无场景实例化且文档不符；deferred 重订阅边缘；`CraftUI.Toggle` 公共入口无锁检查。
-- **P2-30b** `SpawnProjectile` 先设 `GlobalPosition` 再 `AddChild`（应反之，避免父变换覆盖位置）。
+- **P2-30** `HUD` Tab ~~绕过输入锁~~（✅ 5082857 已修）；`CraftUI.Open`/`Toggle` ~~无互斥~~（✅ 5082857 已修）；其余未修：`WeaponSystem` Q 键（实际 `_UnhandledInput` 已有锁检查——复核为误报，无需改）、`FinalizeTutorial` 无条件 Captured 鼠标、`BuildChapters` 重入重复、`StorageUI` 守卫不对称（`Refresh` 未守卫 `_box`/`_playerInventory` 裸引用）、奖励假推进教程 step2（quest_radio 奖励 wood 触发教程 item 步骤）、`StoryInteractable` 无场景实例化且文档不符、deferred 重订阅边缘。
+- **P2-30b** ~~`SpawnProjectile` 先设 `GlobalPosition` 再 `AddChild`~~ → ✅ 已修（5082857：先 AddChild 后设位置）。
 - **P2-31** `GroundLoot` 类注释与 T8.5.7 代码矛盾（注释说拾取后销毁，代码现在保留余数）。
 
 ### 4.7 测试
@@ -125,5 +127,5 @@
 ## 6. 验证
 
 - `dotnet build`：0 错误（24 警告，全部为既有 CA 分析告警）。
-- `godot --headless --path . --run-tests --quit-on-finish`：**Passed 310 | Failed 0**（P0/P1 修复后 301；P2 高价值项修复 +9 测试 → 310，全绿）。
-- 修复提交：`fix(code-review)`（P0/P1 代码+测试）、`docs(code-review)`（报告）、`chore(state)`（state.json）、P2 修复 `5082857`（战斗/服务/存档/模态输入）。
+- `godot --headless --path . --run-tests --quit-on-finish`：**Passed 313 | Failed 0**（P0/P1 修复后 301 → P2 第一轮 310 → P2 第二轮 313，全绿）。
+- 修复提交：`fix(code-review)`（P0/P1）、`docs(code-review)`、`chore(state)`、P2 第一轮 `5082857`（战斗/服务/存档/模态输入）、P2 第二轮 `f30ac22`（死亡门/寻址/音频/视觉）。
