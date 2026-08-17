@@ -99,6 +99,14 @@ public partial class InventorySystem : Node
 
   public override void _Input(InputEvent @event)
   {
+    // FIX(code-review P2-07): no hotbar switching while dead — the T7.0
+    // respawn contract stops ALL player input on death (WeaponSystem already
+    // does this; the inventory is mounted under the Player like it is). The
+    // parent lookup fails closed: an inventory not under a PlayerController
+    // (tests, unwired scenes) is never gated.
+    if (GetParentOrNull<PlayerController>()?.Stats is { IsAlive: false })
+      return;
+
     // Hotbar selection with number keys.
     for (var i = 0; i < HotbarSize; i++)
     {

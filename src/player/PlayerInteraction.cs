@@ -57,6 +57,16 @@ public partial class PlayerInteraction : Node
 
   public override void _Process(double delta)
   {
+    // FIX(code-review P2-07): no interaction while dead — the T7.0 respawn
+    // contract stops ALL player input on death (WeaponSystem already does
+    // this). Clear any held target so no prompt/progress leaks, and skip the
+    // ray + input handling until revive.
+    if (_player?.Stats is { IsAlive: false })
+    {
+      ClearTarget();
+      return;
+    }
+
     UpdateInteractionTarget();
     HandleInteractionInput(delta);
   }

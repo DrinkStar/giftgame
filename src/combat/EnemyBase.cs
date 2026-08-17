@@ -76,6 +76,7 @@ public partial class EnemyBase : CharacterBody3D
   private const float FlyerHoverFrequency = 2.5f;
 
   private CharacterBody3D? _player;
+  private PlayerStats? _playerStats;
   private DayNightService? _dayNight;
   private EnemyHealth? _health;
   private StandardMaterial3D? _material;
@@ -97,7 +98,17 @@ public partial class EnemyBase : CharacterBody3D
   public override void _Ready()
   {
     if (!Player.IsEmpty)
+    {
       _player = GetNodeOrNull<CharacterBody3D>(Player);
+      // FIX(code-review P2-04): resolve the player's stats ONCE and cache it
+      // — the old code re-looked-up "PlayerStats" by name on every attack,
+      // a second addressing path that drifted from PlayerController's
+      // exported Stats property and silently no-op'd the damage/slow when the
+      // child name or position changed. PlayerStats sits under the player in
+      // every shipped scene (Game.tscn, storm_zone.tscn), so this matches the
+      // node-name convention those scenes already rely on.
+      _playerStats = _player?.GetNodeOrNull<PlayerStats>("PlayerStats");
+    }
     if (!DayNightServicePath.IsEmpty)
       _dayNight = GetNodeOrNull<DayNightService>(DayNightServicePath);
     if (!FloatTargetPath.IsEmpty)
@@ -179,7 +190,7 @@ public partial class EnemyBase : CharacterBody3D
       // Phase-3 boss rage boosts damage (1× for regular enemies); T8.5.5:
       // night multiplies damage for every enemy (default 1.25), day = 1.
       var rage = CombatLogic.BossRage(BossPhase());
-      _player.GetNodeOrNull<PlayerStats>("PlayerStats")?
+      _playerStats?
         .TakeDamage(
           EnemyData.Damage
           * rage.DamageMultiplier
@@ -188,8 +199,7 @@ public partial class EnemyBase : CharacterBody3D
 
       // Webbing hit: the spider slows the player for 2 s at 0.5× speed.
       if (behavior == EnemyBehavior.Webbing)
-        _player.GetNodeOrNull<PlayerStats>("PlayerStats")
-          ?.ApplySlow(WebbingSlowDuration, WebbingSlowFactor);
+        _playerStats?.ApplySlow(WebbingSlowDuration, WebbingSlowFactor);
 
       _attackCooldown = EnemyData.AttackCooldown
         * CombatLogic.BossRageCooldownMultiplier(BossPhase());

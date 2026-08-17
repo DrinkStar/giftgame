@@ -274,4 +274,77 @@ public class PlayerRespawnTest : TestClass, IDisposable
 
     inventory.HasItem("wooden_spear", 1).ShouldBeTrue();
   }
+
+  /// <summary>
+  ///   FIX(code-review P2-07): the T7.0 death gate also covers the hotbar —
+  ///   while the player is dead, number-key / wheel selection must not switch
+  ///   the equipped slot (mirrors WeaponSystem's own gate).
+  /// </summary>
+  [Test]
+  public void InventorySystemIgnoresHotbarInputWhilePlayerIsDead()
+  {
+    var player = new PlayerController { Name = "Player" };
+    var stats = new PlayerStats { Name = "PlayerStats" };
+    player.AddChild(stats);
+    player.Stats = stats;
+    var inventory = new InventorySystem { Name = "InventorySystem" };
+    player.AddChild(inventory);
+    _fixture.AddToRoot(player, autoRemoveFromRoot: true);
+
+    inventory.SelectedHotbarSlot = 0;
+
+    stats.TakeDamage(1000f);
+    stats.IsAlive.ShouldBeFalse();
+
+    // Wheel-down while dead must NOT move the selection.
+    inventory._Input(new InputEventMouseButton
+    {
+      ButtonIndex = MouseButton.WheelDown,
+      Pressed = true
+    });
+    inventory.SelectedHotbarSlot.ShouldBe(0);
+
+    // Revive → input works again.
+    stats.Revive();
+    inventory._Input(new InputEventMouseButton
+    {
+      ButtonIndex = MouseButton.WheelDown,
+      Pressed = true
+    });
+    inventory.SelectedHotbarSlot.ShouldBe(1);
+  }
+
+  /// <summary>
+  ///   FIX(code-review P2-07): the T7.0 death gate also covers interaction —
+  ///   while the player is dead, the E-key ray/interact path is skipped and
+  ///   any held target is cleared (no prompt/progress leaks past death).
+  /// </summary>
+  [Test]
+  public async Task PlayerInteractionClearsTargetWhilePlayerIsDead()
+  {
+    var player = new PlayerController { Name = "Player" };
+    var stats = new PlayerStats { Name = "PlayerStats" };
+    player.AddChild(stats);
+    player.Stats = stats;
+    var cameraPivot = new Node3D { Name = "CameraPivot" };
+    player.AddChild(cameraPivot);
+    var camera = new Camera3D { Name = "Camera3D" };
+    cameraPivot.AddChild(camera);
+    var interaction = new PlayerInteraction
+    {
+      Name = "PlayerInteraction",
+      CameraPath = "../CameraPivot/Camera3D"
+    };
+    player.AddChild(interaction);
+    await _fixture.AddToRoot(player, autoRemoveFromRoot: true);
+
+    // Any target the previous frame may have found is dropped on death.
+    stats.TakeDamage(1000f);
+    stats.IsAlive.ShouldBeFalse();
+
+    interaction._Process(1.0 / 60.0);
+
+    interaction.CurrentPrompt.ShouldBe("");
+    interaction.CurrentProgress.ShouldBe(0f);
+  }
 }

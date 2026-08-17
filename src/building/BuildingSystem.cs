@@ -112,7 +112,9 @@ public partial class BuildingSystem : Node3D
 
   /// <summary>
   ///   The save file the last quick-save wrote to (W3). Null until the first
-  ///   F5; F5 overwrites it and the BuildingLoaded event reports it.
+  ///   F5. FIX(code-review P2-22): the BuildingLoaded/BuildingSaved events
+  ///   were dead API (no trigger, no subscriber) and were removed from
+  ///   GameEvents; this field now only feeds LoadMostRecent's path recovery.
   /// </summary>
   private string? _currentSaveFile;
 

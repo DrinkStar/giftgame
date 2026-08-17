@@ -118,7 +118,11 @@ public partial class AudioManager : Node
 
   /// <summary>
   ///   Switches the BGM player to <paramref name="id"/> and starts looping.
-  ///   Unknown ids (or a null stream) only push a warning.
+  ///   Unknown ids (or a null stream) only push a warning. FIX(code-review
+  ///   P2-20): re-requesting the ALREADY-PLAYING track is a no-op — the
+  ///   island/day/night BGM chain re-arms the same id on every scene reload,
+  ///   and unconditionally restarting cut the track (and its position) for
+  ///   nothing.
   /// </summary>
   public void PlayBgm(string id)
   {
@@ -134,6 +138,10 @@ public partial class AudioManager : Node
       GD.PushWarning("AudioManager.PlayBgm: BGM player missing; skipped.");
       return;
     }
+
+    if (player.Stream == stream && player.Playing)
+      return;
+
     SetLoop(stream, loop: true);
     player.Stream = stream;
     player.Play();

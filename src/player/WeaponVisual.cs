@@ -71,8 +71,30 @@ public partial class WeaponVisual : Node3D
       if (instance != null)
       {
         var sourceMesh = FindFirstMesh(instance);
-        _mesh!.Mesh = sourceMesh?.Mesh;
         instance.QueueFree();
+
+        // FIX(code-review P2-01): a failed load must HIDE the weapon, never
+        // show the previous weapon's stale mesh — before this, a missing/
+        // broken model path kept the old _mesh.Mesh visible while the item id
+        // changed (visually wrong equipped item).
+        if (sourceMesh == null)
+        {
+          GD.PushWarning($"WeaponVisual: no mesh in model '{path}'; hiding weapon.");
+          _currentModelPath = path; // remember the failure so we retry on item change
+          _mesh!.Visible = false;
+          DisplayedItemId = "";
+          return;
+        }
+
+        _mesh!.Mesh = sourceMesh.Mesh;
+      }
+      else
+      {
+        GD.PushWarning($"WeaponVisual: model '{path}' failed to load; hiding weapon.");
+        _currentModelPath = path;
+        _mesh!.Visible = false;
+        DisplayedItemId = "";
+        return;
       }
 
       _currentModelPath = path;

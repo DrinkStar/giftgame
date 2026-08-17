@@ -185,6 +185,40 @@ public class AudioManagerTest : TestClass, IDisposable
     Should.NotThrow(() => _audio.PlayBgm(""));
   }
 
+  /// <summary>
+  ///   FIX(code-review P2-20): re-requesting the already-playing track is a
+  ///   no-op — the island/night/boss BGM chain re-arms the same id on scene
+  ///   reloads, and restarting unconditionally would cut the track for
+  ///   nothing. In headless the player may not report Playing, so this
+  ///   asserts the idempotence contract: calling the same id again never
+  ///   throws and keeps the same stream wired.
+  /// </summary>
+  [Test]
+  public void PlayBgm_SameIdTwice_IsIdempotentAndSwitchesOnChange()
+  {
+    if (!FileAccess.FileExists(BgmPaths[0]) || !FileAccess.FileExists(BgmPaths[1]))
+      return;
+
+    var island = GD.Load<AudioStream>(BgmPaths[0]);
+    var night = GD.Load<AudioStream>(BgmPaths[1]);
+    _audio.Bgm["island"] = island;
+    _audio.Bgm["night"] = night;
+
+    var player = _audio.GetNodeOrNull<AudioStreamPlayer>("BgmPlayer");
+    player.ShouldNotBeNull();
+
+    Should.NotThrow(() => _audio.PlayBgm("island"));
+    player!.Stream.ShouldBe(island);
+
+    // Same id again: no throw, stream unchanged.
+    Should.NotThrow(() => _audio.PlayBgm("island"));
+    player.Stream.ShouldBe(island);
+
+    // Different id: switches.
+    Should.NotThrow(() => _audio.PlayBgm("night"));
+    player.Stream.ShouldBe(night);
+  }
+
   [Test]
   public void PlaySfx_MissingId_DoesNotCrash()
   {
