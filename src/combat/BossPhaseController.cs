@@ -42,6 +42,15 @@ public partial class BossPhaseController : Node
   /// <summary>Player NodePath assigned to spawned minions.</summary>
   [Export] public NodePath PlayerPath = new();
 
+  /// <summary>
+  ///   Optional DayNightService path (mirrors EnemyBase's own export). When
+  ///   resolved, spawned minions inherit the night damage/speed boost via an
+  ///   ABSOLUTE path (like IslandBuilder) so it works regardless of where the
+  ///   minion is parented; empty = minions get no night boost (fail-closed,
+  ///   same contract as a boss without a DayNightService).
+  /// </summary>
+  [Export] public NodePath DayNightServicePath = new();
+
   [Export] public float MinionSpawnInterval = 10f;
   [Export] public int MaxAliveMinions = 3;
 
@@ -49,6 +58,7 @@ public partial class BossPhaseController : Node
   [Export] public Color RageTint = new(0.35f, 0.04f, 0.04f);
 
   private EnemyBase? _boss;
+  private DayNightService? _dayNight;
   private readonly List<EnemyBase> _minions = new();
   private int _phase = 1;
   private float _spawnTimer;
@@ -64,6 +74,9 @@ public partial class BossPhaseController : Node
 
     if (_boss == null)
       GD.PushWarning("BossPhaseController: no boss EnemyBase found; disabled.");
+
+    if (!DayNightServicePath.IsEmpty)
+      _dayNight = GetNodeOrNull<DayNightService>(DayNightServicePath);
 
     if (string.IsNullOrEmpty(BossId))
       BossId = _boss?.EnemyData?.Id ?? "";
@@ -125,13 +138,34 @@ public partial class BossPhaseController : Node
     if (parent == null)
       return;
 
-    var minion = MinionScene.Instantiate<EnemyBase>();
+    // FIX(code-review P2-05): type guard — a minion scene whose root is not
+    // an EnemyBase must fail closed (warn + skip) instead of throwing from
+    // the generic Instantiate cast.
+    var minion = MinionScene.Instantiate() as EnemyBase;
+    if (minion == null)
+    {
+      GD.PushWarning(
+        "BossPhaseController: minion scene root is not an EnemyBase; spawn skipped."
+      );
+      return;
+    }
+
     minion.EnemyData = MinionData;
     if (!PlayerPath.IsEmpty)
       minion.Player = PlayerPath;
 
+    // FIX(code-review P2-05): minions inherit the night boost. The boss's
+    // DayNightServicePath is relative to the boss, so the minion (parented
+    // elsewhere) gets an ABSOLUTE path — same pattern as IslandBuilder.
+    if (_dayNight != null)
+      minion.DayNightServicePath = new NodePath(_dayNight.GetPath());
+
     parent.AddChild(minion);
-    minion.GlobalPosition = _boss!.GlobalPosition + new Vector3(2f, 0f, 2f);
+
+    // FIX(code-review P2-05): spawn slightly above the boss so the minion
+    // never starts embedded in terrain/slopes; gravity settles it (swimmers
+    // ignore gravity, so the offset is harmless there).
+    minion.GlobalPosition = _boss!.GlobalPosition + new Vector3(2f, 1.5f, 2f);
 
     _minions.Add(minion);
   }

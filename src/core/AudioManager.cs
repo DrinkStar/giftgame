@@ -53,7 +53,11 @@ public partial class AudioManager : Node
     }
 
     // SFX: a pool of one-shot players so rapid hits don't cut each other off.
-    for (var i = 0; i < SfxPoolSize; i++)
+    // FIX(code-review P2-19): clamp the pool size so SfxPoolSize = 0 can
+    // never divide by zero in PlaySfx — a zero/negative export behaves like 1.
+    var poolSize = Mathf.Max(1, SfxPoolSize);
+    SfxPoolSize = poolSize;
+    for (var i = 0; i < poolSize; i++)
     {
       var name = $"{SfxPlayerPrefix}{i}";
       if (GetNodeOrNull<AudioStreamPlayer>(name) is null)
@@ -124,7 +128,12 @@ public partial class AudioManager : Node
       return;
     }
 
-    var player = GetNode<AudioStreamPlayer>(BgmPlayerName);
+    var player = GetNodeOrNull<AudioStreamPlayer>(BgmPlayerName);
+    if (player == null)
+    {
+      GD.PushWarning("AudioManager.PlayBgm: BGM player missing; skipped.");
+      return;
+    }
     SetLoop(stream, loop: true);
     player.Stream = stream;
     player.Play();
@@ -164,8 +173,13 @@ public partial class AudioManager : Node
       return;
     }
 
-    var player = GetNode<AudioStreamPlayer>($"{SfxPlayerPrefix}{_nextSfxPlayer}");
+    var player = GetNodeOrNull<AudioStreamPlayer>($"{SfxPlayerPrefix}{_nextSfxPlayer}");
     _nextSfxPlayer = (_nextSfxPlayer + 1) % SfxPoolSize;
+    if (player == null)
+    {
+      GD.PushWarning("AudioManager.PlaySfx: pool player missing; skipped.");
+      return;
+    }
 
     player.Stream = stream;
     player.Play();

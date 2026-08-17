@@ -338,4 +338,39 @@ public class CraftUILogicTest : TestClass, IDisposable
     await TestScene.ProcessFrame(2);
     GameEvents.GameplayInputLocked.ShouldBeFalse();
   }
+
+  /// <summary>
+  ///   FIX(code-review P2-30): mutual-exclusion guard on the OPEN path — while
+  ///   another modal holds the gameplay-input lock, Toggle (public entry)
+  ///   must fail closed instead of stacking a second modal. Closing is always
+  ///   allowed (the lock belongs to this panel then).
+  /// </summary>
+  [Test]
+  public async Task ToggleRefusesToOpenWhileAnotherModalHoldsLock()
+  {
+    GameEvents.RaiseGameplayInputLockChanged(true);
+    try
+    {
+      _craftUI.Toggle();
+
+      _craftUI.IsOpen.ShouldBeFalse();
+      _craftUI.Visible.ShouldBeFalse();
+    }
+    finally
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+    }
+
+    // Once the lock is released, Toggle opens normally.
+    _craftUI.Toggle();
+    _craftUI.IsOpen.ShouldBeTrue();
+    await TestScene.ProcessFrame(2);
+    GameEvents.GameplayInputLocked.ShouldBeTrue();
+
+    // Closing with C while holding our own lock still works.
+    _craftUI.Toggle();
+    _craftUI.IsOpen.ShouldBeFalse();
+    await TestScene.ProcessFrame(2);
+    GameEvents.GameplayInputLocked.ShouldBeFalse();
+  }
 }

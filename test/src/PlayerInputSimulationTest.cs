@@ -67,6 +67,47 @@ public class PlayerInputSimulationTest : TestClass
     horizontalVelocity.Length().ShouldBe(0f, 0.001);
   }
 
+  /// <summary>
+  ///   FIX(code-review P2-08): the spider's slow (PlayerStats.ApplySlow →
+  ///   SpeedMultiplier) must actually slow the player — PlayerController folds
+  ///   the multiplier into the walk speed every tick. Half-speed input yields
+  ///   roughly half the horizontal velocity of the full-speed control.
+  /// </summary>
+  [Test]
+  public void ActiveSlowHalvesHorizontalVelocity()
+  {
+    var stats = _player.GetNode<PlayerStats>("PlayerStats");
+    stats.ApplySlow(5f, 0.5f);
+    stats.SpeedMultiplier.ShouldBe(0.5f);
+
+    InjectMoveForward(pressed: true);
+    for (var tick = 0; tick < 30; tick++)
+    {
+      _player._PhysicsProcess(1.0 / 60.0);
+    }
+
+    var slowed = (_player.Velocity with { Y = 0f }).Length();
+
+    // Baseline: same ticks without the slow.
+    ReleaseMoveForward();
+    _player.Velocity = Vector3.Zero;
+    stats.Revive(); // clears _slowRemaining via the revive contract
+    stats.SpeedMultiplier.ShouldBe(1f);
+    InjectMoveForward(pressed: true);
+    for (var tick = 0; tick < 30; tick++)
+    {
+      _player._PhysicsProcess(1.0 / 60.0);
+    }
+
+    var full = (_player.Velocity with { Y = 0f }).Length();
+
+    // The slow must cut the converged horizontal speed roughly in half
+    // (acceleration lerp converges; allow a generous band around 0.5×).
+    full.ShouldBeGreaterThan(0.1f);
+    slowed.ShouldBeLessThan(full * 0.75f);
+    slowed.ShouldBeGreaterThan(full * 0.25f);
+  }
+
   private static void InjectMoveForward(bool pressed)
   {
     Input.ParseInputEvent(new InputEventAction

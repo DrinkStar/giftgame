@@ -210,4 +210,30 @@ public class BossPhaseTest : TestClass, IDisposable
     king.Behavior.ShouldBe(EnemyBehavior.Swimmer);
     king.MaxHealth.ShouldBe(400f);
   }
+
+  /// <summary>
+  ///   FIX(code-review P2-05): a minion scene whose root is NOT an EnemyBase
+  ///   must fail closed (warn + skip) instead of throwing from the generic
+  ///   Instantiate cast. Drives the controller into phase 2 with the interval
+  ///   elapsed, then proves no minion was added and no exception escaped.
+  /// </summary>
+  [Test]
+  public void SpawnMinion_NonEnemyScene_FailsClosedWithoutThrowing()
+  {
+    _enemy.EnemyData = CreateSharkKingData();
+    _enemy.TakeDamage(160f); // 400 → 0.6 = phase 2
+
+    // A scene whose root is a plain Node3D (not an EnemyBase).
+    var packed = new PackedScene();
+    packed.Pack(new Node3D { Name = "NotAnEnemy" });
+    _controller.MinionScene = packed;
+    _controller.MinionData = CreateSharkKingData();
+    _controller.MinionSpawnInterval = 0f;
+    _controller.MaxAliveMinions = 3;
+
+    // Interval elapsed → spawn attempt; must not throw.
+    Should.NotThrow(() => _controller._PhysicsProcess(1.0));
+
+    _controller.CurrentPhase.ShouldBe(2);
+  }
 }

@@ -504,21 +504,30 @@ public partial class HUD : CanvasLayer
 
   private void ToggleInventory()
   {
-    _inventoryOpen = !_inventoryOpen;
+    // FIX(code-review P2-30): respect the gameplay-input lock — while a modal
+    // (crafting/storage) holds it, Tab must neither open the inventory panel
+    // nor steal the mouse mode; the modal's own Esc closes it first. Closing
+    // the panel is always allowed (the lock, if any, belongs to this panel).
+    if (_inventoryOpen)
+    {
+      _inventoryOpen = false;
+      if (_inventoryPanel != null)
+        _inventoryPanel.Visible = false;
+      Input.MouseMode = Input.MouseModeEnum.Captured;
+      return;
+    }
+
+    if (GameEvents.GameplayInputLocked)
+      return;
+
+    _inventoryOpen = true;
 
     if (_inventoryPanel == null)
       return;
 
-    _inventoryPanel.Visible = _inventoryOpen;
-    if (_inventoryOpen)
-    {
-      Input.MouseMode = Input.MouseModeEnum.Visible;
-      UpdateInventoryPanel();
-    }
-    else
-    {
-      Input.MouseMode = Input.MouseModeEnum.Captured;
-    }
+    _inventoryPanel.Visible = true;
+    Input.MouseMode = Input.MouseModeEnum.Visible;
+    UpdateInventoryPanel();
   }
 
   private void UpdateInventoryPanel()

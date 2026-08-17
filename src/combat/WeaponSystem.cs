@@ -438,9 +438,13 @@ public partial class WeaponSystem : Node
     projectile.Speed = speed;
     projectile.Gravity = gravity;
     projectile.Lifetime = ProjectileLifetime;
-    projectile.GlobalPosition = _camera.GlobalPosition + forward;
     projectile.SetVelocity(forward * speed);
 
+    // FIX(code-review P2-30b): add to the tree BEFORE assigning the global
+    // position — a parented node inherits the parent's transform, so setting
+    // GlobalPosition first would be overwritten (or produce a misleading
+    // position) once the projectile is re-parented under the current scene.
     GetTree().CurrentScene?.AddChild(projectile);
+    projectile.GlobalPosition = _camera.GlobalPosition + forward;
   }
 }

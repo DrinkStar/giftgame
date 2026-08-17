@@ -93,6 +93,20 @@ public partial class WeatherService : Node
     GD.Print($"Weather changed to: {weather}");
   }
 
+  /// <summary>
+  ///   FIX(code-review P2-17): save-load restore entry point. Unlike
+  ///   <see cref="SetWeather"/> (which intentionally early-outs on the same
+  ///   value — random weather changes must not re-fire events), a RESTORE must
+  ///   always publish so consumers (e.g. the SfxHook storm audio) re-sync even
+  ///   when the saved weather equals the current one. Mirrors
+  ///   <see cref="DayNightService.RestoreTime"/>'s separate load path.
+  /// </summary>
+  public void RestoreWeather(WeatherType weather)
+  {
+    _currentWeather = weather;
+    GameEvents.RaiseWeatherChanged(weather);
+  }
+
   private void ApplyFog()
   {
     if (_environment?.Environment is not { } env)

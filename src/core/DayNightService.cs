@@ -295,10 +295,15 @@ public partial class DayNightService : Node
   public void RestoreTime(float hour, int day)
   {
     _currentTime = Mathf.Clamp(hour, 0, 24);
+    var previousDay = _currentDay;
     _currentDay = Mathf.Max(1, day);
     UpdatePeriod();
     UpdateLighting();
     GameEvents.RaiseTimeChanged(_currentTime);
-    GameEvents.RaiseDayChanged(_currentDay);
+    // FIX(code-review P2-18): only raise DayChanged when the day actually
+    // changed — an unconditional raise made loading a same-day save look like
+    // a day transition (HUD/consumers re-fire their day logic for nothing).
+    if (_currentDay != previousDay)
+      GameEvents.RaiseDayChanged(_currentDay);
   }
 }

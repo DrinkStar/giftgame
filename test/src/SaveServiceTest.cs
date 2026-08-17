@@ -308,4 +308,142 @@ public class SaveServiceTest : TestClass, IDisposable
       GameEvents.GameLoaded -= OnLoaded;
     }
   }
+
+  /// <summary>
+  ///   FIX(code-review P2-25): LoadGame fails closed on a null snapshot
+  ///   (external callers / corrupt inputs) instead of throwing mid-restore.
+  /// </summary>
+  [Test]
+  public void LoadGameNullFailsClosed()
+  {
+    _service.LoadGame(null).ShouldBeFalse();
+    _service.LoadGame(default).ShouldBeFalse();
+  }
+
+  /// <summary>
+  ///   FIX(code-review P2-28): a save from a NEWER format version is rejected
+  ///   (fail-closed) so unparseable fields can never be silently mis-read.
+  /// </summary>
+  [Test]
+  public void LoadGameRejectsFutureVersion()
+  {
+    var data = _service.Snapshot();
+    data.Version = SaveService.SupportedSaveVersion + 1;
+
+    _service.LoadGame(data).ShouldBeFalse();
+
+    // The version-1 document still loads (default-field fallback contract).
+    data.Version = SaveService.SupportedSaveVersion;
+    _service.LoadGame(data).ShouldBeTrue();
+  }
+
+  /// <summary>
+  ///   FIX(code-review P2-27): a load without a secondary item clears a
+  ///   previously equipped one — a reused InventorySystem must not keep
+  ///   attacking with a stale secondary.
+  /// </summary>
+  [Test]
+  public void LoadGameWithoutSecondaryClearsEquipped()
+  {
+    _inventory.SecondaryItem = LoadItem("wooden_spear");
+
+    var snapshot = _service.Snapshot();
+    snapshot.Inventory.SecondaryItemId.ShouldBe("wooden_spear");
+
+    // Clear the save's secondary, then prove the load wipes the equipped slot.
+    snapshot.Inventory.SecondaryItemId = "";
+    _service.LoadGame(snapshot).ShouldBeTrue();
+    _inventory.SecondaryItem.ShouldBeNull();
+  }
+
+  /// <summary>
+  ///   FIX(code-review P2-17): weather restore ALWAYS publishes — unlike
+  ///   SetWeather's same-value early-out, a load must re-sync consumers even
+  ///   when the saved weather equals the current one.
+  /// </summary>
+  [Test]
+  public void RestoreWeatherAlwaysPublishesEvenWhenSameValue()
+  {
+    var raised = 0;
+    GameEvents.WeatherChanged += OnWeather;
+    try
+    {
+      _weather.SetWeather(WeatherType.Rain);
+      _weather.SetWeather(WeatherType.Rain); // same value → no event (contract)
+      raised.ShouldBe(1);
+
+      var snapshot = _service.Snapshot();
+      snapshot.Weather.Weather = WeatherType.Rain; // same as current
+      _service.LoadGame(snapshot).ShouldBeTrue();
+      raised.ShouldBe(2); // restore published despite the same value
+    }
+    finally
+    {
+      GameEvents.WeatherChanged -= OnWeather;
+    }
+
+    return;
+
+    void OnWeather(WeatherType _) => raised++;
+  }
+
+  /// <summary>
+  ///   FIX(code-review P2-18): RestoreTime raises DayChanged only when the day
+  ///   actually changed — a same-day load must not look like a day transition.
+  /// </summary>
+  [Test]
+  public void RestoreTimeRaisesDayChangedOnlyWhenDayActuallyChanges()
+  {
+    var dayChanges = 0;
+    GameEvents.DayChanged += OnDayChanged;
+    try
+    {
+      _dayNight.RestoreTime(10f, 3);
+      dayChanges.ShouldBe(1);
+
+      _dayNight.RestoreTime(10f, 3); // same day → no event
+      dayChanges.ShouldBe(1);
+
+      _dayNight.RestoreTime(10f, 4); // new day → event
+      dayChanges.ShouldBe(2);
+    }
+    finally
+    {
+      GameEvents.DayChanged -= OnDayChanged;
+    }
+
+    return;
+
+    void OnDayChanged(int _) => dayChanges++;
+  }
+
+  /// <summary>
+  ///   FIX(code-review P2-24): quick save/load is gated on the gameplay-input
+  ///   lock — while a modal (crafting/storage) holds it, F5/F9 do nothing.
+  /// </summary>
+  [Test]
+  public void QuickSaveAndLoadGatedByInputLock()
+  {
+    _service.SaveGame();
+    var saves = Directory.GetFiles(_tempDirectory, "savegame_*.json");
+    saves.Length.ShouldBe(1);
+    var lastWrite = File.GetLastWriteTimeUtc(saves[0]);
+
+    GameEvents.RaiseGameplayInputLockChanged(true);
+    try
+    {
+      _service._Input(new InputEventAction { Action = "quick_save", Pressed = true });
+      _service._Input(new InputEventAction { Action = "quick_load", Pressed = true });
+    }
+    finally
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+    }
+
+    // Gated inputs were ignored: no new save file appeared and the existing
+    // one was not overwritten (timestamp unchanged).
+    var savesAfter = Directory.GetFiles(_tempDirectory, "savegame_*.json");
+    savesAfter.Length.ShouldBe(1);
+    File.GetLastWriteTimeUtc(savesAfter[0]).ShouldBe(lastWrite);
+  }
 }

@@ -120,8 +120,13 @@ public partial class PlayerController : CharacterBody3D
     // R1 (Iter8p): move_speed multiplier, applied here at the copy point so
     // the pure PlayerMotion class stays untouched (null service → ×1).
     // Copied every tick so runtime WalkSpeed changes and progression
-    // multipliers both take effect.
-    _motion.WalkSpeed = WalkSpeed * (Progression?.GetMultiplier("move_speed") ?? 1f);
+    // multipliers both take effect. FIX(code-review P2-08): the stats slow
+    // (spider webbing, PlayerStats.ApplySlow → SpeedMultiplier) is folded in
+    // here too — PlayerStats.SpeedMultiplier existed but had no consumer, so
+    // the spider's 0.5× slow never reached the player's speed.
+    _motion.WalkSpeed = WalkSpeed
+      * (Progression?.GetMultiplier("move_speed") ?? 1f)
+      * (Stats?.SpeedMultiplier ?? 1f);
 
     // T8.5.2 (raft carry): Godot's built-in platform-velocity inheritance
     // proved unreliable for RigidBody3D floors in this project's tests, so the

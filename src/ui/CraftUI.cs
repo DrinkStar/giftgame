@@ -155,6 +155,13 @@ public partial class CraftUI : CanvasLayer
 
   private void Open()
   {
+    // FIX(code-review P2-30): mutual-exclusion guard on the open path itself
+    // (mirrors StorageUI.Open) — the _Input path already refuses under a held
+    // lock, but Toggle() is a public entry point (tests/external callers) and
+    // must fail closed too: never stack a second modal on a held lock.
+    if (GameEvents.GameplayInputLocked)
+      return;
+
     IsOpen = true;
     Visible = true;
     Input.MouseMode = Input.MouseModeEnum.Visible;

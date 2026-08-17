@@ -22,6 +22,14 @@ public partial class SaveService : Node
   /// <summary>Where the unified save document lives (injectable for tests).</summary>
   [Export] public string SaveFolder = "user://saves";
 
+  /// <summary>
+  ///   Save format version this build understands (mirrors
+  ///   <see cref="GameSaveData.Version"/>). FIX(code-review P2-28): a save
+  ///   from a NEWER build is rejected (fail-closed) instead of being silently
+  ///   mis-read; older versions load with default-field fallback as before.
+  /// </summary>
+  public const int SupportedSaveVersion = 1;
+
   [Export] public PlayerStats? PlayerStats;
   [Export] public InventorySystem? Inventory;
   [Export] public DayNightService? DayNight;
@@ -48,6 +56,13 @@ public partial class SaveService : Node
   {
     // FIX(iter8-plan): T8.1 — F5/F9 moved here from BuildingSystem._Input.
     // The actions are registered at runtime by BuildingInput.RegisterInputActions.
+    // FIX(code-review P2-24): gate quick save/load on the gameplay-input
+    // lock — while a modal (crafting/storage) is open, F5/F9 would snapshot
+    // mid-UI state or clobber the open panel's inventory; the modal's Esc
+    // closes it first. Mirrors GameManager's ui_cancel gating.
+    if (GameEvents.GameplayInputLocked)
+      return;
+
     if (@event.IsActionPressed("quick_save"))
     {
       SaveGame();
@@ -203,8 +218,25 @@ public partial class SaveService : Node
   ///   world position, then the scalar state (inventory / stats / clock /
   ///   weather).
   /// </summary>
-  public bool LoadGame(GameSaveData data)
+  public bool LoadGame(GameSaveData? data)
   {
+    // FIX(code-review P2-25): fail closed on a null snapshot instead of
+    // throwing an NRE mid-restore (external callers / corrupt inputs).
+    if (data == null)
+      return false;
+
+    // FIX(code-review P2-28): refuse saves from a NEWER format — a higher
+    // version means fields we cannot parse; loading it would silently lose
+    // data. Older versions keep the default-field fallback.
+    if (data.Version > SupportedSaveVersion)
+    {
+      GD.PushWarning(
+        $"SaveService: save version {data.Version} is newer than supported "
+        + $"{SupportedSaveVersion}; load rejected."
+      );
+      return false;
+    }
+
     // The building rebuild (below) QueueFree's the previous session's
     // instances, but they stay valid + group members until end of frame —
     // FindNearest skips IsQueuedForDeletion nodes so position matching never
@@ -237,7 +269,10 @@ public partial class SaveService : Node
 
     if (Weather != null)
     {
-      Weather.SetWeather(data.Weather.Weather);
+      // FIX(code-review P2-17): restore ALWAYS publishes (unlike SetWeather's
+      // same-value early-out) so consumers re-sync even when the saved weather
+      // equals the current one.
+      Weather.RestoreWeather(data.Weather.Weather);
     }
 
     return true;
@@ -369,6 +404,13 @@ public partial class SaveService : Node
       {
         Inventory.SecondaryItem = item;
       }
+    }
+    else
+    {
+      // FIX(code-review P2-27): a save with NO secondary item must clear a
+      // previously equipped one — otherwise a reused InventorySystem keeps a
+      // stale secondary (WeaponSystem would keep attacking with it).
+      Inventory.SecondaryItem = null;
     }
 
     // One consolidated refresh signal for the HUD.
