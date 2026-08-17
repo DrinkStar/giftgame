@@ -123,8 +123,16 @@ public partial class PlayerController : CharacterBody3D
     // multipliers both take effect.
     _motion.WalkSpeed = WalkSpeed * (Progression?.GetMultiplier("move_speed") ?? 1f);
 
+    // T8.5.2 (raft carry): Godot's built-in platform-velocity inheritance
+    // proved unreliable for RigidBody3D floors in this project's tests, so the
+    // carry is done explicitly. FIX(code-review): the carry is subtracted
+    // from the previous Velocity BEFORE PlayerMotion runs and re-added after,
+    // so it cannot compound — a naive "velocity += carry" would feed the
+    // carry back into ComputeVelocity's deceleration baseline and accelerate
+    // a zero-input player beyond the raft speed (sliding off the deck).
+    var carry = ResolveRaftCarry();
     var velocity = _motion.ComputeVelocity(
-      Velocity, input, cameraBasis, (float)delta, Running
+      Velocity - carry, input, cameraBasis, (float)delta, Running
     );
 
     // Only jump from the ground (tracked by the motion object).
@@ -134,15 +142,9 @@ public partial class PlayerController : CharacterBody3D
       velocity = _motion.Jump(velocity);
     }
 
-    // T8.5.2 (raft carry): Godot's built-in platform-velocity inheritance
-    // proved unreliable for RigidBody3D floors in this project's tests, so the
-    // carry is done explicitly: a short downward probe from the feet finds a
-    // Raft and its horizontal velocity is ADDED to the movement velocity every
-    // tick (replaced, not accumulated — the player tracks the raft and can
-    // still walk relative to it; walking off clears the carry; vertical
-    // velocity — gravity/jump — is untouched). Fail-closed: no raft below (or
-    // no physics space) → no carry.
-    var carry = ResolveRaftCarry();
+    // Re-add the platform motion once per tick (horizontal only — vertical
+    // velocity, i.e. gravity/jump, is untouched). Walking off the raft
+    // clears the carry; no raft below (or no physics space) → zero.
     velocity = new Vector3(velocity.X + carry.X, velocity.Y, velocity.Z + carry.Z);
 
     Velocity = velocity;

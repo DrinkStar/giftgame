@@ -246,6 +246,39 @@ public class SaveServiceTest : TestClass, IDisposable
     chicken.GetSaveState().ProduceElapsedSeconds.ShouldBe(4f);
   }
 
+  /// <summary>
+  ///   FIX(code-review): a backpack-expanded inventory (10→12) must restore
+  ///   slot-aligned after a fresh (default-width) load — the save carries
+  ///   GridWidth and the restore widens the grid first.
+  /// </summary>
+  [Test]
+  public void ExpandedInventoryRestoresAlignedAfterFreshLoad()
+  {
+    _inventory.ExpandInventory(12);
+    // Deterministic direct placement: stone at grid col 0, berries at the
+    // 12th column (the misalignment trigger), wood on the second row.
+    _inventory.GetInventorySlot(0, 0).Item = LoadItem("stone");
+    _inventory.GetInventorySlot(0, 0).Amount = 1;
+    _inventory.GetInventorySlot(11, 0).Item = LoadItem("berries");
+    _inventory.GetInventorySlot(11, 0).Amount = 1;
+    _inventory.GetInventorySlot(0, 1).Item = LoadItem("wood");
+    _inventory.GetInventorySlot(0, 1).Amount = 3;
+
+    var snapshot = _service.Snapshot();
+    snapshot.Inventory.GridWidth.ShouldBe(12);
+
+    // A fresh, default-width inventory receives the load.
+    var fresh = new InventorySystem { Name = "FreshInventory" };
+    var service2 = new SaveService { Inventory = fresh };
+    _fixture.AddToRoot(fresh, autoRemoveFromRoot: true);
+    service2.LoadGame(snapshot);
+
+    fresh.InventoryWidth.ShouldBe(12); // widened to match the save
+    fresh.GetInventorySlot(0, 0).Item?.Id.ShouldBe("stone");
+    fresh.GetInventorySlot(11, 0).Item?.Id.ShouldBe("berries");
+    fresh.GetInventorySlot(0, 1).Item?.Id.ShouldBe("wood");
+  }
+
   /// <summary>F5/F9 raise the GameSaved/GameLoaded events (raise-only).</summary>
   [Test]
   public void SaveAndLoadRaiseEvents()

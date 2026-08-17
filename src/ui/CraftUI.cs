@@ -164,8 +164,14 @@ public partial class CraftUI : CanvasLayer
     IsOpen = false;
     Visible = false;
     Input.MouseMode = Input.MouseModeEnum.Captured;
-    GameEvents.RaiseGameplayInputLockChanged(false);
+    // FIX(code-review): release the gameplay-input lock DEFERRED — _Input
+    // dispatches in reverse tree order, so GameManager sees this node's Esc
+    // handling first; if the lock dropped synchronously, GameManager would
+    // then toggle pause in the SAME input pass (Esc = close panel + pause).
+    CallDeferred(nameof(ReleaseInputLock));
   }
+
+  private void ReleaseInputLock() => GameEvents.RaiseGameplayInputLockChanged(false);
 
   private void Subscribe()
   {

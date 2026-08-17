@@ -15,6 +15,15 @@ public partial class StoryPointTrigger : Area3D
 {
   [Export] public string StoryPointId { get; set; } = "";
 
+  /// <summary>
+  ///   FIX(code-review): when true the trigger fires on EVERY entry instead
+  ///   of once. Quest-gated story points (e.g. "ruin", which only advances
+  ///   quest_ruin while that chapter-2 quest is current) must not be
+  ///   consumed by an early visit — a one-shot trigger would silently
+  ///   soft-lock the later quest and tutorial step.
+  /// </summary>
+  [Export] public bool Reusable;
+
   private bool _fired;
 
   public override void _Ready()
@@ -43,7 +52,10 @@ public partial class StoryPointTrigger : Area3D
 
   private void OnBodyEntered(Node3D body)
   {
-    if (_fired || body is not PlayerController)
+    if (body is not PlayerController)
+      return;
+
+    if (_fired && !Reusable)
       return;
 
     _fired = true;

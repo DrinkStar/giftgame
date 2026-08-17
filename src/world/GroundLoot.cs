@@ -72,7 +72,15 @@ public partial class GroundLoot : StaticBody3D, IInteractable
     if (inventory == null)
       return;
 
-    inventory.AddItem(GD.Load<ItemData>($"res://assets/items/{ItemId}.tres"), Amount);
+    // FIX(code-review): a full inventory must not silently delete the loot —
+    // AddItem returns the unplaced remainder; keep the pile on the ground so
+    // the player can clear space and pick it up (same contract as WoodTree).
+    var remaining = inventory.AddItem(
+      GD.Load<ItemData>($"res://assets/items/{ItemId}.tres"), Amount
+    );
+    if (remaining > 0)
+      return;
+
     QueueFree();
   }
 

@@ -247,6 +247,7 @@ script = ExtResource("52_guide_service")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 10)
 script = ExtResource("53_story_point")
 StoryPointId = "ruin"
+Reusable = true
 
 [node name="WoodTree1" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.5, 5)

@@ -20,8 +20,15 @@ public static class WorldLayout
     /// <summary>Main island radius in meters (covers the existing 40×40 Ground grid).</summary>
     public const float MainRadius = 32f;
 
-    /// <summary>Main island terrain amplitude in meters.</summary>
-    public const float MainHeightScale = 5f;
+    /// <summary>
+    ///   Main island terrain amplitude in meters. FIX(code-review): 1.0 keeps
+    ///   the surface at ≤ +0.5 m (Y = (h01 − 0.5) · H, h01 ≤ 1) so it sits
+    ///   against the Game.tscn Ground box top (y = 0.5) and the BuildingSystem
+    ///   grid (y = 0.5) — the previous 5 m buried placed buildings, created a
+    ///   double collision surface and mismatched placement heights. Still
+    ///   retains a gentle rolling relief.
+    /// </summary>
+    public const float MainHeightScale = 1f;
 
     /// <summary>Main island noise frequency (feature size ≈ 25 m).</summary>
     public const float MainNoiseScale = 0.04f;

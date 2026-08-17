@@ -66,6 +66,15 @@ public sealed class InventorySaveData
   /// <summary>Grid slots in row-major order; empty slots are omitted.</summary>
   public List<SlotSaveData> Grid { get; set; } = new();
 
+  /// <summary>
+  ///   FIX(code-review): the grid width at save time. The backpack expansion
+  ///   (T8.5.4) widens the grid 10→12, and a fresh game starts at the default
+  ///   width — without this field a row-major restore would misalign every
+  ///   slot after the first row. 0 on old saves = fall back to the current
+  ///   width (pre-expansion behaviour).
+  /// </summary>
+  public int GridWidth { get; set; }
+
   /// <summary>Secondary weapon item id, or null when empty.</summary>
   public string? SecondaryItemId { get; set; }
 }

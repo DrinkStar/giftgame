@@ -148,7 +148,7 @@ public partial class IslandBuilder : Node3D
             case IslandTier.Spawn:
                 PlaceTrees(spec, body, heightmap, rng, count: 2 + rng.Next(2)); // 2-3
                 PlacePalm(spec, body, heightmap, rng);
-                PlaceStoryPoint(spec, body, heightmap, rng, "radio");
+                PlaceStoryPoint(spec, body, heightmap, rng, "radio", reusable: false);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -163,7 +163,7 @@ public partial class IslandBuilder : Node3D
             case IslandTier.Storm:
                 // The storm island IS the shark-king boss arena. Weather is
                 // handled by WeatherService / the main orchestrator.
-                PlaceStoryPoint(spec, body, heightmap, rng, "shark_king");
+                PlaceStoryPoint(spec, body, heightmap, rng, "shark_king", reusable: true);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -195,7 +195,14 @@ public partial class IslandBuilder : Node3D
         });
     }
 
-    private void PlaceStoryPoint(IslandSpec spec, StaticBody3D body, float[] heightmap, Random rng, string storyPointId)
+    private void PlaceStoryPoint(
+        IslandSpec spec,
+        StaticBody3D body,
+        float[] heightmap,
+        Random rng,
+        string storyPointId,
+        bool reusable
+    )
     {
         var point = PickLandGridPoint(heightmap, rng);
         var local = GridPointToLocal(spec, point, heightmap);
@@ -203,6 +210,12 @@ public partial class IslandBuilder : Node3D
         {
             Name = $"StoryPointTrigger_{storyPointId}",
             StoryPointId = storyPointId,
+            // FIX(code-review): quest-gated story points must not be consumed
+            // by an early visit (chapter gating is quest-side); re-fire on
+            // every entry so the quest/tutorial step can still trigger later.
+            // "radio" stays one-shot: quest_radio is the current quest from
+            // the start, so the first visit is always the intended one.
+            Reusable = reusable,
             Position = new Vector3(local.X, local.Y + TriggerHeightOffset, local.Z)
         });
     }
@@ -250,11 +263,11 @@ public partial class IslandBuilder : Node3D
         if (packed == null)
             return;
 
-        var playerPath = new NodePath(root.GetPathTo(player));
+        var playerPath = new NodePath(player.GetPath());
         var dayNight = root.FindChild("DayNightService", recursive: true, owned: false);
         var dayNightPath = dayNight == null
             ? new NodePath()
-            : new NodePath(root.GetPathTo(dayNight));
+            : new NodePath(dayNight.GetPath());
 
         foreach (var (enemyId, modelPath, count) in roster)
         {

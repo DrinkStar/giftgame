@@ -85,8 +85,13 @@ public partial class StorageUI : CanvasLayer
     IsOpen = false;
     Visible = false;
     Input.MouseMode = Input.MouseModeEnum.Captured;
-    GameEvents.RaiseGameplayInputLockChanged(false);
+    // FIX(code-review): release the lock DEFERRED — _Input dispatches in
+    // reverse tree order; a synchronous release would let GameManager toggle
+    // pause in the same Esc pass (Esc = close panel + pause).
+    CallDeferred(nameof(ReleaseInputLock));
   }
+
+  private void ReleaseInputLock() => GameEvents.RaiseGameplayInputLockChanged(false);
 
   /// <summary>
   ///   Rebuilds both slot grids from the current box/inventory contents.

@@ -5,6 +5,7 @@ using System;
 using System.Threading.Tasks;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
+using Chickensoft.GodotTestDriver.Util;
 using Godot;
 using Shouldly;
 
@@ -97,10 +98,11 @@ public class CraftUILogicTest : TestClass, IDisposable
 
   /// <summary>
   ///   ② Toggle acquires the gameplay-input lock when opening and releases
-  ///   it when closing.
+  ///   it when closing. The release is DEFERRED (Esc in the same input pass
+  ///   must not let GameManager pause), so the test awaits a frame.
   /// </summary>
   [Test]
-  public void ToggleAcquiresAndReleasesGameplayInputLock()
+  public async Task ToggleAcquiresAndReleasesGameplayInputLock()
   {
     _craftUI.Toggle();
 
@@ -112,6 +114,7 @@ public class CraftUILogicTest : TestClass, IDisposable
 
     _craftUI.IsOpen.ShouldBeFalse();
     _craftUI.Visible.ShouldBeFalse();
+    await TestScene.ProcessFrame(2);
     GameEvents.GameplayInputLocked.ShouldBeFalse();
   }
 
@@ -296,16 +299,19 @@ public class CraftUILogicTest : TestClass, IDisposable
 
   /// <summary>
   ///   ui_cancel closes an open panel (and must not throw from
-  ///   SetInputAsHandled); pressing it while closed changes nothing.
+  ///   SetInputAsHandled); pressing it while closed changes nothing. The lock
+  ///   release is deferred to the next frame (Esc must not pause in the same
+  ///   pass), so the assertion awaits one.
   /// </summary>
   [Test]
-  public void UiCancelClosesOpenPanel()
+  public async Task UiCancelClosesOpenPanel()
   {
     _craftUI.Toggle();
     _craftUI.IsOpen.ShouldBeTrue();
 
     Press("ui_cancel");
     _craftUI.IsOpen.ShouldBeFalse();
+    await TestScene.ProcessFrame(2);
     GameEvents.GameplayInputLocked.ShouldBeFalse();
 
     Press("ui_cancel");
@@ -317,7 +323,7 @@ public class CraftUILogicTest : TestClass, IDisposable
   ///   and shows the empty hint instead of crashing.
   /// </summary>
   [Test]
-  public void NullCraftingIsFailClosed()
+  public async Task NullCraftingIsFailClosed()
   {
     _craftUI.Crafting = null;
 
@@ -329,6 +335,7 @@ public class CraftUILogicTest : TestClass, IDisposable
 
     _craftUI.Toggle();
     _craftUI.IsOpen.ShouldBeFalse();
+    await TestScene.ProcessFrame(2);
     GameEvents.GameplayInputLocked.ShouldBeFalse();
   }
 }

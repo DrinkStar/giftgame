@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
+using Chickensoft.GodotTestDriver.Util;
 using Godot;
 using Shouldly;
 
@@ -173,9 +174,11 @@ public class StorageBoxTest : TestClass, IDisposable
     box.Inventory.IsEmpty.ShouldBeTrue();
     inventory.GetItemCount("wood").ShouldBe(10);
 
-    // Esc closes and releases the lock.
+    // Esc closes and releases the lock (deferred to the next frame — Esc in
+    // the same input pass must not let GameManager pause).
     ui._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
     ui.IsOpen.ShouldBeFalse();
+    await TestScene.ProcessFrame(2);
     GameEvents.GameplayInputLocked.ShouldBeFalse();
   }
 
@@ -245,6 +248,7 @@ public class StorageBoxTest : TestClass, IDisposable
 
     ui._Input(new InputEventAction { Action = "ui_cancel", Pressed = true });
     ui.IsOpen.ShouldBeFalse();
+    await TestScene.ProcessFrame(2);
     GameEvents.GameplayInputLocked.ShouldBeFalse();
   }
 

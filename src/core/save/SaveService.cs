@@ -184,7 +184,12 @@ public partial class SaveService : Node
     var loaded = LoadGame(data);
     if (loaded)
     {
-      _currentSaveFile = files[0].FullName;
+      // FIX(code-review): store the user://-style path (LocalizePath, like
+      // BuildingSystem.LoadMostRecent) — GetSaveFilesInfo returns an OS
+      // absolute path, and StripFolder splits on '/', so a raw FullName
+      // would make the next F5 build a garbage "user://saves/C:\..." path
+      // and throw on Windows.
+      _currentSaveFile = ProjectSettings.LocalizePath(files[0].FullName);
       GameEvents.RaiseGameLoaded(files[0].FullName);
     }
 
@@ -200,6 +205,10 @@ public partial class SaveService : Node
   /// </summary>
   public bool LoadGame(GameSaveData data)
   {
+    // The building rebuild (below) QueueFree's the previous session's
+    // instances, but they stay valid + group members until end of frame —
+    // FindNearest skips IsQueuedForDeletion nodes so position matching never
+    // applies saved state to a dying instance.
     if (BuildingSystem != null && data.Buildings != null)
     {
       BuildingSystem.RestoreFromSnapshot(data.Buildings);
@@ -262,14 +271,25 @@ public partial class SaveService : Node
     }
 
     inv.SecondaryItemId = Inventory.SecondaryItem?.Id;
+    inv.GridWidth = Inventory.InventoryWidth;
     return inv;
   }
 
   private void RestoreInventory(InventorySaveData data)
   {
+    // FIX(code-review): align the grid to the saved width FIRST — the
+    // backpack expansion (T8.5.4) widens the grid, and a fresh game starts at
+    // the default width; a row-major restore with mismatched widths would
+    // misalign every slot after the first row. Expansion is one-way, so a
+    // save narrower than the current grid is simply clamped on read.
+    if (data.GridWidth > Inventory!.InventoryWidth)
+      Inventory.ExpandInventory(data.GridWidth);
+
+    var savedWidth = data.GridWidth > 0 ? data.GridWidth : Inventory.InventoryWidth;
+
     // Clear every slot silently, then write back the saved contents directly
     // (slot fields are writable) so no per-slot events fire mid-restore.
-    for (var i = 0; i < Inventory!.HotbarSize; i++)
+    for (var i = 0; i < Inventory.HotbarSize; i++)
     {
       var slot = Inventory.GetHotbarSlot(i);
       slot.Item = null;
@@ -306,9 +326,13 @@ public partial class SaveService : Node
     }
 
     var gridIndex = 0;
+    // Row-major read with the SAVED width as the row stride (FIX(code-review):
+    // the grid may be wider than the current inventory after a fresh start).
+    // Columns beyond the current grid are read-but-skipped so the index stays
+    // aligned with the saved rows.
     for (var y = 0; y < Inventory.InventoryHeight; y++)
     {
-      for (var x = 0; x < Inventory.InventoryWidth; x++, gridIndex++)
+      for (var x = 0; x < savedWidth; x++, gridIndex++)
       {
         if (gridIndex >= data.Grid.Count)
         {
@@ -319,6 +343,11 @@ public partial class SaveService : Node
         if (string.IsNullOrEmpty(saved.ItemId) || saved.Amount <= 0)
         {
           continue;
+        }
+
+        if (x >= Inventory.InventoryWidth)
+        {
+          continue; // saved wider than the current grid — skip the column.
         }
 
         var item = GD.Load<ItemData>($"res://assets/items/{saved.ItemId}.tres");
@@ -437,7 +466,15 @@ public partial class SaveService : Node
     var bestDistance = PositionTolerance;
     foreach (var node in nodes)
     {
-      if (node is not T typed || !IsInstanceValid(typed))
+      if (
+        node is not T typed
+        || !IsInstanceValid(typed)
+        // FIX(code-review): a rebuild (LoadGame → RestoreFromSnapshot) leaves
+        // the previous instances queued for deletion but still valid + group
+        // members until end of frame — matching them would write saved state
+        // into instances that are about to die.
+        || typed.IsQueuedForDeletion()
+      )
       {
         continue;
       }
