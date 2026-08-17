@@ -39,6 +39,9 @@
 | P1-6 | `src/core/save/SaveService.cs` `RestoreInventory` | **扩容后行错位**（与 P0-2 配套）：恢复前未对齐宽度。 | 先 `ExpandInventory(data.GridWidth)`（单向扩容，旧档更窄则读时钳制）。 |
 | P1-7 | `src/world/island/WorldLayout.cs` `MainHeightScale` | **主岛地形压盖建造面**（用户决策修复）：R=32、H=5 → 地表最高 +2.5m，压盖 `Game.tscn` Ground 盒顶（y=0.5）与 BuildingSystem 网格（y=0.5）→ 建筑被埋、双重碰撞面、放置高度不一致。 | **用户选"压低主岛地形贴盒顶"**：`MainHeightScale 5→1`（地表 ≤ +0.5m，贴盒顶；保留轻微起伏）。 |
 | P1-8 | `test/src/*`（CraftUILogicTest / StorageBoxTest / SaveServiceTest） | 测试脆弱：锁释放断言同步（与 P1-5 异步化冲突）；`SaveServiceTest` 缺扩容对齐用例。 | 5 处加帧等待；新增 `ExpandedInventoryRestoresAlignedAfterFreshLoad`（先有 7 失败 → 修复后 301/0）。 |
+| P1-9 | `src/ui/CraftUI.cs` / `StorageUI.cs` 类注释 | **文档与实现矛盾（quest/ui 审查者）**：注释声称"教程持锁会阻止打开面板"（"e.g. the tutorial blocks opening"），但 `GameplayInputLocked` 只由 CraftUI/StorageUI 自己 Raise，TutorialUI 从不持锁也不检查——教程的独占性来自自身全屏 dim + `TutorialCompleted` 门 + 事件驱动步骤，不依赖输入锁。 | 修正两处类注释：如实说明教程不参与输入锁（教程期间储物箱可开，无软锁）；行为不改。 |
+
+> **P0-4（quest/ui 审查者初判 P0，复核后降级 P1-9）**：该审查者把 CraftUI/StorageUI 类注释当作"契约 4"（实为文档描述），真实契约 4 是 WaterMesh headless 降级——已 PASS。教程不持锁不违反任何 9 条锁契约；章 1 强制教程期间 CraftUI 有 C 键门挡住、StorageUI 无门但教程早期玩家无储物箱，且教程步骤靠事件推进（非模态互斥），不会软锁。故按 P1 文档修复处理。
 
 ---
 
@@ -84,8 +87,8 @@
 - **P2-26** 位置匹配容差 1.0m `<=` 无 Type 校验（`FarmPlot`/`StorageBox` 同位置冲突时取到错误类型）。
 - **P2-27** `SaveService` SecondaryItemId 恢复后不清（复用对象残留）。
 - **P2-28** `GameSaveData.Version` 不校验（版本升级迁移无入口）。
-- **P2-29** `GuideService` 去重误吞（相同文本多次触发只显示一次）。
-- **P2-30** `HUD` Tab 绕过输入锁；`WeaponSystem` Q 键（副槽切换）在模态锁下仍可用；`FinalizeTutorial` 抢鼠标；`BuildChapters` 重入重复；`StorageUI` 守卫不对称；奖励假推进教程 step2；`StoryInteractable` 死代码/文档不符；deferred 重订阅边缘；`CraftUI.Toggle` 公共入口无锁检查。
+- **P2-29** `GuideService` 去重误吞（相同文本多次触发只显示一次；0.5s 窗口还会吞普通敌人台词）。
+- **P2-30** `HUD` Tab 绕过输入锁并抢 MouseMode；`WeaponSystem` Q 键（副槽切换）在模态锁下仍可用；`FinalizeTutorial` 无条件 Captured 鼠标；`BuildChapters` 重入重复；`StorageUI` 守卫不对称（`Refresh` 未守卫 `_box`/`_playerInventory` 裸引用）；奖励假推进教程 step2（quest_radio 奖励 wood 触发教程 item 步骤）；`StoryInteractable` 无场景实例化且文档不符；deferred 重订阅边缘；`CraftUI.Toggle` 公共入口无锁检查。
 - **P2-30b** `SpawnProjectile` 先设 `GlobalPosition` 再 `AddChild`（应反之，避免父变换覆盖位置）。
 - **P2-31** `GroundLoot` 类注释与 T8.5.7 代码矛盾（注释说拾取后销毁，代码现在保留余数）。
 

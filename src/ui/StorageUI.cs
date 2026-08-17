@@ -16,8 +16,11 @@ using Godot;
 ///   one StorageUI is found under the current scene); Esc ("ui_cancel")
 ///   closes it. While open the mouse is Visible and the gameplay-input lock
 ///   is held, so polled consumers (move/attack/build/use) ignore input.
-///   Mutual-exclusion gate (CraftUI contract): a lock held by ANOTHER modal
-///   (e.g. the forced tutorial) blocks opening, never closing.
+///   Mutual-exclusion gate (CraftUI contract): a lock held by ANOTHER panel
+///   blocks opening, never closing. FIX(code-review): the tutorial does NOT
+///   hold this lock — its exclusivity comes from its own full-screen dim and
+///   event-driven steps, so "e.g. the forced tutorial" in earlier docs was
+///   wrong; a chest stays openable mid-tutorial (harmless, no soft-lock).
 ///
 ///   Fail-closed: a null box or player inventory renders empty cells without
 ///   crashing. SUBSCRIBES <see cref="GameEvents.InventoryChanged"/>;

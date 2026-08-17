@@ -15,8 +15,11 @@ using Godot;
 ///     C-key path only reacts after the forced tutorial finished
 ///     (<see cref="GameEvents.TutorialCompleted"/>); before that it shows a
 ///     guide hint once. The gameplay-input lock raised while open belongs to
-///     this panel, so a locked state held by ANOTHER modal (e.g. the
-///     tutorial) blocks opening but never blocks closing with C.
+///     this panel, so a locked state held by ANOTHER panel blocks opening
+///     but never blocks closing with C. FIX(code-review): the tutorial does
+///     NOT hold this lock — it gates interaction through its own full-screen
+///     dim + the TutorialCompleted gate on C, and relies on event-driven
+///     steps, so "e.g. the tutorial" in earlier docs was wrong.
 ///   - Opening switches the mouse to Visible and raises
 ///     <see cref="GameEvents.GameplayInputLockChanged"/>(true) so polled
 ///     consumers (move/attack/build/use) ignore input; closing reverses both.
