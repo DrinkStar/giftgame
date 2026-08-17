@@ -128,4 +128,5 @@
 
 - `dotnet build`：0 错误（24 警告，全部为既有 CA 分析告警）。
 - `godot --headless --path . --run-tests --quit-on-finish`：**Passed 313 | Failed 0**（P0/P1 修复后 301 → P2 第一轮 310 → P2 第二轮 313，全绿）。
-- 修复提交：`fix(code-review)`（P0/P1）、`docs(code-review)`、`chore(state)`、P2 第一轮 `5082857`（战斗/服务/存档/模态输入）、P2 第二轮 `f30ac22`（死亡门/寻址/音频/视觉）。
+- **发布修复（c7a4ff9）**：导出/Release 构建下 `CallDeferred(nameof(...))` 调 private 方法报 `Method not found`（引擎消息队列不可取消，对象先释放后执行时按静态基类查方法失败）——CraftUI/StorageUI 锁释放改为帧计数 + `_Process`（纯 C#，可取消，无悬挂调用）；GameManager/SaveService 的 deferred 目标改 public（source generator 只注册 public）。同时 CraftUI/StorageUI `_ExitTree` 同步释放锁（P2-23 跨场景残留）。Release 测试 313/0 + 导出产物冒烟 exit 0，无 "Method not found"/ObjectDisposed。
+- 修复提交：`fix(code-review)`（P0/P1）、`docs(code-review)`、`chore(state)`、P2 第一轮 `5082857`、P2 第二轮 `f30ac22`、发布修复 `c7a4ff9`。
