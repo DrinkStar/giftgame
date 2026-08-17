@@ -10,7 +10,7 @@ using Godot;
 ///   - transitions computed via the pure <see cref="WeatherLogic"/> tables;
 ///   - signals published through the static <see cref="GameEvents"/> bus;
 ///   - fog fully owned by this service (plan Decision 5): FogDensity,
-///     FogLightColor and FogEnabled are re-applied EVERY frame, with
+///     FogLightColor and FogEnabled are applied on weather/night changes, with
 ///     FogEnabled forced off at night (DayNightService only ever disables
 ///     fog, so the night-off rule must also hold here);
 ///   - no rain particles or audio (explicitly out of scope);
@@ -31,6 +31,9 @@ public partial class WeatherService : Node
   private WeatherType _currentWeather = WeatherType.Clear;
   private float _weatherTimer;
   private float _nextWeatherChange;
+  private WeatherType _appliedFogWeather;
+  private bool _appliedFogNight;
+  private bool _fogApplied;
 
   /// <summary>Latest hour published by GameEvents.TimeChanged.</summary>
   private float _currentHour;
@@ -73,9 +76,8 @@ public partial class WeatherService : Node
         + MinWeatherDuration;
     }
 
-    // Fog is owned by WeatherService and re-applied every frame (plan
-    // Decision 5). DayNightService only disables fog at night, so the
-    // night-off rule is honored here too.
+    // Fog is owned by WeatherService. Re-apply only when weather or night
+    // crossing changes — writing Environment every frame was a P1 setter tax.
     ApplyFog();
   }
 
@@ -105,11 +107,16 @@ public partial class WeatherService : Node
   {
     _currentWeather = weather;
     GameEvents.RaiseWeatherChanged(weather);
+    _fogApplied = false;
   }
 
   private void ApplyFog()
   {
     if (_environment?.Environment is not { } env)
+      return;
+
+    var night = DayNightMath.IsNight(_currentHour);
+    if (_fogApplied && _appliedFogWeather == _currentWeather && _appliedFogNight == night)
       return;
 
     env.FogDensity = _currentWeather switch
@@ -129,7 +136,9 @@ public partial class WeatherService : Node
       _ => new Color(0.7f, 0.7f, 0.75f)
     };
 
-    env.FogEnabled = _currentWeather != WeatherType.Clear
-      && !DayNightMath.IsNight(_currentHour);
+    env.FogEnabled = _currentWeather != WeatherType.Clear && !night;
+    _appliedFogWeather = _currentWeather;
+    _appliedFogNight = night;
+    _fogApplied = true;
   }
 }

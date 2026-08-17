@@ -22,6 +22,7 @@ public partial class Projectile : Area3D
 
   private Vector3 _velocity;
   private float _elapsed;
+  private Godot.Collections.Array<Rid>? _sweepExclude;
 
   public override void _Ready()
   {
@@ -60,7 +61,13 @@ public partial class Projectile : Area3D
 
     var query = PhysicsRayQueryParameters3D.Create(previous, GlobalPosition);
     query.CollisionMask = CollisionMask;
-    query.Exclude = new Godot.Collections.Array<Rid> { GetRid() };
+    _sweepExclude ??= [];
+    if (_sweepExclude.Count == 0)
+    {
+      _sweepExclude.Add(GetRid());
+    }
+
+    query.Exclude = _sweepExclude;
     var hit = spaceState.IntersectRay(query);
     if (hit.Count == 0)
       return;

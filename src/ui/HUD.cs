@@ -44,6 +44,7 @@ public partial class HUD : CanvasLayer
   private Control? _crosshairNormal;
   private Control? _crosshairInteract;
   private Tween? _guideTween;
+  private int _displayedClockMinutes = int.MinValue;
 
   private PlayerStats? _stats;
   private PlayerInteraction? _interaction;
@@ -145,8 +146,18 @@ public partial class HUD : CanvasLayer
 
   public override void _Process(double delta)
   {
-    if (_timeLabel != null && DayNightService != null)
-      _timeLabel.Text = DayNightService.GetTimeString();
+    if (_timeLabel == null || DayNightService == null)
+      return;
+
+    var hour = DayNightService.CurrentHour;
+    var hours = (int)hour;
+    var minutes = (int)((hour - hours) * 60);
+    var packed = hours * 60 + minutes;
+    if (packed == _displayedClockMinutes)
+      return;
+
+    _displayedClockMinutes = packed;
+    _timeLabel.Text = $"{hours:D2}:{minutes:D2}";
   }
 
   public override void _Input(InputEvent @event)

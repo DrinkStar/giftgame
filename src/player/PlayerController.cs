@@ -74,6 +74,7 @@ public partial class PlayerController : CharacterBody3D
   public bool Running { get; set; }
 
   private PlayerMotion _motion = new();
+  private Godot.Collections.Array<Rid>? _raftExclude;
 
   public override void _Ready()
   {
@@ -190,7 +191,13 @@ public partial class PlayerController : CharacterBody3D
       feet + new Vector3(0f, 0.05f, 0f),
       feet - new Vector3(0f, 0.45f, 0f)
     );
-    probe.Exclude = new Godot.Collections.Array<Rid> { GetRid() };
+    _raftExclude ??= [];
+    if (_raftExclude.Count == 0)
+    {
+      _raftExclude.Add(GetRid());
+    }
+
+    probe.Exclude = _raftExclude;
     var hit = spaceState.IntersectRay(probe);
     if (hit.Count == 0)
     {

@@ -36,6 +36,7 @@ public partial class PlayerInteraction : Node
   private IInteractable? _currentTarget;
   private float _holdProgress;
   private bool _isHolding;
+  private readonly Godot.Collections.Array<Rid> _rayExclude = [];
 
   private string _lastPublishedPrompt = "";
   private float _lastPublishedProgress;
@@ -53,6 +54,11 @@ public partial class PlayerInteraction : Node
   {
     _player = GetParentOrNull<PlayerController>();
     _camera = CameraPath is null ? null : GetNodeOrNull<Camera3D>(CameraPath);
+    if (_player != null)
+    {
+      _rayExclude.Clear();
+      _rayExclude.Add(_player.GetRid());
+    }
   }
 
   public override void _Process(double delta)
@@ -89,7 +95,7 @@ public partial class PlayerInteraction : Node
     query.CollisionMask = 0b11101;
     query.CollideWithAreas = true;
     query.CollideWithBodies = true;
-    query.Exclude = new Godot.Collections.Array<Rid> { _player.GetRid() };
+    query.Exclude = _rayExclude;
 
     var result = spaceState.IntersectRay(query);
 

@@ -75,6 +75,13 @@ public partial class EnemyBase : CharacterBody3D
   private const float FlyerHoverAmplitude = 0.15f;
   private const float FlyerHoverFrequency = 2.5f;
 
+  /// <summary>
+  ///   Beyond this distance the AI switch is skipped (idle). Does not change
+  ///   the state machine — far-island enemies still exist, they just don't
+  ///   chase every physics tick.
+  /// </summary>
+  public const float SleepDistance = 80f;
+
   private CharacterBody3D? _player;
   private PlayerStats? _playerStats;
   private DayNightService? _dayNight;
@@ -147,7 +154,14 @@ public partial class EnemyBase : CharacterBody3D
     }
 
     _attackCooldown = Mathf.Max(0f, _attackCooldown - dt);
-    var dist = GlobalPosition.DistanceTo(_player.GlobalPosition);
+    var distSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
+    if (distSq > SleepDistance * SleepDistance)
+    {
+      Velocity = Vector3.Zero;
+      return;
+    }
+
+    var dist = Mathf.Sqrt(distSq);
 
     var behavior = EnemyData.Behavior;
     var seaBeastAggro = behavior == EnemyBehavior.SeaBeast && IsSeaBeastAggro();
