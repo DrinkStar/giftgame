@@ -83,6 +83,7 @@ public partial class GameManager : Node
       HUD?.Initialize(Player, DayNightService, WeatherService);
 
     GameEvents.PlayerDied += OnPlayerDied;
+    CrashLog.Info("GameManager ready");
     GameEvents.RaiseGameStarted();
 
     // W3 auto-load (FIX(iter4-plan): plan Decision 8/15): deferred so it runs AFTER every
@@ -124,6 +125,7 @@ public partial class GameManager : Node
     // death hook, NOT game over. GameOver stays reserved for the true ending
     // (post-shark-king epilogue) and must never be raised from here. Respawn
     // is deferred to avoid re-entering from inside the death event handler.
+    CrashLog.Info("PlayerDied — respawning at spawn point (not a crash).");
     GD.Print("Player died - respawning at spawn point.");
     CallDeferred(nameof(RespawnPlayer));
   }

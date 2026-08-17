@@ -3,7 +3,8 @@
 > 生成日期：2026-08-13 ｜ 依据：`游戏设计-定稿.md` + `godot-refs/集成清单.md` + 骨架实测
 > 更新：2026-08-14 ｜ Iter 6 verified 后只读审查，按 P0/P1/P2 补路线图与缺口清单
 > 更新：2026-08-14 ｜ Grilling 代码审查结论（Q1 允许改路线图；**不重排**，冻结死亡/场景契约）→ `.godot-dev/iter6-code-review.md`
-> 状态：Phase 3 进行中（`phase3_iteration6_verified`，GoDotTest Passed 135）
+> 更新：2026-08-17 ｜ 崩溃日志迭代（不重排玩法）：分析 + 任务清单见 `.godot-dev/crash-log-plan.md`
+> 状态：code-review 已收官（313/0，`dbfb2d0`）；当前待批 = **crash-logging**
 
 ## 0. 当前状态（Iter 0–6 已验证）
 

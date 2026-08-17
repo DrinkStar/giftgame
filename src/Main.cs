@@ -24,6 +24,8 @@ public partial class Main : Node2D
 
   public override void _Ready()
   {
+    EnsureCrashLogService();
+
     // Correct any erroneous scaling and guess sensible defaults.
     GetWindow().LookGood(WindowScaleBehavior.UIFixed, DesignResolution);
 
@@ -34,13 +36,39 @@ public partial class Main : Node2D
     if (Environment.ShouldRunTests)
     {
       RuntimeContext.IsTesting = true;
+      CrashLog.Info("Main: running GoDotTest");
       CallDeferred("RunTests");
       return;
     }
 #endif
 
     // If we don't need to run tests, we can just switch to the game scene.
+    CrashLog.Info("Main: launching Game.tscn");
     CallDeferred("RunScene");
+  }
+
+  /// <summary>
+  ///   C# autoloads can miss their first headless boot (script class not yet
+  ///   registered). Guarantee a real CrashLogService under /root before tests
+  ///   or the game scene start. Safe to call from <see cref="_Ready"/>.
+  /// </summary>
+  public void EnsureCrashLogService()
+  {
+    if (CrashLog.Service != null)
+      return;
+
+    var root = GetTree()?.Root;
+    if (root == null)
+      return;
+
+    var existing = root.GetNodeOrNull("CrashLogService");
+    if (existing is CrashLogService)
+      return;
+
+    if (existing != null)
+      existing.Name = "CrashLogServiceStub";
+
+    root.AddChild(new CrashLogService { Name = "CrashLogService" });
   }
 
 #if RUN_TESTS

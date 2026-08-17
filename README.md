@@ -34,6 +34,22 @@ godot --headless --path . --quit-after 5
 
 > 注：headless 下 Godot 需要写 `%APPDATA%\Godot`（user://）；若在受限沙箱中运行报段错误，用 `--user-data-dir <可写路径>` 重定向。
 
+## 崩溃与运行日志
+
+崩溃后把下面目录里的文件一并带走即可复现修复（**不要**把 `saves/` 存档当日志提交）。
+
+| 文件 | 含义 |
+|---|---|
+| `user://logs/godot.log` | 引擎内置输出（含轮转） |
+| `user://logs/seaanomaly.log` | 游戏会话日志（Info 面包屑 + Warning + Error） |
+| `user://logs/crash-*.log` | 一次未处理异常 / 引擎崩溃通知一份 dump |
+
+Windows 默认目录：
+
+`%APPDATA%\Godot\app_userdata\SeaAnomaly\logs\`
+
+`PlayerDied`（角色死亡重生）**不是**崩溃，不会生成 `crash-*.log`。跑 GoDotTest 时不会往上述目录写会话文件。
+
 ## 导出 Windows 构建
 
 ```powershell

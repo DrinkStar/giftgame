@@ -1,142 +1,63 @@
 {
-  "task_id": "godot-dev-20260813-001",
-  "created_at": "2026-08-13T00:00:00+08:00",
-  "updated_at": "2026-08-15T00:00:00+08:00",
-  "stage": "phase3",
-  "current_iteration": "code-review",
-  "git_branch": "dev/code-review",
-  "last_stable_commit": "2498bb2",
+  "task_id": "godot-dev-20260817-001",
+  "created_at": "2026-08-17T17:46:00+08:00",
+  "updated_at": "2026-08-17T19:10:00+08:00",
+  "stage": "phase4",
+  "current_iteration": "crash-logging",
+  "git_branch": "dev/crash-logging-20260817",
+  "last_stable_commit": "dbfb2d0",
+  "contracts": [
+    "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
+    "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
+    "AI 状态机 + PlayerMotion 不改",
+    "WaterMesh headless 降级（_gpuEnabled=false + GetWaveHeight→0 平海）",
+    "群岛确定性（同 seed 同布局）",
+    "教程/模态不暂停昼夜",
+    "事件订阅 _ExitTree 退订",
+    "Godot 4.7：禁 -- 分隔符、NodePath 导出不加 node_paths",
+    "许可纪律（CC0 + CC BY 署名 + SurvivalIsland 自用非商业）",
+    "PlayerDied 不是崩溃，禁止为其写 crash-*.log",
+    "崩溃日志禁止写入存档正文 / 背包明细 / 物品数量表",
+    "--run-tests 期间不向 user://logs/ 写会话文件（测试用注入目录）",
+    "本迭代不新增 NuGet、不把日志事件打进 GameEvents",
+    "原生引擎段错误不保证被 C# 捕获；内置 godot.log 必须在编辑器与 PC 导出中开启"
+  ],
   "project": {
     "name": "SeaAnomaly",
     "path": "D:/work-auto/giftgame/game",
-    "godot_version": "4.7.1.stable.mono.official",
+    "godot_version": "4.7.1.stable.mono.official.a13da4feb",
     "godot_sdk": "Godot.NET.Sdk 4.7.1",
     "dotnet": ".NET 8.0 target / SDK 10.0.400 installed",
+    "test_framework": "GoDotTest",
     "main_scene": "res://src/Main.tscn",
     "renderer": "forward_plus",
-    "scene_count": 2,
-    "script_count": 3,
-    "refs_dir": "D:/work-auto/giftgame/godot-refs (8 upstream repos)",
-    "integration_checklist": "D:/work-auto/giftgame/godot-refs/集成清单.md"
+    "scene_count": 35,
+    "script_count": 112,
+    "test_script_count": 51,
+    "codegraph": "indexed at repo root .codegraph/",
+    "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
   },
   "iterations": [
     {
-      "name": "skeleton",
-      "status": "done",
+      "name": "crash-logging",
+      "status": "verified",
       "tasks": [
-        {"id": "T1", "file": "project.godot", "action": "create/configure", "status": "done"},
-        {"id": "T2", "file": "SeaAnomaly.csproj/.sln/src/**", "action": "rename", "status": "done"},
-        {"id": "T3", "file": "build", "action": "dotnet build", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration1",
-      "status": "done",
-      "tasks": [
-        {"id": "T1.1", "file": "src/player/PlayerController.cs", "action": "create", "status": "done"},
-        {"id": "T1.2", "file": "src/Game.tscn", "action": "modify", "status": "done"},
-        {"id": "T1.3", "file": "project.godot", "action": "modify", "status": "done"},
-        {"id": "T1.4", "file": "test/src/PlayerMotionTest.cs", "action": "create", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration2",
-      "status": "done",
-      "tasks": [
-        {"id": "T2.1", "file": "assets + project.godot shader_globals", "action": "import", "status": "done"},
-        {"id": "T2.2", "file": "src/world/ocean/*.cs", "action": "create", "status": "done"},
-        {"id": "T2.3", "file": "src/world/buoyancy/*.cs", "action": "create", "status": "done"},
-        {"id": "T2.4", "file": "scenes/ocean_test.tscn", "action": "create", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration3",
-      "status": "done",
-      "tasks": [
-        {"id": "T3.1", "file": "src/core/* + src/player/PlayerStats.cs", "action": "create", "status": "done"},
-        {"id": "T3.2", "file": "src/inventory/* + assets/items + assets/recipes", "action": "create", "status": "done"},
-        {"id": "T3.3", "file": "PlayerInteraction/HUD/hud.tscn/Game.tscn/project.godot", "action": "create/modify", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration4",
-      "status": "done",
-      "tasks": [
-        {"id": "T4.1", "file": "src/building/* (grid/ghost/placement/cost/ui)", "action": "create", "status": "done"},
-        {"id": "T4.2", "file": "src/building/save/*", "action": "create", "status": "done"},
-        {"id": "T4.3", "file": "Game.tscn/StationLinker/GameManager", "action": "create/modify", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration5",
-      "status": "done",
-      "tasks": [
-        {"id": "T5.1", "file": "src/farming/{CropData,CropLogic,FarmPlot,FarmingData}.cs + assets/crops + 13 items + 2 recipes + farmland", "action": "create", "status": "done"},
-        {"id": "T5.2", "file": "src/farming/{LivestockLogic,Livestock}.cs + chicken/sheep/taming_pen + egg/wool/milk", "action": "create", "status": "done"},
-        {"id": "T5.3", "file": "buildable_library.tres + Game.tscn (livestock/seeds/recipes)", "action": "modify", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration6",
-      "status": "done",
-      "tasks": [
-        {"id": "T6.1", "file": "src/combat/* + assets/enemies + 3 items + enemy.tscn", "action": "create", "status": "done"},
-        {"id": "T6.2", "file": "project.godot + Game.tscn + ocean_test.tscn", "action": "modify", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration6.1",
-      "status": "done",
-      "tasks": [
-        {"id": "T6.1.1", "file": "assets/models + sources.md", "action": "import", "status": "done"},
-        {"id": "T6.1.2", "file": "assets/audio + AudioManager.cs", "action": "create", "status": "done"},
-        {"id": "T6.1.3", "file": "EnemyBehavior + 4 placeholder behaviors", "action": "create", "status": "done"},
-        {"id": "T6.1.4", "file": "BossPhaseController + storm_zone.tscn", "action": "create", "status": "done"},
-        {"id": "T6.1.5", "file": "InventorySystem.SecondarySlot + WeaponSystem dual slot", "action": "create", "status": "done"},
-        {"id": "T6.1.6", "file": "Game.tscn models/audio wiring", "action": "modify", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration7",
-      "status": "done",
-      "tasks": [
-        {"id": "T7.0", "file": "GameManager/PlayerController/PlayerStats/WeaponSystem/Game.tscn", "action": "modify", "status": "done"},
-        {"id": "T7.1", "file": "src/quest/lib (vendored) + QuestService + GuideService + StoryPointTrigger", "action": "create", "status": "done"},
-        {"id": "T7.2", "file": "GameEvents +6 quest events", "action": "modify", "status": "done"},
-        {"id": "T7.3", "file": "HUD guide subtitle", "action": "modify", "status": "done"},
-        {"id": "T7.4", "file": "3-chapter quest data", "action": "create", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration8",
-      "status": "done",
-      "tasks": [
-        {"id": "T8.1", "file": "src/core/save/{SaveService,GameSaveData}.cs + BuildingSaveSystem Snapshot/Restore + F5/F9 迁移 + GameEvents GameSaved/GameLoaded", "action": "create/modify", "status": "done"},
-        {"id": "T8.2", "file": "FarmPlot/Livestock GetSaveState/ApplySaveState + farm_plots/livestock groups", "action": "modify", "status": "done"},
-        {"id": "T8.3", "file": "src/ui/{TutorialFlow,TutorialUI}.cs + scenes/ui/tutorial.tscn + DayDurationMinutes=25", "action": "create/modify", "status": "done"},
-        {"id": "T8.4", "file": "src/ui/CraftUI.cs + scenes/ui/craft_ui.tscn", "action": "create", "status": "done"},
-        {"id": "T8.4b", "file": "src/combat/WeaponSystem.cs RequiresCooking gate", "action": "modify", "status": "done"}
-      ]
-    },
-    {
-      "name": "iteration10",
-      "status": "done",
-      "tasks": [
-        {"id": "T10.1", "file": "IslandBuilder 按 Tier 投放敌人 + 模型接线（crab/boar/wolf/storm_beast）", "action": "modify", "status": "done"},
-        {"id": "T10.2", "file": ".godot-dev/balance.md 数值平衡初稿（定稿 §12 待定项第一版）", "action": "create", "status": "done"},
-        {"id": "T10.3", "file": "README.md + build-release.ps1 一键发布管线（Release 构建→导入→导出→测试）", "action": "create", "status": "done"}
+        {"id": "T-L.1", "file": "src/core/logging/CrashLogWriter.cs", "action": "create", "status": "done", "verify": "CrashLogTest session/ring/dump/prune"},
+        {"id": "T-L.2", "file": "src/core/logging/CrashLog.cs + EngineLogSink.cs + CrashLogService.cs/.tscn", "action": "create", "status": "done", "verify": "dotnet build; _EnterTree init"},
+        {"id": "T-L.3", "file": "project.godot", "action": "modify", "status": "done", "verify": "autoload + file_logging.pc"},
+        {"id": "T-L.4", "file": "src/Main.cs + src/core/GameManager.cs", "action": "modify", "status": "done", "verify": "PlayerDied Info is not a crash dump"},
+        {"id": "T-L.5", "file": "test/src/CrashLogTest.cs", "action": "create", "status": "done", "verify": "GoDotTest 322/0"},
+        {"id": "T-L.6", "file": "README.md", "action": "modify", "status": "done", "verify": "docs match paths"}
       ]
     }
   ],
-  "checkpoint": "phase3_code_review_verified",
+  "pending_todos": [],
+  "checkpoint": "phase4_crash_logging_verified",
   "verification": {
-    "build": "dotnet build 0 errors (Debug + Release)",
-    "smoke": "Game.tscn --quit-after 8 exit 0（群岛敌人正常生成）",
-    "tests": "GoDotTest Passed 301 Failed 0",
-    "test_invocation": "godot --headless --path . --run-tests --quit-on-finish（禁用 -- 分隔符）",
-    "release": "build-release.ps1 一键通过：SeaAnomaly.exe (104MB) + SeaAnomaly.pck (59MB) + 全量测试",
-    "visual_evidence": "headless 环境未截图（冒烟 exit 0 + 301 测试 + 发布管线为准）",
-    "code_review": "全项目纵深审查（dev/code-review）：P0×3 + P1×8 已修并验证（详见 .godot-dev/code-review.md）；P2×32 只报告；9 条锁契约全部保持；301/0 全绿"
+    "build": "dotnet build 0 errors",
+    "smoke": "godot --headless --path . --quit-after 5 exit 0; user://logs/seaanomaly.log contains CrashLogService/Main/GameManager breadcrumbs; WaterMesh headless warning is WARN not crash dump",
+    "tests": "GoDotTest Passed 322 Failed 0",
+    "test_invocation": "godot --headless --path . --run-tests --quit-on-finish"
   },
-  "reuse_notes": "PlayerMotion/PlayerController/PlayerCamera 移植自 chickensoft-GameDemo（MIT）；复用策略见 设计定稿 §13。海洋移植自 2Retr0/GodotOceanWaves（MIT）；浮力移植自 ManickYoj/godot-ocean-waves-buoyancy（MIT）；4.7 push-constant/uniform-set 严格校验已适配；生存核心移植自 srperens/SurvivalIsland（用户决策自用非商业；无体温；3 上游 bug 修复：死亡单次/退款完整性）。建造系统移植自 MarkoDM/GodotInGameBuildingSystem（MIT）；7 上游 bug + 6 集成修复；层 5 Buildings/6 BuildingWalls/7 FreeObjects；建筑存档 user://buildings。种植(6 作物)+产出型驯养自写(无上游)；交互射线掩码 29 + FindInteractable 扩展；作物/驯养状态未持久化(留 Iter 8 GDSave)。自写战斗+敌人框架（概念参考 SurvivalIsland AnimalAI）；敌人层 8；NodePath 型导出不加 node_paths（Godot 4.7 会置空）。敌人模型 Quaternius/PolyPizza(CC0)+OGA/CraftPix 备用；音频 soundimage(BGM署名)/freesound CC0 镜像；螃蟹模型缺失(计划T1表遗漏)已记录；storm_zone 水用暗色平面(headless GPU compute 限制)；T7.0 复活契约(PlayerDied≠GameOver, 停输入/传送/满状态/不 GameOver/不掉包)；DotnetQuestSystem vendored 11 文件到 src/quest/lib（net9 NuGet 冲突弃用）；三章任务骨架+奖励数量表；奖励按物品 Id 表；引导者旁白 GuideLine+字幕。8p-game 玩法债闭环(R1 成长接口预留/R2 耐久字段/吃喝/采木+椰/地面掉落/床跳夜+改复活槽/火把灯)；8p-art 可视包(crab 补遗漏+女主+篝火+床模型, 7 图标, 5 音效, SfxHook+MeleeHit 事件)；资产来源 PolyPizza/Quaternius/Kenney/game-icons(CC-BY 署名)/freesound(CC0)；coconut 图标用 palm-tree 替代"
+  "notes": "Uncommitted CraftUI/StorageUI lock-release tweaks are unrelated and were not committed. Previous code-review verification: 313/0 at dbfb2d0."
 }
