@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260817-001",
   "created_at": "2026-08-17T17:46:00+08:00",
-  "updated_at": "2026-08-17T19:10:00+08:00",
+  "updated_at": "2026-08-17T20:20:00+08:00",
   "stage": "phase4",
-  "current_iteration": "crash-logging",
-  "git_branch": "dev/crash-logging-20260817",
-  "last_stable_commit": "e0af997",
+  "current_iteration": "perf-p0-p1",
+  "git_branch": "dev/perf-p0-p1-20260817",
+  "last_stable_commit": "ae89640",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
     "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
@@ -33,7 +33,7 @@
     "renderer": "forward_plus",
     "scene_count": 35,
     "script_count": 112,
-    "test_script_count": 51,
+    "test_script_count": 52,
     "codegraph": "indexed at repo root .codegraph/",
     "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
   },
@@ -49,15 +49,27 @@
         {"id": "T-L.5", "file": "test/src/CrashLogTest.cs", "action": "create", "status": "done", "verify": "GoDotTest 322/0"},
         {"id": "T-L.6", "file": "README.md", "action": "modify", "status": "done", "verify": "docs match paths"}
       ]
+    },
+    {
+      "name": "perf-p0-p1",
+      "status": "verified",
+      "tasks": [
+        {"id": "T-P.1", "file": "src/world/ocean/WaveGenerator.cs", "action": "modify", "status": "done", "verify": "no catch-up flush; NormalizeMapSize tests"},
+        {"id": "T-P.2", "file": "src/world/ocean/WaterMesh.cs", "action": "modify", "status": "done", "verify": "async readback; headless GetWaveHeight 0"},
+        {"id": "T-P.3", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "SleepDistance early-out; AI switch untouched"},
+        {"id": "T-P.4", "file": "src/player/PlayerInteraction.cs + PlayerController.cs + Projectile.cs", "action": "modify", "status": "done", "verify": "cached Array<Rid>"},
+        {"id": "T-P.5", "file": "src/ui/HUD.cs + src/core/WeatherService.cs", "action": "modify", "status": "done", "verify": "clock/fog dirty writes"},
+        {"id": "T-P.6", "file": "src/building/BuildableInstance.cs + MouseObject.cs", "action": "modify", "status": "done", "verify": "null Object3DModel no NRE"}
+      ]
     }
   ],
   "pending_todos": [],
-  "checkpoint": "phase4_crash_logging_verified",
+  "checkpoint": "phase4_perf_p0_p1_verified",
   "verification": {
     "build": "dotnet build 0 errors",
-    "smoke": "godot --headless --path . --quit-after 5 exit 0; user://logs/seaanomaly.log contains CrashLogService/Main/GameManager breadcrumbs; WaterMesh headless warning is WARN not crash dump",
-    "tests": "GoDotTest Passed 322 Failed 0",
+    "smoke": "godot --headless --path . --quit-after 5 exit 0; WaterMesh headless warning is WARN not crash dump",
+    "tests": "GoDotTest Passed 325 Failed 0",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish"
   },
-  "notes": "Uncommitted CraftUI/StorageUI lock-release tweaks are unrelated and were not committed. Previous code-review verification: 313/0 at dbfb2d0."
+  "notes": "Uncommitted CraftUI/StorageUI lock-release tweaks are unrelated and were not committed. Perf P0/P1 from .godot-dev/perf-review.md; PlayerMotion/AI switch/WaterMesh headless semantics unchanged."
 }
