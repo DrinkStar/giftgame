@@ -16,7 +16,7 @@ using Godot;
 ///     (<see cref="WaterMeshPath"/>, set by the main orchestrator in
 ///     Game.tscn) or at runtime via <see cref="RaftSetup"/>. Raw samples are
 ///     lerp-smoothed once per physics tick because WaterMesh readback steps
-///     at DisplacementReadbackPerSecond (10 Hz) and raw stepped heights would
+///     at DisplacementReadbackPerSecond (2 Hz) and raw stepped heights would
 ///     make the raft jitter; every buoyancy cell then samples the same
 ///     smoothed surface level per tick.
 ///   </para>
@@ -121,7 +121,7 @@ public partial class Raft : FloatingBody
 
   public override void _PhysicsProcess(double delta)
   {
-    // WaterMesh readback steps at DisplacementReadbackPerSecond (10 Hz).
+    // WaterMesh readback steps at DisplacementReadbackPerSecond (2 Hz).
     // Lerp toward the raw sample once per physics tick so the buoyancy cells
     // see a smooth surface instead of 10 Hz jumps (T8.5.2 wave-jitter fix).
     if (_rawWaveHeightProvider is not null)

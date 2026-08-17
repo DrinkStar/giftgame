@@ -22,16 +22,14 @@ public partial class WaterMesh : MeshInstance3D
 
   /// <summary>How many times per second the displacement map is read back to CPU.</summary>
   /// <remarks>
-  ///   FIX(perf): lowered from 5 to 2 — each readback is a synchronous
-  ///   TextureGetData that stalls the render thread for a frame; 2 Hz is still
-  ///   far above the buoyancy sampling needs (raft smoothing lerps), and it
-  ///   cuts the per-frame stall frequency by 60%.
+  ///   FIX(perf): lowered from 5 to 2; readback is asynchronous
+  ///   (TextureGetDataAsync) so this rate no longer stalls the render thread.
   /// </remarks>
   [Export(PropertyHint.Range, "1, 60")]
   public int DisplacementReadbackPerSecond { get; set; } = 2;
 
   [Export]
-  public int MapSize { get; set; } = 512;
+  public int MapSize { get; set; } = 256;
 
   [Export]
   public Color WaterColor { get; set; } = new(0.1f, 0.15f, 0.18f);
@@ -66,6 +64,7 @@ public partial class WaterMesh : MeshInstance3D
   private int _imgHeight;
   private double _readbackAccumulator;
   private double _readbackUpdateRate;
+  private bool _readbackPending;
 
   private ShaderMaterial? _waterMaterial;
 
@@ -142,9 +141,8 @@ public partial class WaterMesh : MeshInstance3D
       UpdateScalesUniform();
 
       _readbackUpdateRate = 1.0 / DisplacementReadbackPerSecond;
-      _cachedDisplacementImage = _waveGenerator!.RetrieveDisplacementImage(0);
-      _imgWidth = _cachedDisplacementImage.GetWidth();
-      _imgHeight = _cachedDisplacementImage.GetHeight();
+      // Kick the first sample immediately; GetWaveHeight stays 0 until it lands.
+      _readbackPending = _waveGenerator!.RequestDisplacementImageAsync(0, OnDisplacementReadback);
     }
     catch (Exception e)
     {
@@ -179,15 +177,24 @@ public partial class WaterMesh : MeshInstance3D
 
     // Resample the displacement image for CPU-side wave height queries.
     _readbackAccumulator += delta;
-    if (_readbackAccumulator >= _readbackUpdateRate)
+    if (!_readbackPending && _readbackAccumulator >= _readbackUpdateRate)
     {
-      _readbackAccumulator -= _readbackUpdateRate;
-      // TODO: Switch to asynchronous readback — TextureGetData is synchronous
-      // and stalls the render thread for one frame per readback.
-      _cachedDisplacementImage = _waveGenerator!.RetrieveDisplacementImage(0);
-      _imgWidth = _cachedDisplacementImage.GetWidth();
-      _imgHeight = _cachedDisplacementImage.GetHeight();
+      _readbackAccumulator = 0;
+      _readbackPending = _waveGenerator!.RequestDisplacementImageAsync(0, OnDisplacementReadback);
     }
+  }
+
+  private void OnDisplacementReadback(Image image)
+  {
+    _readbackPending = false;
+    if (!_gpuEnabled || !IsInsideTree())
+    {
+      return;
+    }
+
+    _cachedDisplacementImage = image;
+    _imgWidth = image.GetWidth();
+    _imgHeight = image.GetHeight();
   }
 
   /// <summary>
@@ -256,7 +263,7 @@ public partial class WaterMesh : MeshInstance3D
       parametersForCascade.ShouldGenerateSpectrum = true;
     }
 
-    _waveGenerator = new WaveGenerator { MapSize = MapSize };
+    _waveGenerator = new WaveGenerator { MapSize = WaveGenerator.NormalizeMapSize(MapSize) };
     AddChild(_waveGenerator);
     _waveGenerator.InitGpu(Mathf.Max(2, Parameters.Length));
 

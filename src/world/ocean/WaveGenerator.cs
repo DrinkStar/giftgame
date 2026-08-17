@@ -33,8 +33,21 @@ public partial class WaveGenerator : Node
   private WaveCascadeParameters[] _passParameters = Array.Empty<WaveCascadeParameters>();
   private int _passNumCascadesRemaining;
 
+  /// <summary>
+  ///   FFT workgroups require a power-of-two map at least 128 (butterfly
+  ///   dispatch uses MapSize/2/64). Values outside that are snapped down.
+  /// </summary>
+  public static int NormalizeMapSize(int mapSize)
+  {
+    var size = Mathf.Clamp(mapSize, 128, 512);
+    var log = (int)Math.Floor(Math.Log(size) / Math.Log(2));
+    return 1 << log;
+  }
+
   public void InitGpu(int numCascades)
   {
+    MapSize = NormalizeMapSize(MapSize);
+
     // --- DEVICE/SHADER CREATION ---
     Context ??= RenderingContext.Create(RenderingServer.GetRenderingDevice());
     var context = Context!;
@@ -232,9 +245,10 @@ public partial class WaveGenerator : Node
 
   /// <summary>
   ///   Begins updating wave cascades based on the provided parameters. To
-  ///   balance stutter, the generator will schedule one cascade update per
-  ///   frame. All cascades from the previous invocation that have not been
-  ///   processed yet will be updated.
+  ///   balance stutter, the generator schedules one cascade update per frame
+  ///   via <see cref="_Process"/>. If a pass is still draining, time still
+  ///   advances but leftover work is NOT flushed in this call (flushing every
+  ///   remaining cascade on a late Update hitch'd the GPU).
   /// </summary>
   public void Update(double delta, WaveCascadeParameters[] parameters)
   {
@@ -243,17 +257,6 @@ public partial class WaveGenerator : Node
     if (Context == null)
     {
       InitGpu(Math.Max(2, parameters.Length));
-    }
-    else if (_passNumCascadesRemaining != 0)
-    {
-      // Update cascades from previous invocation that have yet to be processed...
-      var context = Context!;
-      long computeList = context.ComputeListBegin();
-      for (int i = 0; i < _passNumCascadesRemaining; i++)
-      {
-        UpdateOne(computeList, i, _passParameters);
-      }
-      context.ComputeListEnd();
     }
 
     // Update each cascade's parameters that rely on time delta.
@@ -269,6 +272,11 @@ public partial class WaveGenerator : Node
     }
 
     _passParameters = parameters;
+    if (_passNumCascadesRemaining != 0)
+    {
+      return;
+    }
+
     _passNumCascadesRemaining = parameters.Length;
   }
 
@@ -282,8 +290,44 @@ public partial class WaveGenerator : Node
   {
     var displacement = Descriptors["displacement_map"];
     byte[] data = Context!.Device.TextureGetData(displacement.Rid, (uint)cascade);
-    var image = Image.CreateFromData(MapSize, MapSize, false, Image.Format.Rgbah, data);
-    image.Convert(Image.Format.Rgbaf); // Convert to a workable format.
+    return DecodeDisplacementImage(data);
+  }
+
+  /// <summary>
+  ///   Non-blocking displacement readback. The callback runs after the
+  ///   render-device frame queue; keep using the previous cached image until
+  ///   then. Returns false when the device rejected the request.
+  /// </summary>
+  public bool RequestDisplacementImageAsync(int cascade, Action<Image> onReady)
+  {
+    if (Context == null)
+    {
+      return false;
+    }
+
+    var displacement = Descriptors["displacement_map"];
+    var mapSize = MapSize;
+    var err = Context.Device.TextureGetDataAsync(
+      displacement.Rid,
+      (uint)cascade,
+      Callable.From((byte[] data) =>
+      {
+        if (Context == null || data == null || data.Length == 0)
+        {
+          return;
+        }
+
+        onReady(DecodeDisplacementImage(data, mapSize));
+      })
+    );
+    return err == Error.Ok;
+  }
+
+  private Image DecodeDisplacementImage(byte[] data, int? mapSize = null)
+  {
+    var size = mapSize ?? MapSize;
+    var image = Image.CreateFromData(size, size, false, Image.Format.Rgbah, data);
+    image.Convert(Image.Format.Rgbaf);
     return image;
   }
 
