@@ -5,7 +5,7 @@
   "stage": "phase4",
   "current_iteration": "crash-logging",
   "git_branch": "dev/crash-logging-20260817",
-  "last_stable_commit": "dbfb2d0",
+  "last_stable_commit": "e0af997",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
     "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
