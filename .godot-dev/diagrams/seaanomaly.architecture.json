@@ -2,8 +2,8 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "SeaAnomaly Runtime Architecture",
-    "subtitle": "Godot 4.7 C# product scene vs ocean lab · Iter 7 wiring",
+    "title": "SeaAnomaly Architecture",
+    "subtitle": "Godot 4.7.1 C# · survival-raft game · post Iter10 + code review",
     "output": "seaanomaly-architecture.html",
     "quality_profile": "standard",
     "views": [
@@ -11,86 +11,123 @@
         "id": "boot-path",
         "label": "Boot to player",
         "focus": ["main", "game", "manager", "player"],
-        "note": "Main chooses tests or Game.tscn; GameManager wires the player cluster."
-      },
-      {
-        "id": "inventory-hub",
-        "label": "Inventory hub",
-        "focus": ["player", "inventory", "building", "farming", "combat"],
-        "note": "InventorySystem is the highest fan-in hub for cost, crops, livestock, and ammo."
+        "note": "Main picks tests or Game.tscn; GameManager wires the player cluster."
       },
       {
         "id": "event-bus",
-        "label": "Event bus",
-        "focus": ["events", "manager", "hud", "quest", "combat"],
-        "note": "Static GameEvents decouples systems; QuestService is the Iter 7 subscriber."
+        "label": "Event bus hub",
+        "focus": ["events", "manager", "hud", "quest", "save"],
+        "note": "53-event static GameEvents decouples systems; quest + HUD + save subscribe."
+      },
+      {
+        "id": "world-systems",
+        "label": "World simulation",
+        "focus": ["islands", "ocean", "raft", "combat", "farming"],
+        "note": "FFT ocean, procedural archipelago, raft buoyancy, tiered enemies."
       }
     ]
   },
   "layout": {
     "mode": "grid",
     "cols": 5,
-    "origin": [40, 90],
-    "gapX": 36,
-    "gapY": 72,
+    "origin": [40, 100],
+    "gapX": 30,
+    "gapY": 84,
     "cellW": 140,
-    "cellH": 62
+    "cellH": 64
   },
   "components": [
-    { "id": "main", "type": "frontend", "label": "Main", "sublabel": "Main.tscn entry", "row": 0, "col": 0, "tag": "tests or scene" },
-    { "id": "game", "type": "backend", "label": "Game.tscn", "sublabel": "product root", "row": 0, "col": 1, "tag": "empty Game.cs" },
-    { "id": "manager", "type": "backend", "label": "GameManager", "sublabel": "scene wiring", "row": 0, "col": 2 },
-    { "id": "events", "type": "messagebus", "label": "GameEvents", "sublabel": "static C# bus", "row": 0, "col": 3, "tag": "Decision 13" },
-    { "id": "hud", "type": "frontend", "label": "HUD", "sublabel": "stats + prompts", "row": 0, "col": 4 },
-    { "id": "player", "type": "frontend", "label": "Player", "sublabel": "controller cluster", "row": 1, "col": 1 },
-    { "id": "inventory", "type": "database", "label": "Inventory", "sublabel": "21 callers", "row": 1, "col": 2, "tag": "hub" },
+    { "id": "main", "type": "frontend", "label": "Main", "sublabel": "Main.tscn", "row": 0, "col": 0, "tag": "GoDotTest or scene" },
+    { "id": "game", "type": "backend", "label": "Game.tscn", "sublabel": "product root", "row": 0, "col": 1 },
+    { "id": "manager", "type": "backend", "label": "GameManager", "sublabel": "wiring + respawn", "row": 0, "col": 2 },
+    { "id": "events", "type": "messagebus", "label": "GameEvents", "sublabel": "53 static events", "row": 0, "col": 3, "tag": "decoupling hub" },
+    { "id": "save", "type": "database", "label": "SaveService", "sublabel": "unified JSON", "row": 0, "col": 4, "tag": "F5 / F9" },
+    { "id": "player", "type": "frontend", "label": "Player", "sublabel": "controller + stats", "row": 1, "col": 0 },
+    { "id": "inventory", "type": "database", "label": "Inventory", "sublabel": "hotbar + grid", "row": 1, "col": 1, "tag": "hub" },
+    { "id": "crafting", "type": "backend", "label": "Crafting", "sublabel": "recipes + UI", "row": 1, "col": 2 },
     { "id": "combat", "type": "backend", "label": "Combat", "sublabel": "weapons + enemies", "row": 1, "col": 3 },
-    { "id": "quest", "type": "backend", "label": "QuestService", "sublabel": "story point IDs", "row": 1, "col": 4, "tag": "Iter 7" },
-    { "id": "ocean", "type": "external", "label": "Ocean lab", "sublabel": "ocean_test.tscn", "row": 2, "col": 0, "tag": "Iter 8.5 merge" },
-    { "id": "building", "type": "backend", "label": "Building", "sublabel": "grid + JSON save", "row": 2, "col": 1 },
-    { "id": "farming", "type": "backend", "label": "Farming", "sublabel": "crops + livestock", "row": 2, "col": 2 }
+    { "id": "quest", "type": "backend", "label": "Quest + Guide", "sublabel": "3 chapters", "row": 1, "col": 4 },
+    { "id": "islands", "type": "cloud", "label": "IslandBuilder", "sublabel": "procedural world", "row": 2, "col": 0, "tag": "seed 12345" },
+    { "id": "ocean", "type": "cloud", "label": "FFT Ocean", "sublabel": "WaterMesh 512²", "row": 2, "col": 1, "tag": "GPU compute" },
+    { "id": "raft", "type": "external", "label": "Raft", "sublabel": "FloatingBody", "row": 2, "col": 2 },
+    { "id": "farming", "type": "backend", "label": "Farming", "sublabel": "crops + livestock", "row": 2, "col": 3 },
+    { "id": "building", "type": "backend", "label": "Building", "sublabel": "grid placement", "row": 2, "col": 4 },
+    { "id": "hud", "type": "frontend", "label": "HUD + Modals", "sublabel": "Craft / Storage / Tutorial", "row": 3, "col": 1 },
+    { "id": "daynight", "type": "backend", "label": "DayNight", "sublabel": "clock + sky", "row": 3, "col": 2 },
+    { "id": "weather", "type": "backend", "label": "Weather", "sublabel": "fog + rain", "row": 3, "col": 3 },
+    { "id": "audio", "type": "backend", "label": "Audio", "sublabel": "BGM + SFX", "row": 3, "col": 4 }
   ],
   "boundaries": [
-    { "kind": "region", "label": "Product scene  src/Game.tscn", "wraps": ["game", "manager", "hud", "player", "inventory", "quest", "building", "farming", "combat"] }
+    {
+      "kind": "region",
+      "label": "Product scene  src/Game.tscn",
+      "wraps": ["game", "manager", "player", "inventory", "crafting", "combat", "quest", "islands", "ocean", "raft", "farming", "building", "hud", "daynight", "weather", "audio"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Labs (ocean_test / storm_zone)",
+      "wraps": ["ocean"]
+    }
   ],
   "connections": [
-    { "id": "boot", "from": "main", "to": "game", "label": "ChangeScene", "variant": "emphasis", "labelDy": -24 },
+    { "id": "boot", "from": "main", "to": "game", "label": "ChangeScene", "variant": "emphasis", "labelDy": -22 },
     { "id": "wire", "from": "game", "to": "manager" },
     { "id": "player-wire", "from": "manager", "to": "player", "variant": "emphasis" },
-    { "id": "player-inv", "from": "player", "to": "inventory" },
-    { "id": "build-cost", "from": "inventory", "to": "building", "fromSide": "bottom", "toSide": "top" },
-    { "id": "farm-inv", "from": "inventory", "to": "farming", "fromSide": "bottom", "toSide": "top" },
-    { "id": "ammo", "from": "inventory", "to": "combat" },
+    { "id": "inv", "from": "player", "to": "inventory" },
+    { "id": "craft", "from": "inventory", "to": "crafting", "fromSide": "right", "toSide": "left" },
+    { "id": "quest-sub", "from": "events", "to": "quest", "variant": "emphasis", "fromSide": "right", "toSide": "top" },
     { "id": "died", "from": "player", "to": "events", "variant": "security", "fromSide": "top", "toSide": "bottom" },
     { "id": "revive", "from": "events", "to": "manager", "label": "respawn", "variant": "security" },
-    { "id": "hud-bus", "from": "events", "to": "hud", "variant": "dashed" },
     { "id": "kill-bus", "from": "combat", "to": "events", "fromSide": "top", "toSide": "bottom" },
-    { "id": "quest-bus", "from": "events", "to": "quest", "variant": "emphasis", "fromSide": "right", "toSide": "top" },
-    { "id": "ocean-dash", "from": "game", "to": "ocean", "label": "not merged", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 54 }
+    { "id": "ocean-wave", "from": "ocean", "to": "raft", "label": "GetWaveHeight", "variant": "dashed", "fromSide": "right", "toSide": "left", "labelAt": [436, 320] },
+    { "id": "raft-buoy", "from": "raft", "to": "player", "label": "carry", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "enemy-ai", "from": "islands", "to": "combat", "label": "spawns", "fromSide": "right", "toSide": "bottom" },
+    { "id": "farm-inv", "from": "farming", "to": "inventory", "label": "yield", "fromSide": "left", "toSide": "right" },
+    { "id": "build-inv", "from": "building", "to": "inventory", "label": "cost", "fromSide": "top", "toSide": "bottom" }
   ],
   "cards": [
     {
       "dot": "cyan",
-      "title": "Wiring hub",
+      "title": "Decoupling by event bus",
       "items": [
-        "GameManager exports DayNight, Weather, Player, HUD, BuildingSystem",
-        "It is not the event host — GameEvents is static"
+        "GameEvents: 53 static C# events, raised not subscribed",
+        "Quest, HUD, Save, Audio subscribe; no direct cross-links",
+        "GameplayInputLocked gates modals, F5/F9, hotbar"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Inventory is the material hub",
+      "items": [
+        "Costs (building), seeds/yield (farming), ammo (combat) all read it",
+        "CraftingSystem consumes from it; SaveService snapshots it"
       ]
     },
     {
       "dot": "emerald",
       "title": "Logic split",
       "items": [
-        "Godot Nodes own I/O; pure *Logic classes own math",
-        ".tres resources drive items, crops, enemies, recipes"
+        "Godot nodes own I/O; pure *Logic / *Math classes own rules",
+        ".tres resources drive items, crops, enemies, recipes",
+        "PlayerMotion, CombatLogic, CropLogic unit-tested pure"
       ]
     },
     {
       "dot": "rose",
-      "title": "Death contract",
+      "title": "Locked contracts",
       "items": [
-        "PlayerDied is the revive hook",
-        "GameOver is reserved for a true ending"
+        "PlayerDied = respawn hook, never GameOver",
+        "Archipelago deterministic by seed; AI state machine frozen",
+        "Headless: WaterMesh degrades to flat sea, tests 313 green"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Publishing",
+      "items": [
+        "build-release.ps1: Release build → import → export",
+        "-Portable: self-contained single exe (163 MB, no .NET needed)",
+        "GoDotTest suite runs in the pipeline before 'ship it'"
       ]
     }
   ]
