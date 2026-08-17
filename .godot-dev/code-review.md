@@ -51,16 +51,17 @@
 
 ### 4.2 战斗 / 敌人
 - **P2-04** `EnemyBase` 双寻址：既按节点名找 `PlayerStats` 又缓存字段，读取路径不一致。
-- **P2-05** `BossPhaseController` 召唤物不继承夜间伤害乘数；`Instantiate<EnemyBase>` 无类型守卫（换模型即崩）。
+- **P2-05** `BossPhaseController` 召唤物不继承夜间伤害乘数；`Instantiate<EnemyBase>` 无类型守卫（换模型即崩）；生成点可能卡在地形里。
 - **P2-06** `Projectile` 不停 `RigidBody3D`（木筏）且无连续碰撞（高速穿透木筏）。
 - **P2-07** 死亡门未覆盖 E 键/热栏切换（仅覆盖主攻击）。
 - **P2-08** spider 减速 `ApplySlow` 无消费者（效果永不到达敌人）。
+- **P2-08b** `PlayerStats.SpeedMultiplier` 无消费者（与 P2-08 同一根因：减速/加速修饰符无读取方）。
 
 ### 4.3 建造 / 存档
 - **P2-09** `BuildingSystem._currentSaveFile` / `LoadMostRecent` 死代码；`RaiseBuildingLoaded` 永不触发（无订阅者）。
 - **P2-10** `BuildingSaveSystem.Restore` 不同步 `_freeObjectsList`（重复 restore 累积）。
 - **P2-11** `BuildableInstance.Object3DModel!` 空引用（`GetAabb()` 裸调用）。
-- **P2-12** `CombatLogic` "axe 分支"注释过期（代码已无该分支）。
+- **P2-12** `CombatLogic` "axe 分支"注释过期（代码已无该分支）；`BossPhase` 恰 30% 进 phase 3 的注释与实际阈值表述不符。
 
 ### 4.4 物理 / 世界
 - **P2-13** `FloatingBody.ApplyForce(netForce, GlobalBasis*cell.LocalPosition)` 力臂方向在俯仰/横滚时错误（木筏倾覆时桨/帆力臂错位）。
@@ -84,7 +85,8 @@
 - **P2-27** `SaveService` SecondaryItemId 恢复后不清（复用对象残留）。
 - **P2-28** `GameSaveData.Version` 不校验（版本升级迁移无入口）。
 - **P2-29** `GuideService` 去重误吞（相同文本多次触发只显示一次）。
-- **P2-30** `HUD` Tab 绕过输入锁；`FinalizeTutorial` 抢鼠标；`BuildChapters` 重入重复；`StorageUI` 守卫不对称；奖励假推进教程 step2；`StoryInteractable` 死代码/文档不符；deferred 重订阅边缘；`CraftUI.Toggle` 公共入口无锁检查。
+- **P2-30** `HUD` Tab 绕过输入锁；`WeaponSystem` Q 键（副槽切换）在模态锁下仍可用；`FinalizeTutorial` 抢鼠标；`BuildChapters` 重入重复；`StorageUI` 守卫不对称；奖励假推进教程 step2；`StoryInteractable` 死代码/文档不符；deferred 重订阅边缘；`CraftUI.Toggle` 公共入口无锁检查。
+- **P2-30b** `SpawnProjectile` 先设 `GlobalPosition` 再 `AddChild`（应反之，避免父变换覆盖位置）。
 - **P2-31** `GroundLoot` 类注释与 T8.5.7 代码矛盾（注释说拾取后销毁，代码现在保留余数）。
 
 ### 4.7 测试
