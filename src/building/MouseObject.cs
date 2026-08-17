@@ -100,7 +100,13 @@ public partial class MouseObject : Node3D
   public void UpdateVisual(BuildableResource buildableObject)
   {
     ClearMouseObject();
-    var objectInstance = buildableObject.Object3DModel!.Instantiate<Node3D>();
+    if (buildableObject.Object3DModel == null)
+    {
+      GD.PushWarning($"MouseObject: '{buildableObject.Name}' has no Object3DModel; ghost preview skipped.");
+      return;
+    }
+
+    var objectInstance = buildableObject.Object3DModel.Instantiate<Node3D>();
 
     _objectContainer.AddChild(objectInstance);
     _mouseNodeChild = objectInstance;

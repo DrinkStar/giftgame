@@ -53,7 +53,16 @@ public partial class BuildableInstance : Node3D
 
   private void Initialize(BuildableResource resource, uint layerMask)
   {
-    ObjectInstance = resource.Object3DModel!.Instantiate<Node3D>();
+    if (resource.Object3DModel == null)
+    {
+      GD.PushWarning($"BuildableInstance: '{resource.Name}' has no Object3DModel; using empty placeholder.");
+      ObjectInstance = new Node3D { Name = "MissingModel" };
+    }
+    else
+    {
+      ObjectInstance = resource.Object3DModel.Instantiate<Node3D>();
+    }
+
     AddChild(ObjectInstance);
     BuildableResource = resource;
     _cells = [];
@@ -180,7 +189,7 @@ public partial class BuildableInstance : Node3D
       case SnapBehaviour.Free:
       {
         var meshInstance = FindMeshInstance(ObjectInstance);
-        if (meshInstance != null)
+        if (meshInstance?.Mesh != null)
         {
           var aabb = meshInstance.Mesh.GetAabb();
           size = aabb.Size;
