@@ -45,7 +45,16 @@
 
 ---
 
-## 4. P2 —— 只报告，不修（32 项）
+## 4. P2 —— 报告清单（32 项）
+
+> **P2 高价值项修复（2026-08-15，提交 5082857，验证 310/0）**：以下 12 项已修复并配测试——
+> P2-05（Boss 召唤物类型守卫+夜间继承+生成点抬升）、P2-06（Projectile 连续碰撞+木筏拦截）、
+> P2-08/P2-08b（spider 减速真正生效）、P2-17（RestoreWeather 读档必发事件）、
+> P2-18（RestoreTime 仅天数变化才 raise DayChanged）、P2-19（AudioManager 除零+GetNode 守卫）、
+> P2-24（F5/F9 按输入锁门控）、P2-25（LoadGame(null) fail-closed）、P2-27（SecondaryItem 清除）、
+> P2-28（存档版本校验拒绝未来版）、P2-30 部分（CraftUI.Open 互斥 + HUD Tab 尊重锁）、
+> P2-30b（SpawnProjectile 先 AddChild 后设 GlobalPosition）。
+> 其余 20 项仍只报告不修。
 
 ### 4.1 视觉 / 表现
 - **P2-01** `WeaponVisual` 模型加载失败时显示陈旧网格（无失败回退）。
@@ -116,5 +125,5 @@
 ## 6. 验证
 
 - `dotnet build`：0 错误（24 警告，全部为既有 CA 分析告警）。
-- `godot --headless --path . --run-tests --quit-on-finish`：**Passed 301 | Failed 0**（修复前 300；P0 修复后 301 曾短暂 7 失败——因 P1-5 异步化与 P1-3 组清理误伤，均已修正后重跑全绿）。
-- 修复提交建议分两个：`fix(code-review)`（P0/P1 代码+测试）与 `docs(code-review)`（本报告）。
+- `godot --headless --path . --run-tests --quit-on-finish`：**Passed 310 | Failed 0**（P0/P1 修复后 301；P2 高价值项修复 +9 测试 → 310，全绿）。
+- 修复提交：`fix(code-review)`（P0/P1 代码+测试）、`docs(code-review)`（报告）、`chore(state)`（state.json）、P2 修复 `5082857`（战斗/服务/存档/模态输入）。
