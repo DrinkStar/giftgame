@@ -5,10 +5,11 @@ using Godot;
 
 /// <summary>
 ///   Player projectile (Iter6 plan Decision 4). An Area3D that monitors the
-///   World (1) and Enemies (8) layers, integrates velocity with gravity in
-///   _PhysicsProcess, and frees itself on enemy hit, ground/wall hit, or
+///   World (1) and EnemyHurtbox (9) layers, integrates velocity with gravity
+///   in _PhysicsProcess, and frees itself on hurtbox hit, ground/wall hit, or
 ///   lifetime expiry. Player bodies are ignored so a fresh projectile can
-///   never hurt the shooter.
+///   never hurt the shooter. <see cref="Hurtbox.ResolveEnemy"/> still accepts
+///   an EnemyBase body collider as a thin-miss fallback.
 /// </summary>
 public partial class Projectile : Area3D
 {
@@ -26,10 +27,16 @@ public partial class Projectile : Area3D
 
   public override void _Ready()
   {
-    // Decision 4: World (1) | Enemies (128) = 129.
-    CollisionMask = 129u;
+    CollisionMask = CombatLayers.ProjectileMask;
     Monitoring = true;
     BodyEntered += OnBodyEntered;
+    AreaEntered += OnAreaEntered;
+  }
+
+  public override void _ExitTree()
+  {
+    BodyEntered -= OnBodyEntered;
+    AreaEntered -= OnAreaEntered;
   }
 
   /// <summary>Sets the initial velocity (called by WeaponSystem on spawn).</summary>
@@ -61,6 +68,8 @@ public partial class Projectile : Area3D
 
     var query = PhysicsRayQueryParameters3D.Create(previous, GlobalPosition);
     query.CollisionMask = CollisionMask;
+    query.CollideWithAreas = true;
+    query.CollideWithBodies = true;
     _sweepExclude ??= [];
     if (_sweepExclude.Count == 0)
     {
@@ -72,24 +81,14 @@ public partial class Projectile : Area3D
     if (hit.Count == 0)
       return;
 
-    var collider = hit["collider"].As<Node>();
-    if (collider is PlayerController)
-      return; // Decision 4: projectiles never hurt the shooter.
-
-    if (collider is EnemyBase enemy)
-    {
-      enemy.TakeDamage(Damage);
-      QueueFree();
-      return;
-    }
-
-    // Ground/wall (StaticBody3D) or the raft (RigidBody3D — FloatingBody)
-    // stops the projectile; anything else (other dynamic bodies) does not.
-    if (collider is StaticBody3D or RigidBody3D)
-      QueueFree();
+    ApplyHit(hit["collider"].As<Node>());
   }
 
-  private void OnBodyEntered(Node body)
+  private void OnAreaEntered(Area3D area) => ApplyHit(area);
+
+  private void OnBodyEntered(Node body) => ApplyHit(body);
+
+  private void ApplyHit(Node? collider)
   {
     // Guard against double-handling: the sweep ray above may have already
     // queued this projectile for deletion in the same physics step.
@@ -97,10 +96,10 @@ public partial class Projectile : Area3D
       return;
 
     // Ignore the player (Decision 4) — projectiles only hurt enemies.
-    if (body is PlayerController)
+    if (collider is PlayerController)
       return;
 
-    if (body is EnemyBase enemy)
+    if (Hurtbox.ResolveEnemy(collider) is { } enemy)
     {
       enemy.TakeDamage(Damage);
       QueueFree();
@@ -109,7 +108,7 @@ public partial class Projectile : Area3D
 
     // Ground or wall (StaticBody3D) stops the projectile; the raft is a
     // RigidBody3D (FloatingBody) and must stop it too (P2-06).
-    if (body is StaticBody3D or RigidBody3D)
+    if (collider is StaticBody3D or RigidBody3D)
       QueueFree();
   }
 }

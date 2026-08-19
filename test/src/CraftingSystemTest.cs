@@ -287,7 +287,7 @@ public class CraftingSystemTest : TestClass, IDisposable
 
     recipe.ShouldNotBeNull();
     recipe.Id.ShouldBe("stone_axe");
-    recipe.DisplayName.ShouldBe("Stone Axe");
+    recipe.DisplayName.ShouldBe("石斧");
     recipe.Result.ShouldNotBeNull();
     recipe.Result!.Id.ShouldBe("stone_axe");
     recipe.ResultAmount.ShouldBe(1);
@@ -312,6 +312,8 @@ public class CraftingSystemTest : TestClass, IDisposable
       var recipe = GD.Load<CraftingRecipe>($"res://assets/recipes/{id}.tres");
       recipe.ShouldNotBeNull();
       recipe.Id.ShouldBe(id);
+      recipe.DisplayName.ShouldNotBeNullOrEmpty();
+      ContainsHan(recipe.DisplayName).ShouldBeTrue($"{id}: {recipe.DisplayName}");
       recipe.Ingredients.Count.ShouldBeGreaterThan(0);
     }
 
@@ -327,6 +329,18 @@ public class CraftingSystemTest : TestClass, IDisposable
       item.ShouldNotBeNull();
       item.Id.ShouldBe(id);
       item.DisplayName.ShouldNotBeNullOrEmpty();
+      ContainsHan(item.DisplayName).ShouldBeTrue($"{id}: {item.DisplayName}");
     }
+  }
+
+  private static bool ContainsHan(string text)
+  {
+    foreach (var c in text)
+    {
+      if (c >= 0x4E00 && c <= 0x9FFF)
+        return true;
+    }
+
+    return false;
   }
 }

@@ -26,6 +26,18 @@ public enum EnemyBehavior
 }
 
 /// <summary>
+///   Species home biome used as DATA around the existing AI (contract 3:
+///   the behavior switch is not rewritten). None = no leash / wander.
+///   Explicit ints so .tres values stay stable.
+/// </summary>
+public enum EnemyHabitatKind
+{
+  None = 0,
+  ForestRiver = 1,
+  BeachShore = 2
+}
+
+/// <summary>
 ///   Data-only enemy definition serialized in assets/enemies/*.tres (Iter6
 ///   plan Decision 5/6). One resource per enemy; the file name equals
 ///   <see cref="Id"/>. Behavior specializations are applied by
@@ -38,9 +50,6 @@ public partial class EnemyData : Resource
 {
   /// <summary>Unique enemy id, equals the .tres file stem (e.g. "crab").</summary>
   [Export] public string Id = "";
-
-  /// <summary>Human-readable name shown in future UI/debug.</summary>
-  [Export] public string DisplayName = "";
 
   [Export] public float MaxHealth = 1f;
 
@@ -72,4 +81,16 @@ public partial class EnemyData : Resource
   [Export] public string DropItemId = "";
 
   [Export] public int DropAmount = 1;
+
+  /// <summary>
+  ///   Home biome for spawn placement and wander/leash clamps. None keeps
+  ///   the original always-chase-within-SleepDistance movement.
+  /// </summary>
+  [Export] public EnemyHabitatKind Habitat = EnemyHabitatKind.None;
+
+  /// <summary>
+  ///   Horizontal meters from the den (spawn) the enemy may roam. 0 falls
+  ///   back to <see cref="EnemyHabitat.DefaultWanderRadius"/>.
+  /// </summary>
+  [Export] public float WanderRadius;
 }

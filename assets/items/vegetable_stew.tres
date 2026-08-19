@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "vegetable_stew"
-DisplayName = "Vegetable Stew"
-Description = "A warm stew of garden vegetables, cooked over a fire"
+DisplayName = "蔬菜炖汤"
 Type = 2
 MaxStack = 20
 HungerRestore = 40.0

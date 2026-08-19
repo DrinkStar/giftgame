@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "research_table"
-Description = "Placeholder research station (Iter8.5). Full cost: 15 wood + 5 stone; single-cost system charges the 15 wood"
+Description = "研究台。完整造价：木头15、石头5；当前只收取木头15"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

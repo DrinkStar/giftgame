@@ -13,7 +13,7 @@ Amount = 1
 [resource]
 script = ExtResource("1_recipe")
 Id = "cooked_meat"
-DisplayName = "Cooked Meat"
+DisplayName = "熟肉"
 Result = ExtResource("4_cooked_meat")
 ResultAmount = 1
 Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1")])

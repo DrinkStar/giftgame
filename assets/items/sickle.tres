@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "sickle"
-DisplayName = "Sickle"
-Description = "A curved blade for harvesting crops"
+DisplayName = "镰刀"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

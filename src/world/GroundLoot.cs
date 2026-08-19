@@ -59,7 +59,7 @@ public partial class GroundLoot : StaticBody3D, IInteractable
   public string GetInteractionPrompt()
   {
     var item = GD.Load<ItemData>($"res://assets/items/{ItemId}.tres");
-    return $"[E] Pick up {item?.DisplayName ?? ItemId}";
+    return $"[E] 拾取 {item?.DisplayName ?? ItemId}";
   }
 
   public bool CanInteract() => true;

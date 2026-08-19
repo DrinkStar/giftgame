@@ -5,7 +5,6 @@
 [resource]
 script = ExtResource("1_script")
 Id = "bat"
-DisplayName = "Bat"
 MaxHealth = 20.0
 Damage = 6.0
 MoveSpeed = 4.0

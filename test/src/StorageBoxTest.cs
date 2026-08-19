@@ -292,4 +292,59 @@ public class StorageBoxTest : TestClass, IDisposable
     box.Inventory.GetSlot(1).Item?.Id.ShouldBe("stone");
     box.Inventory.GetSlot(1).Amount.ShouldBe(3);
   }
+
+  /// <summary>
+  ///   Tutorial chest lid: the imported GLB parents lid meshes under LidPivot.
+  ///   Interact tweens it open; StorageUI.Close tweens it shut. No pause.
+  /// </summary>
+  [Test]
+  public async Task WoodenChestLidOpensAndClosesWithStorageUi()
+  {
+    var player = await BuildPlayer();
+    var inventory = player.GetNode<InventorySystem>("InventorySystem");
+    var chest = new WoodenChest();
+    await _fixture.AddToRoot(chest, autoRemoveFromRoot: true);
+
+    var pivot = WoodenChest.FindLidPivot(chest);
+    pivot.ShouldNotBeNull();
+    pivot!.Rotation.ShouldBe(Vector3.Zero);
+
+    var ui = new StorageUI();
+    await _fixture.AddToRoot(ui, autoRemoveFromRoot: true);
+    chest.Interact(player);
+
+    ui.IsOpen.ShouldBeTrue();
+    GameEvents.GameplayInputLocked.ShouldBeTrue();
+    await WaitLid(WoodenChest.OpenDuration);
+    pivot.Rotation.X.ShouldBe(Mathf.DegToRad(WoodenChest.OpenAngleDegrees), 0.05f);
+
+    ui.Close();
+    await WaitLid(WoodenChest.CloseDuration);
+    pivot.Rotation.X.ShouldBe(0f, 0.05f);
+    GameEvents.GameplayInputLocked.ShouldBeFalse();
+  }
+
+  /// <summary>A missing LidPivot must not block opening the storage UI.</summary>
+  [Test]
+  public async Task WoodenChestWithoutLidPivotStillOpensUi()
+  {
+    var player = await BuildPlayer();
+    var chest = new WoodenChest();
+    await _fixture.AddToRoot(chest, autoRemoveFromRoot: true);
+    var ui = new StorageUI();
+    await _fixture.AddToRoot(ui, autoRemoveFromRoot: true);
+
+    chest.Interact(player);
+    ui.IsOpen.ShouldBeTrue();
+    ui.Close();
+    await TestScene.ProcessFrame(2);
+    ui.IsOpen.ShouldBeFalse();
+  }
+
+  private async Task WaitLid(float seconds)
+  {
+    var tree = TestScene.GetTree();
+    await tree.ToSignal(tree.CreateTimer(seconds + 0.05f), SceneTreeTimer.SignalName.Timeout);
+    await TestScene.ProcessFrame(2);
+  }
 }

@@ -18,6 +18,15 @@ using Godot;
 ///     (PeriodChanged, NOT DayChanged — the latter is a midnight day-number
 ///     rollover event.)
 ///
+///   Main-story through-line (non-intrusive):
+///   - QuestStarted → <see cref="StoryGuideCopy.QuestStartLines"/> (queued
+///     until TutorialCompleted and the gameplay lock is down, so 开始游戏
+///     and 新手教程 both see the line after the menu dismisses, and chapter-1
+///     tutorial cards are not overlapped).
+///   - StoryPointReached → <see cref="StoryGuideCopy.StoryPointLines"/>
+///     (shark_king only; radio/ruin complete a quest the same tick).
+///   Never calls GetTree().Paused. Missing copy for an id is fail-closed.
+///
 ///   Boss double-fire dedup: EnemyBase.Die raises EnemyDied and then
 ///   BossDefeated in the same tick. The beast line is therefore deferred by
 ///   the 0.5s window and cancelled when the boss line lands first, so a boss
@@ -43,6 +52,19 @@ public partial class GuideService : Node
   private bool _enemyLinePending;
   private double _enemyLineAt;
 
+  /// <summary>
+  ///   Set by TutorialCompleted (开始游戏 skips chapter 1 with this event;
+  ///   新手教程 raises it when the 6-step card finishes). Story quest lines
+  ///   stay quiet until then so they do not fire under the main menu.
+  /// </summary>
+  private bool _storyReady;
+
+  /// <summary>True while a tutorial step card is on screen (TutorialStepChanged).</summary>
+  private bool _tutorialOverlayQuiet;
+
+  private string? _pendingQuestId;
+  private string? _spokenQuestId;
+
   public override void _Ready()
   {
     GameEvents.EnemyDied += OnEnemyDied;
@@ -51,6 +73,17 @@ public partial class GuideService : Node
     GameEvents.PlayerDied += OnPlayerDied;
     GameEvents.QuestCompleted += OnQuestCompleted;
     GameEvents.PeriodChanged += OnPeriodChanged;
+    GameEvents.QuestStarted += OnQuestStarted;
+    GameEvents.StoryPointReached += OnStoryPointReached;
+    GameEvents.TutorialCompleted += OnTutorialCompleted;
+    GameEvents.TutorialStepChanged += OnTutorialStepChanged;
+    GameEvents.GameplayInputLockChanged += OnGameplayInputLockChanged;
+
+    // QuestService sits earlier in Game.tscn and already started quest_radio
+    // before this node subscribed — pull the current id fail-closed.
+    var quests = GetParent()?.GetNodeOrNull<QuestService>("QuestService");
+    if (quests?.CurrentQuestId is { Length: > 0 } currentId)
+      _pendingQuestId = currentId;
   }
 
   public override void _ExitTree()
@@ -61,6 +94,11 @@ public partial class GuideService : Node
     GameEvents.PlayerDied -= OnPlayerDied;
     GameEvents.QuestCompleted -= OnQuestCompleted;
     GameEvents.PeriodChanged -= OnPeriodChanged;
+    GameEvents.QuestStarted -= OnQuestStarted;
+    GameEvents.StoryPointReached -= OnStoryPointReached;
+    GameEvents.TutorialCompleted -= OnTutorialCompleted;
+    GameEvents.TutorialStepChanged -= OnTutorialStepChanged;
+    GameEvents.GameplayInputLockChanged -= OnGameplayInputLockChanged;
   }
 
   public override void _Process(double delta)
@@ -109,4 +147,62 @@ public partial class GuideService : Node
     if (period == DayPeriod.Night)
       GameEvents.RaiseGuideLine(NightLine);
   }
+
+  private void OnQuestStarted(string questId)
+  {
+    if (string.IsNullOrEmpty(questId))
+      return;
+
+    _pendingQuestId = questId;
+    TrySpeakPendingQuest();
+  }
+
+  private void OnStoryPointReached(string storyPointId)
+  {
+    if (!CanSpeakStory())
+      return;
+
+    if (!StoryGuideCopy.StoryPointLines.TryGetValue(storyPointId, out var line))
+      return;
+
+    GameEvents.RaiseGuideLine(line);
+  }
+
+  private void OnTutorialCompleted()
+  {
+    _storyReady = true;
+    _tutorialOverlayQuiet = false;
+    TrySpeakPendingQuest();
+  }
+
+  private void OnTutorialStepChanged(int _currentStep, int _totalSteps) =>
+    _tutorialOverlayQuiet = true;
+
+  private void OnGameplayInputLockChanged(bool locked)
+  {
+    if (!locked)
+      TrySpeakPendingQuest();
+  }
+
+  private void TrySpeakPendingQuest()
+  {
+    if (_pendingQuestId == null || _pendingQuestId == _spokenQuestId)
+      return;
+
+    if (!CanSpeakStory())
+      return;
+
+    if (!StoryGuideCopy.QuestStartLines.TryGetValue(_pendingQuestId, out var line))
+      return;
+
+    _spokenQuestId = _pendingQuestId;
+    GameEvents.RaiseGuideLine(line);
+  }
+
+  /// <summary>
+  ///   Story through-line stays quiet under the main menu (input lock),
+  ///   before TutorialCompleted, and while a tutorial step card is visible.
+  /// </summary>
+  private bool CanSpeakStory() =>
+    _storyReady && !_tutorialOverlayQuiet && !GameEvents.GameplayInputLocked;
 }

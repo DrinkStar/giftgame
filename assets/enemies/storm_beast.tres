@@ -5,7 +5,6 @@
 [resource]
 script = ExtResource("1_script")
 Id = "storm_beast"
-DisplayName = "Storm Beast"
 MaxHealth = 120.0
 Damage = 20.0
 MoveSpeed = 4.0

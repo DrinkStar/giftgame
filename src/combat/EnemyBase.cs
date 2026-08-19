@@ -91,6 +91,16 @@ public partial class EnemyBase : CharacterBody3D
   private Node3D? _floatTarget;
   private MeshInstance3D? _modelVisual;
   private BossPhaseController? _phaseController;
+  private CharacterAnimator? _animator;
+  private bool _dying;
+  private SphereShape3D? _attackQueryShape;
+
+  private Vector3 _homePosition;
+  private Vector2 _attractorXz;
+  private Vector3 _wanderTarget;
+  private float _wanderRadius;
+  private float _wanderClock;
+  private int _wanderSlot = -1;
 
   private float _attackCooldown;
   private float _chargeCooldownRemaining;
@@ -101,6 +111,9 @@ public partial class EnemyBase : CharacterBody3D
 
   /// <summary>Exposed for tests (null until health is initialized).</summary>
   public EnemyHealth? HealthTracker => _health;
+
+  /// <summary>True while a Charge dash is in progress (visual layer only).</summary>
+  public bool IsCharging => _chargeRemaining > 0f;
 
   public override void _Ready()
   {
@@ -135,11 +148,19 @@ public partial class EnemyBase : CharacterBody3D
     ApplyModelOverride();
     ApplyScale();
     SetupMaterial();
+    Hurtbox.EnsureOn(this, Hurtbox.Kind.Enemy);
+
+    // Visual layer: bind clips after the model child is in the tree. Does
+    // not touch the AI switch below.
+    _animator = GetNodeOrNull<CharacterAnimator>("CharacterAnimator");
+    _animator?.BindFromTree();
+
+    CaptureHabitat();
   }
 
   public override void _PhysicsProcess(double delta)
   {
-    if (EnemyData == null)
+    if (EnemyData == null || _dying)
       return;
 
     var dt = (float)delta;
@@ -155,7 +176,9 @@ public partial class EnemyBase : CharacterBody3D
 
     _attackCooldown = Mathf.Max(0f, _attackCooldown - dt);
     var distSq = GlobalPosition.DistanceSquaredTo(_player.GlobalPosition);
-    if (distSq > SleepDistance * SleepDistance)
+    // Habitat species still wander their den when the player is far; others
+    // keep the SleepDistance idle skip. The behavior switch is unchanged.
+    if (!HasHabitat() && distSq > SleepDistance * SleepDistance)
     {
       Velocity = Vector3.Zero;
       return;
@@ -201,22 +224,28 @@ public partial class EnemyBase : CharacterBody3D
 
     if (canAttack && CombatLogic.ShouldAttack(dist, attackRange, _attackCooldown <= 0f))
     {
-      // Phase-3 boss rage boosts damage (1× for regular enemies); T8.5.5:
-      // night multiplies damage for every enemy (default 1.25), day = 1.
-      var rage = CombatLogic.BossRage(BossPhase());
-      _playerStats?
-        .TakeDamage(
-          EnemyData.Damage
-          * rage.DamageMultiplier
-          * CombatLogic.NightDamageMultiplier(IsNight(), NightDamageMultiplierValue)
-        );
+      // AttackRange / cooldown / behavior switch are unchanged. Damage is
+      // applied only when the attack volume overlaps the player Hurtbox.
+      if (OverlapsPlayerHurtbox(attackRange))
+      {
+        // Phase-3 boss rage boosts damage (1× for regular enemies); T8.5.5:
+        // night multiplies damage for every enemy (default 1.25), day = 1.
+        var rage = CombatLogic.BossRage(BossPhase());
+        _playerStats?
+          .TakeDamage(
+            EnemyData.Damage
+            * rage.DamageMultiplier
+            * CombatLogic.NightDamageMultiplier(IsNight(), NightDamageMultiplierValue)
+          );
 
-      // Webbing hit: the spider slows the player for 2 s at 0.5× speed.
-      if (behavior == EnemyBehavior.Webbing)
-        _playerStats?.ApplySlow(WebbingSlowDuration, WebbingSlowFactor);
+        // Webbing hit: the spider slows the player for 2 s at 0.5× speed.
+        if (behavior == EnemyBehavior.Webbing)
+          _playerStats?.ApplySlow(WebbingSlowDuration, WebbingSlowFactor);
+      }
 
       _attackCooldown = EnemyData.AttackCooldown
         * CombatLogic.BossRageCooldownMultiplier(BossPhase());
+      _animator?.NotifyAttack();
     }
   }
 
@@ -235,6 +264,8 @@ public partial class EnemyBase : CharacterBody3D
 
     health.TakeDamage(damage);
     StartFlash();
+    if (!health.IsDead)
+      _animator?.NotifyHit();
 
     if (health.IsDead)
       Die();
@@ -242,14 +273,45 @@ public partial class EnemyBase : CharacterBody3D
 
   private void Die()
   {
+    if (_dying)
+      return;
+    _dying = true;
+
     // Decision 9: EnemyDied fires for every enemy; bosses additionally fire
-    // BossDefeated. QueueFree happens immediately after.
+    // BossDefeated. Loot and events stay immediate so tests and drops do not
+    // wait on the death clip; QueueFree waits for the visual when present.
     GameEvents.RaiseEnemyDied(EnemyData!.Id);
     if (EnemyData.Boss)
       GameEvents.RaiseBossDefeated(EnemyData.Id);
 
     TryDropLoot();
-    QueueFree();
+    CollisionLayer = 0;
+    CollisionMask = 0;
+    GetNodeOrNull<Hurtbox>(Hurtbox.NodeName)?.Disable();
+    Velocity = Vector3.Zero;
+
+    var hold = _animator?.NotifyDeath() ?? 0f;
+    if (hold <= 0.05f)
+    {
+      QueueFree();
+      return;
+    }
+
+    var tree = GetTree();
+    if (tree == null)
+    {
+      QueueFree();
+      return;
+    }
+
+    tree.CreateTimer(Mathf.Min(hold, 1.5f))
+      .Timeout += OnDeathClipFinished;
+  }
+
+  private void OnDeathClipFinished()
+  {
+    if (IsInstanceValid(this))
+      QueueFree();
   }
 
   /// <summary>
@@ -405,16 +467,169 @@ public partial class EnemyBase : CharacterBody3D
     return toPlayer.LengthSquared() > 0.0001f ? toPlayer.Normalized() : Vector3.Zero;
   }
 
+  /// <summary>
+  ///   True when a sphere of <paramref name="attackRange"/> around this enemy
+  ///   overlaps the player's Hurtbox. AttackRange remains the AI gate;
+  ///   this only decides whether damage is applied. Geometric fallback keeps
+  ///   crabs/wolves connecting at the same range when physics is not yet
+  ///   synced (headless tests).
+  /// </summary>
+  private bool OverlapsPlayerHurtbox(float attackRange)
+  {
+    var hurtbox = _player?.GetNodeOrNull<Hurtbox>(Hurtbox.NodeName);
+    if (hurtbox == null || !GodotObject.IsInstanceValid(hurtbox))
+      return false;
+    if (hurtbox.CollisionLayer == 0 || !hurtbox.Monitorable)
+      return false;
+
+    var space = GetWorld3D()?.DirectSpaceState;
+    if (space != null)
+    {
+      _attackQueryShape ??= new SphereShape3D();
+      _attackQueryShape.Radius = attackRange;
+      var query = new PhysicsShapeQueryParameters3D
+      {
+        Shape = _attackQueryShape,
+        Transform = new Transform3D(Basis.Identity, GlobalPosition),
+        CollisionMask = CombatLayers.PlayerHurtboxMask,
+        CollideWithAreas = true,
+        CollideWithBodies = false
+      };
+      var hits = space.IntersectShape(query, 8);
+      foreach (var hit in hits)
+      {
+        if (
+          hit.TryGetValue("collider", out var collider)
+          && Hurtbox.IsPlayerHurtbox(collider.AsGodotObject())
+        )
+        {
+          return true;
+        }
+      }
+    }
+
+    return GlobalPosition.DistanceTo(_player!.GlobalPosition) <= attackRange;
+  }
+
+  private bool HasHabitat() =>
+    EnemyData != null
+    && EnemyData.Habitat != EnemyHabitatKind.None
+    && _wanderRadius > 0f;
+
+  private void CaptureHabitat()
+  {
+    _homePosition = GlobalPosition;
+    _wanderTarget = _homePosition;
+    _attractorXz = new Vector2(_homePosition.X, _homePosition.Z);
+    _wanderRadius = 0f;
+    if (EnemyData == null || EnemyData.Habitat == EnemyHabitatKind.None)
+      return;
+
+    _wanderRadius = EnemyHabitat.EffectiveWanderRadius(
+      EnemyData.Habitat, EnemyData.WanderRadius);
+
+    var tree = GetTree();
+    if (tree == null)
+      return;
+
+    long seed = 12345;
+    if (tree.Root.FindChild("IslandBuilder", recursive: true, owned: false)
+        is IslandBuilder builder)
+      seed = builder.WorldSeed;
+
+    _attractorXz = EnemyHabitat.WorldAttractor(
+      new Vector2(_homePosition.X, _homePosition.Z),
+      EnemyData.Habitat,
+      WorldLayout.Generate(seed));
+  }
+
+  private Vector3 HorizontalToward(Vector3 world)
+  {
+    var d = world - GlobalPosition;
+    d.Y = 0f;
+    return d.LengthSquared() > 0.0001f ? d.Normalized() : Vector3.Zero;
+  }
+
+  /// <summary>
+  ///   Direction used by the existing chase movers: chase while the player
+  ///   is in the den disk, otherwise den / forage / drink-beach. Does not
+  ///   add AI states.
+  /// </summary>
+  private Vector3 HabitatMoveDirection(float dt)
+  {
+    if (!HasHabitat())
+      return HorizontalDirectionToPlayer();
+
+    _wanderClock += dt;
+    bool leaking = EnemyHabitat.IsLeakingLeash(
+      _homePosition, _wanderRadius, GlobalPosition);
+    bool chase = !leaking && EnemyHabitat.ShouldChase(
+      _homePosition, _wanderRadius, GlobalPosition,
+      _player!.GlobalPosition, EnemyData!.AttackRange);
+
+    Vector3 desired;
+    if (chase)
+    {
+      desired = HorizontalDirectionToPlayer();
+    }
+    else if (leaking)
+    {
+      desired = HorizontalToward(_homePosition);
+    }
+    else
+    {
+      int slot = (int)(_wanderClock / EnemyHabitat.WanderSlotSeconds) % 4;
+      if (slot != _wanderSlot)
+      {
+        _wanderSlot = slot;
+        var attractor = new Vector3(_attractorXz.X, GlobalPosition.Y, _attractorXz.Y);
+        _wanderTarget = EnemyHabitat.PickWanderTarget(
+          _homePosition, attractor, _wanderRadius, slot);
+      }
+
+      var to = _wanderTarget - GlobalPosition;
+      to.Y = 0f;
+      if (to.LengthSquared() < 0.64f)
+        return Vector3.Zero;
+
+      desired = to.Normalized();
+    }
+
+    return ConstrainDirToHabitat(desired);
+  }
+
+  private Vector3 ConstrainDirToHabitat(Vector3 desired)
+  {
+    if (!HasHabitat() || desired.LengthSquared() < 0.0001f)
+      return desired;
+
+    var offset = new Vector3(
+      GlobalPosition.X - _homePosition.X, 0f, GlobalPosition.Z - _homePosition.Z);
+    float dist = offset.Length();
+    if (dist < _wanderRadius * 0.98f)
+      return desired;
+    if (dist < 0.0001f)
+      return desired;
+
+    var outward = offset / dist;
+    float radial = desired.Dot(outward);
+    if (radial <= 0f)
+      return desired;
+
+    var tangent = desired - outward * radial;
+    return tangent.LengthSquared() < 0.0001f ? -outward : tangent.Normalized();
+  }
+
   private void MoveMeleeChase(float dt)
   {
     // T8.5.5: night speed — wolves keep their 1.5× hunt boost, every other
     // melee chaser gets the general 1.25× (CombatLogic.NightSpeedMultiplier);
     // mutants add their rage speed on top (Iter6.1).
-    var speed = EnemyData.MoveSpeed
-      * CombatLogic.NightSpeedMultiplier(EnemyData!.Id, IsNight())
+    var speed = EnemyData!.MoveSpeed
+      * CombatLogic.NightSpeedMultiplier(EnemyData.Id, IsNight())
       * RageSpeedMultiplier();
 
-    var dir = HorizontalDirectionToPlayer();
+    var dir = HabitatMoveDirection(dt);
     Velocity = new Vector3(dir.X * speed, Velocity.Y + Gravity * dt, dir.Z * speed);
     MoveAndSlide();
   }
@@ -424,11 +639,21 @@ public partial class EnemyBase : CharacterBody3D
     _chargeCooldownRemaining = Mathf.Max(0f, _chargeCooldownRemaining - dt);
     _chargeRemaining = Mathf.Max(0f, _chargeRemaining - dt);
 
+    bool chasing = HasHabitat()
+      && EnemyHabitat.ShouldChase(
+        _homePosition, _wanderRadius, GlobalPosition,
+        _player!.GlobalPosition, EnemyData!.AttackRange)
+      && !EnemyHabitat.IsLeakingLeash(_homePosition, _wanderRadius, GlobalPosition);
+    if (!HasHabitat())
+      chasing = true;
+
     // Pure logic decides engagement; once engaged the boost holds for the
     // whole ChargeCooldown window so the charge is a real dash, and the
-    // cooldown pauses the next one (Decision 7/8).
+    // cooldown pauses the next one (Decision 7/8). Habitat species only
+    // dash while actually chasing (not while walking back to the den).
     if (
-      _chargeRemaining <= 0f
+      chasing
+      && _chargeRemaining <= 0f
       && CombatLogic.ChargeSpeedMultiplier(dist, ChargeRange, _chargeCooldownRemaining <= 0f) > 1f
     )
     {
@@ -438,9 +663,9 @@ public partial class EnemyBase : CharacterBody3D
 
     var speed = EnemyData!.MoveSpeed
       * CombatLogic.NightSpeedMultiplier(EnemyData.Id, IsNight())
-      * (_chargeRemaining > 0f ? ChargeSpeedMultiplierValue : 1f);
+      * (chasing && _chargeRemaining > 0f ? ChargeSpeedMultiplierValue : 1f);
 
-    var dir = HorizontalDirectionToPlayer();
+    var dir = HabitatMoveDirection(dt);
     Velocity = new Vector3(dir.X * speed, Velocity.Y + Gravity * dt, dir.Z * speed);
     MoveAndSlide();
   }

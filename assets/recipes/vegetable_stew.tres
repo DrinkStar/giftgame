@@ -25,7 +25,7 @@ Amount = 2
 [resource]
 script = ExtResource("1_recipe")
 Id = "vegetable_stew"
-DisplayName = "Vegetable Stew"
+DisplayName = "蔬菜炖汤"
 Result = ExtResource("6_stew")
 ResultAmount = 1
 Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1"), SubResource("ing_2"), SubResource("ing_3")])

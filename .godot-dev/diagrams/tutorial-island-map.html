@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SeaAnomaly 教程岛示意地图（现行生成器）</title>
+  <style>
+    :root, [data-theme="dark"] {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --ink: #e8eef8;
+      --muted: #9aa8bd;
+      --dim: #6d7c93;
+      --line: #2a3a55;
+      --water: #1a3a58;
+      --water-stroke: #3d6d99;
+      --beach: #c4a574;
+      --beach-fill: rgba(196, 165, 116, 0.55);
+      --inland: #3d6a45;
+      --inland-fill: rgba(72, 122, 78, 0.72);
+      --plateau: #5a7a4e;
+      --plateau-fill: #6b8f5c;
+      --tree: #c4e38a;
+      --palm: #e8c35a;
+      --crab: #e07a5f;
+      --rock: #b8b3a8;
+      --shrub: #7dba6a;
+      --grass: #9dce7a;
+      --river: #6eb4d4;
+      --spawn: #f4f1de;
+      --warn: #f2cc8f;
+      --card: rgba(18, 26, 43, 0.92);
+      --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    }
+    [data-theme="light"] {
+      --bg: #eef3ea;
+      --panel: #ffffff;
+      --ink: #1b2433;
+      --muted: #4d5b70;
+      --dim: #6b7789;
+      --line: #c9d2c4;
+      --water: #b9d4e8;
+      --water-stroke: #5b8fb5;
+      --beach: #d4b48a;
+      --beach-fill: rgba(212, 180, 138, 0.7);
+      --inland: #6a9a62;
+      --inland-fill: rgba(106, 154, 98, 0.78);
+      --plateau: #8fb57a;
+      --plateau-fill: #a3c489;
+      --tree: #3f6b28;
+      --palm: #b8860b;
+      --crab: #c45c3e;
+      --rock: #6f6a62;
+      --shrub: #3d7a3a;
+      --grass: #4e8f3e;
+      --river: #2e7ca8;
+      --spawn: #1b2433;
+      --warn: #8a5a12;
+      --card: rgba(255, 255, 255, 0.94);
+      --shadow: 0 10px 28px rgba(27, 36, 51, 0.12);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.5 "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 20px 24px 8px;
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.35rem; margin: 0 0 6px; letter-spacing: 0.02em; }
+    .caption { color: var(--muted); max-width: 62ch; margin: 0; }
+    .caption strong { color: var(--ink); font-weight: 650; }
+    button.theme {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+      gap: 20px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 8px 24px 32px;
+    }
+    .map-card, .side-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .map-card { padding: 8px 8px 4px; }
+    svg { width: 100%; height: auto; display: block; }
+    .side-card { padding: 16px 18px 18px; }
+    h2 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--dim); margin: 18px 0 8px; }
+    .side-card h2:first-child { margin-top: 0; }
+    .legend { display: grid; gap: 7px; }
+    .row { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; font-size: 13px; }
+    .swatch { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid currentColor; margin-top: 2px; }
+    ol.steps { margin: 0; padding-left: 1.2em; }
+    ol.steps li { margin: 0 0 8px; font-size: 13.5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th, td { text-align: left; padding: 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--dim); font-weight: 600; width: 42%; }
+    .note { font-size: 12.5px; color: var(--muted); }
+    footer {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px 28px;
+      color: var(--dim);
+      font-size: 12px;
+    }
+    code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 0.92em; }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>教程岛示意地图 · 现行生成器</h1>
+      <p class="caption">
+        北向上、俯视、岛心局部坐标。这不是幻想岛：圆环与数量来自
+        <code>WorldLayout.GenerateTutorialIsland</code> /
+        <code>IslandVegetation</code> /
+        <code>PlaceRidgeVegetation</code>。
+        <strong>同 WorldSeed 位置确定；点「新手教程」传送到此岛。</strong>
+        「开始游戏」不生成、不落到这里。
+      </p>
+    </div>
+    <button class="theme" type="button" id="themeBtn">浅色</button>
+  </header>
+
+  <main>
+    <section class="map-card" aria-label="教程岛俯视示意">
+      <svg viewBox="0 0 860 720" role="img" aria-labelledby="mapTitle mapDesc">
+        <title id="mapTitle">SeaAnomaly 教程岛北向上示意（WorldSeed 12345）</title>
+        <desc id="mapDesc">
+          岛半径约 38 米，中央 24 米建造平台，外围海滩环、椰子环、脊线木树环，一只螃蟹在出生沙滩外侧。
+        </desc>
+        <defs>
+          <pattern id="crabHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+            <path d="M0 0 L0 8" stroke="var(--crab)" stroke-width="1.4" opacity="0.55"/>
+          </pattern>
+          <pattern id="rockHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(-25)">
+            <path d="M0 0 L7 7" stroke="var(--rock)" stroke-width="1.2" opacity="0.7"/>
+          </pattern>
+          <pattern id="treeHatch" width="10" height="10" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="1.4" fill="var(--tree)" opacity="0.7"/>
+          </pattern>
+        </defs>
+
+        <!-- Island local: +X east, +Z south → SVG Y = −Z so north is up. 8 px/m. -->
+        <g transform="translate(360 360)">
+          <circle r="336" fill="var(--water)"/>
+          <circle r="304.7" fill="var(--beach-fill)"/>
+          <circle r="219.4" fill="var(--inland-fill)"/>
+          <circle r="192" fill="var(--plateau-fill)"/>
+
+          <!-- Honest rule bands (donuts). Not individual RNG dots. -->
+          <path fill="var(--grass)" fill-rule="evenodd" opacity="0.22"
+                d="M0,-219.4 A219.4,219.4 0 1,1 0,219.4 A219.4,219.4 0 1,1 0,-219.4 Z M0,-80 A80,80 0 1,0 0,80 A80,80 0 1,0 0,-80 Z"/>
+          <path fill="var(--tree)" fill-rule="evenodd" opacity="0.38"
+                d="M0,-182.8 A182.8,182.8 0 1,1 0,182.8 A182.8,182.8 0 1,1 0,-182.8 Z M0,-128 A128,128 0 1,0 0,128 A128,128 0 1,0 0,-128 Z"/>
+          <path fill="var(--palm)" fill-rule="evenodd" opacity="0.40"
+                d="M0,-228.5 A228.5,228.5 0 1,1 0,228.5 A228.5,228.5 0 1,1 0,-228.5 Z M0,-188.9 A188.9,188.9 0 1,0 0,188.9 A188.9,188.9 0 1,0 0,-188.9 Z"/>
+          <path fill="url(#crabHatch)" fill-rule="evenodd" opacity="0.85"
+                d="M0,-289.4 A289.4,289.4 0 1,1 0,289.4 A289.4,289.4 0 1,1 0,-289.4 Z M0,-213.3 A213.3,213.3 0 1,0 0,213.3 A213.3,213.3 0 1,0 0,-213.3 Z"/>
+          <path fill="url(#rockHatch)" fill-rule="evenodd" opacity="0.8"
+                d="M0,-228.5 A228.5,228.5 0 1,1 0,228.5 A228.5,228.5 0 1,1 0,-228.5 Z M0,-208 A208,208 0 1,0 0,208 A208,208 0 1,0 0,-208 Z"/>
+
+          <circle r="85.3" fill="none" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 5" opacity="0.35"/>
+          <circle r="128" fill="none" stroke="var(--tree)" stroke-width="1.4" stroke-dasharray="3 4" opacity="0.75"/>
+          <circle r="192" fill="none" stroke="var(--ink)" stroke-width="1.8" opacity="0.55"/>
+          <circle r="213.3" fill="none" stroke="var(--crab)" stroke-width="1.6" stroke-dasharray="5 4" opacity="0.85"/>
+          <circle r="228.5" fill="none" stroke="var(--beach)" stroke-width="1.3" opacity="0.85"/>
+          <circle r="304.7" fill="none" stroke="var(--water-stroke)" stroke-width="2.2"/>
+
+          <path id="riverPath" fill="none" stroke="var(--river)" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
+
+          <circle r="7" fill="var(--spawn)" stroke="var(--ink)" stroke-width="1.5"/>
+          <circle r="14" fill="none" stroke="var(--spawn)" stroke-width="1.4" opacity="0.7"/>
+
+          <g fill="var(--ink)">
+            <path d="M0 -318 L-7 -300 L0 -305 L7 -300 Z"/>
+            <text x="0" y="-328" text-anchor="middle" font-size="16" font-weight="700">N</text>
+            <text x="0" y="-344" text-anchor="middle" font-size="10" fill="var(--muted)">−Z</text>
+          </g>
+          <text x="318" y="5" font-size="11" fill="var(--muted)">+X 东</text>
+          <text x="5" y="318" font-size="11" fill="var(--muted)">+Z 南</text>
+          <g transform="translate(-300 248)" fill="var(--muted)" font-size="11">
+            <line x1="0" y1="0" x2="80" y2="0" stroke="var(--ink)" stroke-width="2"/>
+            <line x1="0" y1="-4" x2="0" y2="4" stroke="var(--ink)"/>
+            <line x1="80" y1="-4" x2="80" y2="4" stroke="var(--ink)"/>
+            <text x="40" y="16" text-anchor="middle">10 m</text>
+          </g>
+        </g>
+
+        <!-- callouts -->
+        <g font-size="13" fill="var(--ink)">
+          <text x="560" y="118" font-weight="700">海滩环 · Poly Haven 沙</text>
+          <text x="560" y="136" fill="var(--muted)" font-size="11">0.72R–R，h01&lt;0.62 着沙色</text>
+          <text x="575" y="188" font-weight="700" fill="var(--palm)">椰子 ×2 · 缓坡海滩</text>
+          <text x="575" y="206" fill="var(--muted)" font-size="11">0.62R–0.75R，h01 0.55–0.64，坡&lt;0.7</text>
+          <text x="590" y="258" font-weight="700" fill="var(--crab)">螃蟹 ×1 · 岸带</text>
+          <text x="590" y="276" fill="var(--muted)" font-size="11">0.70R–0.95R，不在出生沙地</text>
+          <text x="548" y="330" font-weight="700" fill="var(--tree)">木树 ×5 · 脊线</text>
+          <text x="548" y="348" fill="var(--muted)" font-size="11">16 m–0.60R（止于蟹滩内侧）</text>
+          <text x="548" y="364" fill="var(--muted)" font-size="11">松在高脊 h01&gt;0.68 · 橡在低脊</text>
+          <text x="200" y="268" font-weight="700">24 m 建造平台</text>
+          <text x="200" y="286" fill="var(--muted)" font-size="11">传送 / 重生 / 40×40 建造格</text>
+          <text x="96" y="400" font-weight="700" fill="var(--river)">河流（平台外才剖切）</text>
+          <text x="96" y="418" fill="var(--muted)" font-size="11">seed 确定走向；平台内不挖槽</text>
+          <text x="430" y="470" fill="var(--rock)" font-weight="700">岩石 ×4</text>
+          <text x="430" y="488" fill="var(--muted)" font-size="11">≥26 m 高地陡坡，避开平台</text>
+        </g>
+
+        <!-- radial scale -->
+        <g transform="translate(48 620)">
+          <text x="0" y="-18" font-size="12" fill="var(--dim)" font-weight="700">半径剖面（WorldSeed 12345，R = 38.08 m）</text>
+          <rect x="0" y="0" width="192" height="14" fill="var(--plateau-fill)"/>
+          <rect x="192" y="0" width="36.7" height="14" fill="var(--inland-fill)"/>
+          <rect x="228.5" y="0" width="76.2" height="14" fill="var(--beach-fill)"/>
+          <line x1="80" y1="-2" x2="80" y2="16" stroke="var(--grass)" stroke-width="2"/>
+          <line x1="128" y1="-2" x2="128" y2="16" stroke="var(--tree)" stroke-width="2"/>
+          <line x1="213.3" y1="-2" x2="213.3" y2="16" stroke="var(--crab)" stroke-width="2"/>
+          <line x1="304.7" y1="-2" x2="304.7" y2="16" stroke="var(--water-stroke)" stroke-width="2"/>
+          <text x="0" y="30" font-size="10" fill="var(--muted)">0 心</text>
+          <text x="80" y="30" font-size="10" fill="var(--muted)">10 草</text>
+          <text x="128" y="30" font-size="10" fill="var(--muted)">16 树</text>
+          <text x="184" y="30" font-size="10" fill="var(--muted)">24 台</text>
+          <text x="205" y="30" font-size="10" fill="var(--crab)">0.70R 蟹</text>
+          <text x="292" y="30" font-size="10" fill="var(--muted)">R</text>
+        </g>
+
+        <!-- world locator -->
+        <g transform="translate(700 520)">
+          <text x="0" y="-8" font-size="11" fill="var(--dim)" font-weight="700">世界定位</text>
+          <circle cx="40" cy="70" r="52" fill="var(--water)" opacity="0.5"/>
+          <circle cx="40" cy="70" r="8" fill="none" stroke="var(--muted)"/>
+          <circle cx="40" cy="70" r="18" fill="none" stroke="var(--line)"/>
+          <circle cx="40" cy="70" r="28" fill="none" stroke="var(--line)"/>
+          <circle cx="52" cy="15" r="5" fill="var(--palm)"/>
+          <line x1="40" y1="70" x2="52" y2="15" stroke="var(--warn)" stroke-width="1.4"/>
+          <text x="58" y="14" font-size="10" fill="var(--ink)">教程岛</text>
+          <text x="48" y="78" font-size="9" fill="var(--muted)">Main</text>
+          <text x="-8" y="132" font-size="10" fill="var(--muted)">距原点 559 m（540–600）</text>
+          <text x="-8" y="146" font-size="10" fill="var(--muted)">北偏东 · 风暴环以外</text>
+        </g>
+      </svg>
+    </section>
+
+    <aside class="side-card">
+      <h2>图例</h2>
+      <div class="legend">
+        <div class="row"><span class="swatch" style="background:var(--plateau-fill);color:var(--ink)"></span><span>建造平台 24 m（Main/教程才有）。玩家传送到圆心，Y = 2 m。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--inland-fill);color:var(--inland)"></span><span>内陆草坡。山脊增益从 0.28R 起。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--beach-fill);color:var(--beach)"></span><span>海滩环。径向衰减 0.75R→R；Kenney 植被 + Poly Haven sand_01（CC0）。</span></div>
+        <div class="row"><span class="swatch" style="background:transparent;color:var(--tree);box-shadow:inset 0 0 0 6px var(--tree)"></span><span>可伐木树 ×5 · 松在高脊、橡在低脊。间距 ≥5 m。止于 0.60R，不进 0.70R 蟹滩。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--palm);color:var(--palm)"></span><span>椰子树 ×2 · 海滩缓坡，间距 ≥5.5 m。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--grass);color:var(--grass)"></span><span>草丛最多 16（≥10 m，≤0.72R）。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--shrub);color:var(--shrub)"></span><span>灌木最多 6（≥16 m，≤0.68R，平台外缘/低脊）。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--rock);color:var(--rock)"></span><span>岩石最多 4 · 高地陡坡，半径 ≥26 m，不上 24 m 平台。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--crab);color:var(--crab)"></span><span>海滩蟹 ×1。无狼/野猪。栖息 0.70R–0.95R。</span></div>
+        <div class="row"><span class="swatch" style="background:var(--river);color:var(--river)"></span><span>种子河流。平台内不剖切。</span></div>
+      </div>
+      <p class="note">草/灌/岩/树/椰子的精确 XZ 是高度图脊线贪心选取（同 seed 可复现），本图只画规则环带，不编造点位。浆果不长在岛上：开局背包 3 浆果 + 3 浆果种子（<code>Game.tscn</code>）。</p>
+
+      <h2>对应教程 1–6</h2>
+      <ol class="steps">
+        <li><strong>移动</strong> — 平台圆心传送点；走出 &gt;2 m。</li>
+        <li><strong>采集</strong> — 脊上 5 棵木树（各 3 木，共 15 ≥ 篝火 5 + 床 6）或海滩 2 棵椰子。</li>
+        <li><strong>饮用</strong> — 吃椰子，或用开局浆果（F）。岛上无浆果灌木。</li>
+        <li><strong>篝火</strong> — 24 m 平台上的 40×40 建造格。</li>
+        <li><strong>床</strong> — 同一平台。教程不暂停昼夜。</li>
+        <li><strong>战斗</strong> — 岸上那一只蟹；不在出生沙地，避免一传送就挨打。</li>
+      </ol>
+
+      <h2>WorldSeed 12345（默认）</h2>
+      <table>
+        <tr><th>圆心世界坐标</th><td>X = 116.6 m，Z = −546.9 m</td></tr>
+        <tr><th>距原点 / 半径</th><td>559.2 m / 38.08 m（常量范围 540–600 / 36–42）</td></tr>
+        <tr><th>岛种子</th><td>1624630753（独立流 <code>TutorialStreamMix</code>）</td></tr>
+        <tr><th>高程振幅 / 噪声</th><td>12 m / 0.04（特征约 25 m）</td></tr>
+        <tr><th>河向（局部 XZ）</th><td>约 145°，摆幅 3.0 m，半宽 2.5 m</td></tr>
+        <tr><th>网格</th><td>129²，cell ≈ 0.595 m</td></tr>
+      </table>
+    </aside>
+  </main>
+
+  <footer>
+    源：<code>WorldLayout.cs</code>、<code>IslandBuilder.cs</code>、<code>IslandVegetation.cs</code>、<code>IslandHeightmap.cs</code>、<code>EnemyHabitat.cs</code>、<code>TutorialUI.cs</code>、<code>VegetationModels.cs</code>、<code>TutorialIslandTest.cs</code>。
+    许可：Kenney 植被 CC0；Poly Haven sand_01 CC0。未改 PlayerMotion / AI / 岛屿生成。
+  </footer>
+
+  <script>
+    (function () {
+      var key = "seaanomaly-tutorial-island-map-theme";
+      var root = document.documentElement;
+      var btn = document.getElementById("themeBtn");
+      function apply(theme) {
+        root.setAttribute("data-theme", theme);
+        btn.textContent = theme === "dark" ? "浅色" : "深色";
+        try { localStorage.setItem(key, theme); } catch (e) {}
+      }
+      var start = "dark";
+      try { start = localStorage.getItem(key) || start; } catch (e) {}
+      if (start !== "light" && start !== "dark") start = "dark";
+      apply(start);
+      btn.addEventListener("click", function () {
+        apply(root.getAttribute("data-theme") === "dark" ? "light" : "dark");
+      });
+
+      // River polyline for seed 12345 (RiverPath.FromSpec — no heightmap RNG).
+      var river = {
+        cos: -0.8204019, sin: 0.5717873, phase: 4.192989,
+        meander: 3.0465672, start: 8.37806, end: 35.035526, plateau: 24
+      };
+      var scale = 8;
+      var d = [];
+      for (var i = 0; i <= 32; i++) {
+        var a = i / 32;
+        var t = river.start + a * (river.end - river.start);
+        var off = Math.sin(a * 3 * Math.PI + river.phase) * river.meander;
+        var px = river.cos * t - river.sin * off;
+        var pz = river.sin * t + river.cos * off;
+        var r = Math.hypot(px, pz);
+        if (r < river.plateau) continue;
+        var cmd = d.length === 0 ? "M" : "L";
+        d.push(cmd + (px * scale).toFixed(1) + " " + (-pz * scale).toFixed(1));
+      }
+      document.getElementById("riverPath").setAttribute("d", d.join(" "));
+    })();
+  </script>
+</body>
+</html>

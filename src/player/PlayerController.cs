@@ -90,6 +90,7 @@ public partial class PlayerController : CharacterBody3D
     };
 
     SetPhysicsProcess(true);
+    Hurtbox.EnsureOn(this, Hurtbox.Kind.Player);
   }
 
   public override void _PhysicsProcess(double delta)

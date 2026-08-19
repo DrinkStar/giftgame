@@ -156,6 +156,8 @@ sprint={
 3d_physics/layer_6="BuildingWalls"
 3d_physics/layer_7="FreeObjects"
 3d_physics/layer_8="Enemies"
+3d_physics/layer_9="EnemyHurtbox"
+3d_physics/layer_10="PlayerHurtbox"
 
 [rendering]
 

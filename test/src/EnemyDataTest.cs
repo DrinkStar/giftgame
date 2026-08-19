@@ -41,7 +41,6 @@ public class EnemyDataTest : TestClass
       data.ShouldNotBeNull($"{id}.tres must load");
 
       data!.Id.ShouldBe(id);
-      data.DisplayName.ShouldNotBeNullOrEmpty();
       data.MaxHealth.ShouldBe(health);
       data.Damage.ShouldBe(damage);
       data.MoveSpeed.ShouldBe(speed);
@@ -83,5 +82,39 @@ public class EnemyDataTest : TestClass
     var drop = GD.Load<ItemData>("res://assets/items/raw_meat.tres");
     drop.ShouldNotBeNull();
     drop!.Id.ShouldBe("raw_meat");
+  }
+
+  [Test]
+  public void WolfBoarAndCrabResourcesHaveSpeciesHabitats()
+  {
+    var wolf = GD.Load<EnemyData>("res://assets/enemies/wolf.tres")!;
+    wolf.Habitat.ShouldBe(EnemyHabitatKind.ForestRiver);
+    wolf.WanderRadius.ShouldBe(18f);
+
+    var boar = GD.Load<EnemyData>("res://assets/enemies/boar.tres")!;
+    boar.Habitat.ShouldBe(EnemyHabitatKind.ForestRiver);
+    boar.WanderRadius.ShouldBe(16f);
+
+    var crab = GD.Load<EnemyData>("res://assets/enemies/crab.tres")!;
+    crab.Habitat.ShouldBe(EnemyHabitatKind.BeachShore);
+    crab.WanderRadius.ShouldBe(14f);
+
+    GD.Load<EnemyData>("res://assets/enemies/shark.tres")!
+      .Habitat.ShouldBe(EnemyHabitatKind.None);
+  }
+
+  [Test]
+  public void EnemyTresFilesLoadWithoutDisplayNameField()
+  {
+    foreach (var (id, _, _, _, _, _, _, _, _, _, _) in ExpectedEnemies)
+    {
+      var path = $"res://assets/enemies/{id}.tres";
+      var data = GD.Load<EnemyData>(path);
+      data.ShouldNotBeNull($"{id}.tres must load");
+      data!.Id.ShouldBe(id);
+
+      var text = FileAccess.GetFileAsString(path);
+      text.Contains("DisplayName").ShouldBeFalse(path);
+    }
   }
 }

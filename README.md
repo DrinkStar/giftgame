@@ -67,8 +67,9 @@ godot --headless --path . --export-release "Windows Desktop" build/SeaAnomaly.ex
 
 ## 操作
 
-- WASD 移动 · 空格跳 · Shift 冲刺 · E 交互 · F 使用物品（吃喝/装备/鱼竿/背包） · 左键近战 · 右键投掷/射击 · Q 切换武器槽 · B 建造 · R 旋转 · G 木筏锚 · M 木筏桨/帆切换 · C 合成 · Tab 背包 · Esc 暂停（暂停时显示署名）
-- 新手教程强制 6 步；第二/三章按章节任务触发进阶教程
+- 进场主菜单：新手教程（强制第一章 6 步）· 开始游戏（跳过第一章）· 读取存档（列表点选）· 退出游戏
+- WASD 移动 · 空格跳 · Shift 冲刺 · E 交互 · F 使用物品（吃喝/装备/鱼竿/背包） · 左键近战 · 右键投掷/射击 · Q 切换武器槽 · B 建造 · R 旋转 · G 木筏锚 · M 木筏桨/帆切换 · C 合成 · Tab 背包 · Esc 暂停（暂停时显示署名）· F5 快存 · F9 读取最新快存
+- 第二/三章按章节任务触发进阶教程（种田+遗迹 / 木筏出航）
 
 ## 项目结构
 
@@ -84,4 +85,4 @@ game/
 
 ## 许可与署名
 
-第三方资产台账与来源见 `game/assets/sources.md`。游戏内暂停界面已含署名：Eric Matyas（BGM）、game-icons.net（CC BY）。SurvivalIsland 架构移植为自用非商业（详见 `游戏设计-定稿.md` §13）。
+第三方资产台账与来源见 `game/assets/sources.md`。游戏内暂停界面已含署名：Eric Matyas（BGM）、game-icons.net（CC BY）、Poly Haven sand_01（CC0）。SurvivalIsland 架构移植为自用非商业（详见 `游戏设计-定稿.md` §13）。教程岛植被为 Kenney Nature Kit / Pirate Kit（CC0）沿山脊摆放。

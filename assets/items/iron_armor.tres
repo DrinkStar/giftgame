@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "iron_armor"
-DisplayName = "Iron Armor"
-Description = "Heavy forged plates — the best protection"
+DisplayName = "铁甲"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

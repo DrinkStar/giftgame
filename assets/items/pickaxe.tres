@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "pickaxe"
-DisplayName = "Pickaxe"
-Description = "A sturdy pick for mining stone and ore"
+DisplayName = "镐"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

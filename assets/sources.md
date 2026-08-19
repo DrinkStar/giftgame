@@ -62,6 +62,7 @@ All assets downloaded 2026-08-14 (plan todo 4 / W4). Every asset below has **sta
 |---|---|---|---|---|
 | crab (海蟹) | `models/enemies/crab/Crab.glb` | Quaternius "Crab Enemy" (Easy Enemy pack) via Poly Pizza https://poly.pizza/m/Gs3yfsV5lB; file https://static.poly.pizza/b9bbf6bd-2b21-4013-bc38-0f5e524ac12c.glb | CC0 1.0 | ok (fills the iter8p-plan gap: crab model was missing from the iter6.1 batch) |
 | player (女主) | `models/player/Woman.glb` | Quaternius "Animated Woman" via Poly Pizza https://poly.pizza/m/nIItLV9nxS; file https://static.poly.pizza/46d6db5a-3c9f-4238-8cdf-8eb7194498dc.glb | CC0 1.0 | ok |
+| survival protagonist (程序人形) | `models/player/survival_protagonist/SurvivalProtagonist.glb` | procedural / write_gltf.py (`humanoid --quality high --style forest`) | original | ok (sample only; not wired over Woman.glb) |
 | campfire (篝火) | `models/buildings/campfire/Campfire.glb` | Kenney "Campfire" via Poly Pizza https://poly.pizza/m/i6UFAevfcu; file https://static.poly.pizza/bf4a5ed8-486b-4863-a654-fade1a9eaa39.glb | CC0 1.0 | ok |
 | bed (床) | `models/buildings/bed/Bed.glb` | Quaternius "Bed Single" via Poly Pizza https://poly.pizza/m/ianC28eMOF; file https://static.poly.pizza/eac4fc76-244d-44ff-8848-ef0348379bf6.glb | CC0 1.0 | ok |
 
@@ -144,3 +145,57 @@ Downloaded 2026-08-15 from the `FreeAssetsByKenneyNLandQuaternius` mirror (Quate
 | iron_bow | `models/weapons/iron_bow.fbx` | .../FBX/Bow_Evil.fbx | CC0 | ok |
 
 Display wiring: `src/player/WeaponVisual.cs` shows the selected weapon/tool's model at a hand offset on the player (hotbar selection + inventory refresh); the pre-existing bow/spear models are now also displayed.
+
+## Island vegetation (tutorial ridges)
+
+All assets downloaded 2026-08-18. CC0 only. Extracted a small low-poly subset (not the full 330-piece kit) so the tutorial island stays cheap to draw.
+
+| Asset | File | Source URL | License | Status |
+|---|---|---|---|---|
+| inland oak | `models/vegetation/tree_oak.glb` | Kenney Nature Kit 2.1 (GLTF) — https://kenney.nl/assets/nature-kit ; zip https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip ; also mirrored at https://opengameart.org/content/nature-kit | CC0 1.0 (Kenney, www.kenney.nl) | ok |
+| ridge pine | `models/vegetation/tree_pineTallA.glb` | same Nature Kit | CC0 1.0 | ok |
+| grass clump | `models/vegetation/grass.glb` + `grass_large.glb` | same Nature Kit | CC0 1.0 | ok |
+| shrub | `models/vegetation/plant_bush.glb` + `plant_bushSmall.glb` | same Nature Kit | CC0 1.0 | ok |
+| rock | `models/vegetation/rock_smallA.glb` + `rock_tallA.glb` | same Nature Kit | CC0 1.0 | ok |
+| coconut palm | `models/vegetation/palm-detailed-straight.glb` + `Textures/colormap.png` | Kenney Pirate Kit 2.1 (GLB) — https://kenney.nl/assets/pirate-kit ; zip via OpenGameArt https://opengameart.org/sites/default/files/kenney_pirate-kit_2.1.zip | CC0 1.0 (Kenney) | ok |
+| beach sand albedo | `textures/sand_01_diff_1k.jpg` | Poly Haven `sand_01` 1K JPEG — https://polyhaven.com/a/sand_01 ; file https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/sand_01/sand_01_diff_1k.jpg | CC0 1.0 (Poly Haven) | ok (texture on existing beach vertex splat; no extra sand mesh) |
+
+Kit licenses copied beside the GLBs: `models/vegetation/License-Kenney-NatureKit.txt`, `License-Kenney-PirateKit.txt`. Credit "Kenney.nl" is optional under CC0; Poly Haven sand is CC0 (no attribution required). SurvivalIsland pack was **not** used.
+
+Placement: `IslandVegetation.Analyze` reads slope + ridge direction from the heightmap Laplacian; trees/grass yaw along the contour. Applied on Spawn / Main / Tutorial; Storm (boss arena) is unchanged. Tutorial completeness (5 wood trees, 2 palms, plateau, one beach crab) is preserved.
+
+## Exploration islands (post-story free sail)
+
+All assets downloaded 2026-08-18. CC0 only. Wired by `IslandBuilder` on optional Wild / Atoll / Wreck islets (not on the quest chain; no `radio` / `ruin` / `shark_king` story points).
+
+| Asset | File | Source URL | License | Used on |
+|---|---|---|---|---|
+| dark oak | `models/vegetation/tree_oak_dark.glb` | Kenney Nature Kit 2.1 (GLTF) — https://kenney.nl/assets/nature-kit ; zip https://kenney.nl/media/pages/assets/nature-kit/37ac38a37b-1677698939/kenney_nature-kit.zip | CC0 1.0 (Kenney) | Wild extra trees |
+| default pine | `models/vegetation/tree_pineDefaultA.glb` | same Nature Kit | CC0 1.0 | Wild extra trees |
+| large rock | `models/vegetation/rock_largeA.glb` | same Nature Kit | CC0 1.0 | Wild rocks |
+| driftwood log | `models/vegetation/log.glb` + `log_large.glb` | same Nature Kit | CC0 1.0 | Wreck shoreline |
+| old stump | `models/vegetation/stump_old.glb` | same Nature Kit | CC0 1.0 | Wreck inland |
+| bent palm | `models/vegetation/palm-detailed-bend.glb` | Kenney Pirate Kit 2.1 (GLB) — https://kenney.nl/assets/pirate-kit ; zip via OpenGameArt https://opengameart.org/sites/default/files/kenney_pirate-kit_2.1.zip | CC0 1.0 (Kenney) | Atoll palms |
+| sand rocks | `models/vegetation/rocks-sand-a.glb` | same Pirate Kit | CC0 1.0 | Atoll beach rocks |
+| barrel | `models/props/barrel.glb` + `Textures/colormap.png` | same Pirate Kit | CC0 1.0 | Wreck salvage |
+| crate | `models/props/crate.glb` | same Pirate Kit | CC0 1.0 | Wreck salvage |
+| chest | `models/props/chest.glb` | same Pirate Kit | CC0 1.0 | Wreck landmark |
+| stylized wooden chest | `models/props/wooden_chest/WoodenChest.glb` | procedural / write_gltf.py (low-poly wood + iron bands) | original | tutorial island landmark (`scenes/world/wooden_chest.tscn` + `WoodenChest.cs`); Kenney `chest.glb` remains the wreck landmark |
+| ship wreck | `models/props/ship-wreck.glb` | same Pirate Kit | CC0 1.0 | Wreck visible landmark |
+| coast sand albedo | `textures/coast_sand_01_diff_1k.jpg` | Poly Haven `coast_sand_01` 1K JPEG — https://polyhaven.com/a/coast_sand_01 ; file https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/coast_sand_01/coast_sand_01_diff_1k.jpg | CC0 1.0 (Poly Haven) | Atoll terrain |
+| rocks ground albedo | `textures/rocks_ground_01_diff_1k.jpg` | Poly Haven `rocks_ground_01` 1K JPEG — https://polyhaven.com/a/rocks_ground_01 ; file https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rocks_ground_01/rocks_ground_01_diff_1k.jpg | CC0 1.0 (Poly Haven) | Wreck terrain |
+
+Kit licenses: Nature Kit already at `models/vegetation/License-Kenney-NatureKit.txt`; Pirate Kit copied to `models/props/License-Kenney-PirateKit.txt`. SurvivalIsland pack was **not** used.
+
+## Easter-egg islands (volcano / polar)
+
+All assets downloaded 2026-08-18. CC0 only. Wired by `IslandBuilder` on optional Volcano / Polar islets (not on the quest chain; no `radio` / `ruin` / `shark_king`). Presence is 1 or 2 islands per world seed (`rng.Next(3)` after the exploration ring).
+
+| Asset | File | Source URL | License | Used on |
+|---|---|---|---|---|
+| volcanic ground albedo | `textures/rock_ground_02_diff_1k.jpg` | Poly Haven `rock_ground_02` 1K JPEG — https://polyhaven.com/a/rock_ground_02 ; file https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_ground_02/rock_ground_02_diff_1k.jpg | CC0 1.0 (Poly Haven) | Volcano terrain |
+| snow albedo | `textures/snow_02_diff_1k.jpg` | Poly Haven `snow_02` 1K JPEG — https://polyhaven.com/a/snow_02 ; file https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/snow_02/snow_02_diff_1k.jpg | CC0 1.0 (Poly Haven) | Polar terrain |
+
+Lava pools are emissive CSG cylinders (no extra mesh pack). Polar pines reuse Kenney Nature Kit `tree_pineTallA` / `tree_pineDefaultA` already on disk. Volcano scorched trees reuse `tree_oak_dark.glb`. SurvivalIsland pack was **not** used.
+
+

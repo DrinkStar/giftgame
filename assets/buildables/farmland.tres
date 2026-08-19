@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "farmland"
-Description = "A plot of farmland where crops can be planted"
+Description = "农田，可种植作物"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

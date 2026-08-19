@@ -28,9 +28,9 @@ using Godot;
 ///   in Game.tscn so the starting inventory's <see cref="GameEvents.ItemAdded"/>
 ///   (raised by the Player subtree _Ready) cannot count toward quest_wood.
 ///
-///   T8.5.9: quest_radio ("联系引导者", completed by the story interactable
-///   at the radio tower) opens chapter 1; the shark_king story point is a
-///   chapter-3 beat that only narrates (quest_boss stays BossDefeated-driven).
+  ///   T8.5.9: quest_radio ("联系引导者", completed by the radio story point)
+  ///   opens chapter 1; the shark_king story point is a chapter-3 beat
+  ///   (GuideService narrates; quest_boss stays BossDefeated-driven).
 ///
 ///   PlayerDied is intentionally NOT subscribed (frozen contract: death is
 ///   never a quest failure — T7.0 respawn).
@@ -82,6 +82,36 @@ public partial class QuestService : Node
   private int _questIdx;
   private Quest? _currentQuest;
   private InventorySystem? _inventory;
+
+  /// <summary>Active quest id, or null when the chapter chain is finished / not started.</summary>
+  public string? CurrentQuestId => _currentQuest?.Name;
+
+  /// <summary>Chinese objective of the active quest, or null when none.</summary>
+  public string? CurrentQuestObjective => _currentQuest?.Objective;
+
+  /// <summary>
+  ///   Fail-closed snapshot for the HUD tracker. Returns false when no quest
+  ///   is current (missing service, finished chain).
+  /// </summary>
+  public bool TryGetCurrentTracker(
+    out string questId, out string objective, out int done, out int need
+  )
+  {
+    if (_currentQuest == null)
+    {
+      questId = "";
+      objective = "";
+      done = 0;
+      need = 0;
+      return false;
+    }
+
+    questId = _currentQuest.Name;
+    objective = _currentQuest.Objective;
+    _progress.TryGetValue(questId, out done);
+    need = Targets.TryGetValue(questId, out var target) ? target : 1;
+    return true;
+  }
 
   public override void _Ready()
   {
@@ -284,9 +314,9 @@ public partial class QuestService : Node
 
   /// <summary>
   ///   T8.5.9: story points drive quests — "ruin" advances quest_ruin
-  ///   (Iter7), "radio" completes the new chapter-1 opener quest_radio, and
-  ///   "shark_king" is a chapter-3 boss beat that only narrates (quest_boss
-  ///   stays BossDefeated-driven so the existing chapter flow is untouched).
+  ///   (Iter7), "radio" completes the new chapter-1 opener quest_radio.
+  ///   "shark_king" is narrated by GuideService; quest_boss stays
+  ///   BossDefeated-driven so the existing chapter flow is untouched.
   /// </summary>
   private void OnStoryPointReached(string storyPointId)
   {
@@ -297,9 +327,6 @@ public partial class QuestService : Node
         break;
       case "radio":
         HandleProgress("quest_radio", Targets["quest_radio"]);
-        break;
-      case "shark_king":
-        GameEvents.RaiseGuideLine("海域之主现身");
         break;
     }
   }

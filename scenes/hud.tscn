@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://src/ui/HUD.cs" id="1_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/control_hint_ui.tscn" id="2_hints"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -13,52 +14,161 @@ offset_left = 20.0
 offset_top = 20.0
 offset_right = -20.0
 offset_bottom = -20.0
+mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
+mouse_filter = 2
 
 [node name="TopBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
+mouse_filter = 2
 
-[node name="StatsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopBar"]
+[node name="StatusPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 0
+mouse_filter = 2
 
-[node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatsContainer"]
-custom_minimum_size = Vector2(200, 20)
+[node name="StatsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel"]
 layout_mode = 2
-max_value = 100.0
-value = 100.0
-show_percentage = false
+theme_override_constants/separation = 6
+mouse_filter = 2
 
-[node name="HungerBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatsContainer"]
-custom_minimum_size = Vector2(200, 20)
+[node name="TimeLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer"]
 layout_mode = 2
-max_value = 100.0
-value = 100.0
-show_percentage = false
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 16
+text = "时间 第1天 08:00 上午"
 
-[node name="ThirstBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatsContainer"]
-custom_minimum_size = Vector2(200, 20)
+[node name="HealthRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer"]
 layout_mode = 2
-max_value = 100.0
-value = 100.0
-show_percentage = false
+theme_override_constants/separation = 8
+mouse_filter = 2
 
-[node name="StaminaBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatsContainer"]
-custom_minimum_size = Vector2(200, 20)
+[node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/HealthRow"]
+custom_minimum_size = Vector2(48, 22)
 layout_mode = 2
-max_value = 100.0
-value = 100.0
-show_percentage = false
+theme_override_colors/font_color = Color(1, 0.42, 0.45, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+text = "生命"
 
-[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/TopBar"]
+[node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/HealthRow"]
+custom_minimum_size = Vector2(220, 22)
 layout_mode = 2
 size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false
 
-[node name="TimeLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar"]
+[node name="ValueLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/HealthRow"]
+custom_minimum_size = Vector2(64, 22)
 layout_mode = 2
-text = "12:00"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "100/100"
+horizontal_alignment = 2
+
+[node name="HungerRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/HungerRow"]
+custom_minimum_size = Vector2(48, 22)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.28, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+text = "饥饿"
+
+[node name="HungerBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/HungerRow"]
+custom_minimum_size = Vector2(220, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="ValueLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/HungerRow"]
+custom_minimum_size = Vector2(64, 22)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "100/100"
+horizontal_alignment = 2
+
+[node name="ThirstRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/ThirstRow"]
+custom_minimum_size = Vector2(48, 22)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.9, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+text = "口渴"
+
+[node name="ThirstBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/ThirstRow"]
+custom_minimum_size = Vector2(220, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="ValueLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/ThirstRow"]
+custom_minimum_size = Vector2(64, 22)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "100/100"
+horizontal_alignment = 2
+
+[node name="StaminaRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/StaminaRow"]
+custom_minimum_size = Vector2(48, 22)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.95, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 14
+text = "体力"
+
+[node name="StaminaBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/StaminaRow"]
+custom_minimum_size = Vector2(220, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="ValueLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/StatusPanel/StatsContainer/StaminaRow"]
+custom_minimum_size = Vector2(64, 22)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 13
+text = "100/100"
+horizontal_alignment = 2
 
 [node name="CenterContainer" type="CenterContainer" parent="."]
 anchors_preset = 8
@@ -66,10 +176,12 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
+mouse_filter = 2
 
 [node name="Crosshair" type="Control" parent="CenterContainer"]
 custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
+mouse_filter = 2
 
 [node name="CrosshairNormal" type="ColorRect" parent="CenterContainer/Crosshair"]
 layout_mode = 1
@@ -82,6 +194,7 @@ offset_left = -1.0
 offset_top = -1.0
 offset_right = 1.0
 offset_bottom = 1.0
+mouse_filter = 2
 color = Color(1, 1, 1, 0.8)
 
 [node name="CrosshairInteract" type="ColorRect" parent="CenterContainer/Crosshair"]
@@ -96,6 +209,7 @@ offset_left = -3.0
 offset_top = -3.0
 offset_right = 3.0
 offset_bottom = 3.0
+mouse_filter = 2
 color = Color(0.2, 1, 0.2, 0.8)
 
 [node name="BottomContainer" type="VBoxContainer" parent="."]
@@ -108,6 +222,7 @@ offset_left = -200.0
 offset_top = -150.0
 offset_right = 200.0
 offset_bottom = -20.0
+mouse_filter = 2
 
 [node name="InteractionPrompt" type="Label" parent="BottomContainer"]
 visible = false
@@ -131,8 +246,28 @@ horizontal_alignment = 1
 [node name="Spacer" type="Control" parent="BottomContainer"]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
+mouse_filter = 2
 
 [node name="HotbarContainer" type="HBoxContainer" parent="BottomContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
 theme_override_constants/separation = 8
+mouse_filter = 2
+
+[node name="QuestObjectiveLabel" type="Label" parent="."]
+visible = false
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 392.0
+offset_top = 16.0
+offset_right = -240.0
+offset_bottom = 56.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.72, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 0.9)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ControlHintUI" parent="." instance=ExtResource("2_hints")]

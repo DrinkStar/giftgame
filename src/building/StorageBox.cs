@@ -52,7 +52,7 @@ public partial class StorageBox : Node3D, IInteractable
   ///   StorageUI (not yet wired into the scene) nothing happens — the prompt
   ///   stays and the box keeps working once the UI exists.
   /// </summary>
-  public void Interact(PlayerController player)
+  public virtual void Interact(PlayerController player)
   {
     var ui = FindStorageUi();
     if (ui == null)
@@ -62,6 +62,14 @@ public partial class StorageBox : Node3D, IInteractable
     }
 
     ui.Open(this, player.GetNodeOrNull<InventorySystem>("InventorySystem"));
+  }
+
+  /// <summary>
+  ///   Called by <see cref="StorageUI.Close"/> after the panel hides. Default
+  ///   is a no-op so player-built boxes without a lid stay quiet.
+  /// </summary>
+  public virtual void OnStorageClosed()
+  {
   }
 
   /// <summary>Snapshots the box contents, keyed by world position (T8.5.8).</summary>
@@ -114,7 +122,7 @@ public partial class StorageBox : Node3D, IInteractable
   ///   scene (breadth-first walk), so Game.tscn wiring may place it at the
   ///   top level like CraftUI without this node knowing the exact path.
   /// </summary>
-  private StorageUI? FindStorageUi()
+  protected StorageUI? FindStorageUi()
   {
     var tree = GetTree();
     if (tree?.CurrentScene == null)

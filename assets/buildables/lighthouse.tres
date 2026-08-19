@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "lighthouse"
-Description = "Placeholder lighthouse beacon (Iter8.5). Full cost: 20 wood + 10 stone; single-cost system charges the 20 wood"
+Description = "灯塔信标。完整造价：木头20、石头10；当前只收取木头20"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

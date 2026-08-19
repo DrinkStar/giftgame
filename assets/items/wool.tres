@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "wool"
-DisplayName = "Wool"
-Description = "Soft fleece sheared from a tamed sheep"
+DisplayName = "羊毛"
 Type = 0
 MaxStack = 64
 HungerRestore = 0.0

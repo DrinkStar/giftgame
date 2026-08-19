@@ -1,0 +1,1708 @@
+{
+  "name": "WoodenChest",
+  "parts": [
+    {
+      "type": "box",
+      "name": "footFL",
+      "size": [
+        0.1,
+        0.055,
+        0.1
+      ],
+      "translation": [
+        0.35,
+        0,
+        0.18
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.75,
+      "roughness": 0.42,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "footFR",
+      "size": [
+        0.1,
+        0.055,
+        0.1
+      ],
+      "translation": [
+        -0.35,
+        0,
+        0.18
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.75,
+      "roughness": 0.42,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "footBL",
+      "size": [
+        0.1,
+        0.055,
+        0.1
+      ],
+      "translation": [
+        0.35,
+        0,
+        -0.18
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.75,
+      "roughness": 0.42,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "footBR",
+      "size": [
+        0.1,
+        0.055,
+        0.1
+      ],
+      "translation": [
+        -0.35,
+        0,
+        -0.18
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.75,
+      "roughness": 0.42,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "body",
+      "size": [
+        0.88,
+        0.4,
+        0.52
+      ],
+      "translation": [
+        0,
+        0.055,
+        0
+      ],
+      "color": [
+        0.58,
+        0.34,
+        0.16,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.88,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "plankF0",
+      "size": [
+        0.208,
+        0.36,
+        0.016
+      ],
+      "translation": [
+        -0.33,
+        0.075,
+        0.266
+      ],
+      "color": [
+        0.62,
+        0.37,
+        0.17,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "plankF1",
+      "size": [
+        0.208,
+        0.36,
+        0.016
+      ],
+      "translation": [
+        -0.11,
+        0.075,
+        0.266
+      ],
+      "color": [
+        0.4,
+        0.22,
+        0.11,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "plankF2",
+      "size": [
+        0.208,
+        0.36,
+        0.016
+      ],
+      "translation": [
+        0.11,
+        0.075,
+        0.266
+      ],
+      "color": [
+        0.62,
+        0.37,
+        0.17,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "plankF3",
+      "size": [
+        0.208,
+        0.36,
+        0.016
+      ],
+      "translation": [
+        0.33,
+        0.075,
+        0.266
+      ],
+      "color": [
+        0.4,
+        0.22,
+        0.11,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "rim",
+      "size": [
+        0.84,
+        0.03,
+        0.48
+      ],
+      "translation": [
+        0,
+        0.425,
+        0
+      ],
+      "color": [
+        0.4,
+        0.22,
+        0.11,
+        1.0
+      ],
+      "metallic": 0.0,
+      "roughness": 0.9,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandLoF",
+      "size": [
+        0.924,
+        0.058,
+        0.022
+      ],
+      "translation": [
+        0,
+        0.12,
+        0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandLoB",
+      "size": [
+        0.924,
+        0.058,
+        0.022
+      ],
+      "translation": [
+        0,
+        0.12,
+        -0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandLoL",
+      "size": [
+        0.022,
+        0.058,
+        0.564
+      ],
+      "translation": [
+        0.451,
+        0.12,
+        0
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandLoR",
+      "size": [
+        0.022,
+        0.058,
+        0.564
+      ],
+      "translation": [
+        -0.451,
+        0.12,
+        0
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandHiF",
+      "size": [
+        0.924,
+        0.058,
+        0.022
+      ],
+      "translation": [
+        0,
+        0.377,
+        0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandHiB",
+      "size": [
+        0.924,
+        0.058,
+        0.022
+      ],
+      "translation": [
+        0,
+        0.377,
+        -0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandHiL",
+      "size": [
+        0.022,
+        0.058,
+        0.564
+      ],
+      "translation": [
+        0.451,
+        0.377,
+        0
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "bandHiR",
+      "size": [
+        0.022,
+        0.058,
+        0.564
+      ],
+      "translation": [
+        -0.451,
+        0.377,
+        0
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "strapFL",
+      "size": [
+        0.07,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        -0.28,
+        0.055,
+        0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "strapBL",
+      "size": [
+        0.07,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        -0.28,
+        0.055,
+        -0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "strapFR",
+      "size": [
+        0.07,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        0.28,
+        0.055,
+        0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "strapBR",
+      "size": [
+        0.07,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        0.28,
+        0.055,
+        -0.271
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerXFL",
+      "size": [
+        0.045,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        0.43,
+        0.055,
+        0.271
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerZFL",
+      "size": [
+        0.022,
+        0.4,
+        0.045
+      ],
+      "translation": [
+        0.451,
+        0.055,
+        0.25
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerXFR",
+      "size": [
+        0.045,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        -0.43,
+        0.055,
+        0.271
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerZFR",
+      "size": [
+        0.022,
+        0.4,
+        0.045
+      ],
+      "translation": [
+        -0.451,
+        0.055,
+        0.25
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerXBL",
+      "size": [
+        0.045,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        0.43,
+        0.055,
+        -0.271
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerZBL",
+      "size": [
+        0.022,
+        0.4,
+        0.045
+      ],
+      "translation": [
+        0.451,
+        0.055,
+        -0.25
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerXBR",
+      "size": [
+        0.045,
+        0.4,
+        0.022
+      ],
+      "translation": [
+        -0.43,
+        0.055,
+        -0.271
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "cornerZBR",
+      "size": [
+        0.022,
+        0.4,
+        0.045
+      ],
+      "translation": [
+        -0.451,
+        0.055,
+        -0.25
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.8,
+      "roughness": 0.4,
+      "origin": "bottom"
+    },
+    {
+      "type": "mesh",
+      "name": "lid",
+      "positions": [
+        [
+          -0.4312,
+          0.0,
+          0.26
+        ],
+        [
+          -0.4312,
+          0.13,
+          0.22517
+        ],
+        [
+          -0.4312,
+          0.22517,
+          0.13
+        ],
+        [
+          -0.4312,
+          0.26,
+          0.0
+        ],
+        [
+          -0.4312,
+          0.22517,
+          -0.13
+        ],
+        [
+          -0.4312,
+          0.13,
+          -0.22517
+        ],
+        [
+          -0.4312,
+          0.0,
+          -0.26
+        ],
+        [
+          0.4312,
+          0.0,
+          0.26
+        ],
+        [
+          0.4312,
+          0.13,
+          0.22517
+        ],
+        [
+          0.4312,
+          0.22517,
+          0.13
+        ],
+        [
+          0.4312,
+          0.26,
+          0.0
+        ],
+        [
+          0.4312,
+          0.22517,
+          -0.13
+        ],
+        [
+          0.4312,
+          0.13,
+          -0.22517
+        ],
+        [
+          0.4312,
+          0.0,
+          -0.26
+        ],
+        [
+          0.43119999999999997,
+          0.0,
+          0.0
+        ],
+        [
+          -0.43119999999999997,
+          0.0,
+          0.0
+        ]
+      ],
+      "indices": [
+        0,
+        7,
+        8,
+        0,
+        8,
+        1,
+        1,
+        8,
+        9,
+        1,
+        9,
+        2,
+        2,
+        9,
+        10,
+        2,
+        10,
+        3,
+        3,
+        10,
+        11,
+        3,
+        11,
+        4,
+        4,
+        11,
+        12,
+        4,
+        12,
+        5,
+        5,
+        12,
+        13,
+        5,
+        13,
+        6,
+        14,
+        8,
+        7,
+        14,
+        9,
+        8,
+        14,
+        10,
+        9,
+        14,
+        11,
+        10,
+        14,
+        12,
+        11,
+        14,
+        13,
+        12,
+        15,
+        0,
+        1,
+        15,
+        1,
+        2,
+        15,
+        2,
+        3,
+        15,
+        3,
+        4,
+        15,
+        4,
+        5,
+        15,
+        5,
+        6
+      ],
+      "color": [
+        0.68,
+        0.42,
+        0.2,
+        1.0
+      ],
+      "roughness": 0.82,
+      "metallic": 0.0,
+      "translation": [
+        0.0,
+        0.0,
+        0.26
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidEndL",
+      "size": [
+        0.03,
+        0.04,
+        0.54
+      ],
+      "translation": [
+        0.43,
+        0.0,
+        0.26
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom",
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidEndR",
+      "size": [
+        0.03,
+        0.04,
+        0.54
+      ],
+      "translation": [
+        -0.43,
+        0.0,
+        0.26
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom",
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapL0",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        -0.28,
+        0.07092,
+        0.52466
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        75.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapL1",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        -0.28,
+        0.19375,
+        0.45375
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        45.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapL2",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        -0.28,
+        0.26466,
+        0.33092
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        15.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapL3",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        -0.28,
+        0.26466,
+        0.18908
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -15.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapL4",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        -0.28,
+        0.19375,
+        0.06625
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -45.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapL5",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        -0.28,
+        0.07092,
+        -0.00466
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -75.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapM0",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.0,
+        0.07092,
+        0.52466
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        75.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapM1",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.0,
+        0.19375,
+        0.45375
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        45.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapM2",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.0,
+        0.26466,
+        0.33092
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        15.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapM3",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.0,
+        0.26466,
+        0.18908
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -15.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapM4",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.0,
+        0.19375,
+        0.06625
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -45.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapM5",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.0,
+        0.07092,
+        -0.00466
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -75.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapR0",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.28,
+        0.07092,
+        0.52466
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        75.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapR1",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.28,
+        0.19375,
+        0.45375
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        45.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapR2",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.28,
+        0.26466,
+        0.33092
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        15.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapR3",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.28,
+        0.26466,
+        0.18908
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -15.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapR4",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.28,
+        0.19375,
+        0.06625
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -45.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lidStrapR5",
+      "size": [
+        0.07,
+        0.02,
+        0.15074
+      ],
+      "translation": [
+        0.28,
+        0.07092,
+        -0.00466
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "center",
+      "rotation_euler_deg": [
+        -75.0,
+        0,
+        0
+      ],
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "latchPlate",
+      "size": [
+        0.14,
+        0.11,
+        0.02
+      ],
+      "translation": [
+        0,
+        0.325,
+        0.288
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.85,
+      "roughness": 0.35,
+      "origin": "bottom"
+    },
+    {
+      "type": "box",
+      "name": "hasp",
+      "size": [
+        0.07,
+        0.045,
+        0.09
+      ],
+      "translation": [
+        0.0,
+        -0.01,
+        0.54
+      ],
+      "color": [
+        0.42,
+        0.44,
+        0.48,
+        1.0
+      ],
+      "metallic": 0.82,
+      "roughness": 0.36,
+      "origin": "bottom",
+      "parent": "LidPivot"
+    },
+    {
+      "type": "box",
+      "name": "lockBody",
+      "size": [
+        0.055,
+        0.06,
+        0.04
+      ],
+      "translation": [
+        0,
+        0.335,
+        0.315
+      ],
+      "color": [
+        0.8,
+        0.58,
+        0.22,
+        1.0
+      ],
+      "metallic": 0.7,
+      "roughness": 0.35,
+      "origin": "bottom"
+    },
+    {
+      "type": "cylinder",
+      "name": "lockShackle",
+      "radius": 0.016,
+      "height": 0.05,
+      "segments": 8,
+      "origin": "bottom",
+      "translation": [
+        0,
+        0.385,
+        0.315
+      ],
+      "color": [
+        0.8,
+        0.58,
+        0.22,
+        1.0
+      ],
+      "metallic": 0.75,
+      "roughness": 0.32
+    },
+    {
+      "type": "sphere",
+      "name": "rivet55",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        -0.4,
+        0.149,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    },
+    {
+      "type": "sphere",
+      "name": "rivet56",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        -0.28,
+        0.149,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    },
+    {
+      "type": "sphere",
+      "name": "rivet57",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        0.28,
+        0.149,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    },
+    {
+      "type": "sphere",
+      "name": "rivet58",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        0.4,
+        0.149,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    },
+    {
+      "type": "sphere",
+      "name": "rivet59",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        -0.4,
+        0.406,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    },
+    {
+      "type": "sphere",
+      "name": "rivet60",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        -0.28,
+        0.406,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    },
+    {
+      "type": "sphere",
+      "name": "rivet61",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        0.28,
+        0.406,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    },
+    {
+      "type": "sphere",
+      "name": "rivet62",
+      "radius": 0.016,
+      "slices": 8,
+      "stacks": 6,
+      "origin": "center",
+      "translation": [
+        0.4,
+        0.406,
+        0.294
+      ],
+      "color": [
+        0.22,
+        0.23,
+        0.26,
+        1.0
+      ],
+      "metallic": 0.9,
+      "roughness": 0.3
+    }
+  ],
+  "empties": [
+    {
+      "name": "LidPivot",
+      "translation": [
+        0.0,
+        0.455,
+        -0.26
+      ]
+    }
+  ]
+}

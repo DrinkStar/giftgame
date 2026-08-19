@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1_script")
 Id = "mushroom"
-DisplayName = "Mushroom"
+DisplayName = "蘑菇"
 SeedItemId = "mushroom_seed"
 ProduceItemId = "mushroom"
 GrowthSeconds = 120.0

@@ -5,7 +5,6 @@
 [resource]
 script = ExtResource("1_script")
 Id = "wolf"
-DisplayName = "Wolf"
 MaxHealth = 40.0
 Damage = 10.0
 MoveSpeed = 4.5
@@ -16,3 +15,5 @@ Boss = false
 Scale = 1.0
 DropItemId = ""
 DropAmount = 0
+Habitat = 1
+WanderRadius = 18.0

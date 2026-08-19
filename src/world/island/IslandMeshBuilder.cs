@@ -11,9 +11,9 @@ using Godot;
 ///
 ///   Mesh layout: vertex (col, row) sits at local
 ///   <c>(col·cell - Radius, (h01 - 0.5)·HeightScale, row·cell - Radius)</c>
-///   with <c>cell = Radius·2 / (resolution - 1)</c>; UVs are world
-///   coordinates (spec.Center + local XZ) so a texture would tile in world
-///   space. Triangles are wound counter-clockwise seen from above, so
+///   with <c>cell = Radius·2 / (resolution - 1)</c>; UVs are local XZ
+///   meters so a tiled sand albedo follows the beach splat per-island.
+///   Triangles are wound counter-clockwise seen from above, so
 ///   <c>GenerateNormals</c> produces upward normals.
 ///
 ///   Collision: <see cref="Godot.HeightMapShape3D"/>. Verified against
@@ -64,17 +64,54 @@ public static class IslandMeshBuilder
         var surface = new SurfaceTool();
         surface.Begin(Mesh.PrimitiveType.Triangles);
 
-        // T9.5: per-vertex biome gradient — the shore band (h01 ≈ sea level
-        // 0.5) is sand, inland blends to the tier's land color, and the
-        // underwater slope is darkened wet sand. Zero textures needed; the
+        // Biome splat from height + radial distance: beach ring, grassland,
+        // inland river (carved low), mountain rock. Zero textures; the
         // material uses VertexColorUseAsAlbedo.
-        var sand = new Color(0.87f, 0.80f, 0.62f);
-        var inland = spec.Tier switch
+        var sand = spec.Tier switch
         {
-            IslandTier.Spawn => new Color(0.32f, 0.55f, 0.30f), // low-risk grass
-            IslandTier.Main => new Color(0.24f, 0.46f, 0.27f),  // forest green
-            IslandTier.Storm => new Color(0.28f, 0.30f, 0.34f), // barren rock
+            IslandTier.Ruin => new Color(0.72f, 0.68f, 0.58f),
+            IslandTier.Storm => new Color(0.70f, 0.72f, 0.68f),
+            IslandTier.Atoll => new Color(0.93f, 0.86f, 0.68f),
+            IslandTier.Wreck => new Color(0.74f, 0.70f, 0.62f),
+            IslandTier.Volcano => new Color(0.42f, 0.16f, 0.08f),
+            IslandTier.Polar => new Color(0.86f, 0.90f, 0.94f),
+            _ => new Color(0.87f, 0.80f, 0.62f)
+        };
+        var grass = spec.Tier switch
+        {
+            IslandTier.Spawn => new Color(0.32f, 0.55f, 0.30f),
+            IslandTier.Main => new Color(0.28f, 0.50f, 0.30f),
+            IslandTier.Harvest => new Color(0.50f, 0.54f, 0.28f),
+            IslandTier.Ruin => new Color(0.40f, 0.39f, 0.34f),
+            IslandTier.Mutant => new Color(0.16f, 0.30f, 0.20f),
+            IslandTier.Storm => new Color(0.30f, 0.34f, 0.28f),
+            IslandTier.Tutorial => new Color(0.38f, 0.58f, 0.34f),
+            IslandTier.Wild => new Color(0.22f, 0.42f, 0.24f),
+            IslandTier.Atoll => new Color(0.42f, 0.52f, 0.32f),
+            IslandTier.Wreck => new Color(0.36f, 0.38f, 0.30f),
+            IslandTier.Volcano => new Color(0.18f, 0.15f, 0.13f),
+            IslandTier.Polar => new Color(0.78f, 0.84f, 0.88f),
             _ => new Color(0.5f, 0.5f, 0.5f)
+        };
+        var mountain = spec.Tier switch
+        {
+            IslandTier.Storm => new Color(0.28f, 0.30f, 0.34f),
+            IslandTier.Ruin => new Color(0.50f, 0.48f, 0.44f),
+            IslandTier.Mutant => new Color(0.22f, 0.26f, 0.24f),
+            IslandTier.Harvest => new Color(0.52f, 0.48f, 0.36f),
+            IslandTier.Wild => new Color(0.40f, 0.42f, 0.34f),
+            IslandTier.Atoll => new Color(0.62f, 0.56f, 0.42f),
+            IslandTier.Wreck => new Color(0.44f, 0.42f, 0.40f),
+            IslandTier.Volcano => new Color(0.12f, 0.10f, 0.10f),
+            IslandTier.Polar => new Color(0.92f, 0.94f, 0.97f),
+            _ => new Color(0.48f, 0.46f, 0.42f)
+        };
+        var river = spec.Tier switch
+        {
+            IslandTier.Harvest => new Color(0.36f, 0.50f, 0.38f),
+            IslandTier.Volcano => new Color(0.70f, 0.18f, 0.04f),
+            IslandTier.Polar => new Color(0.50f, 0.68f, 0.82f),
+            _ => new Color(0.28f, 0.42f, 0.48f)
         };
 
         for (int row = 0; row < resolution; row++)
@@ -84,16 +121,17 @@ public static class IslandMeshBuilder
             {
                 float localX = (col - half) * cell;
                 float h01 = heightmap[row * resolution + col];
+                float radial = spec.Radius > 0f
+                    ? new Vector2(localX, localZ).Length() / spec.Radius
+                    : 0f;
 
-                var color = sand.Lerp(inland, Mathf.Clamp((h01 - 0.55f) / 0.18f, 0f, 1f));
-                if (h01 < 0.5f)
-                {
-                    color = color.Darkened(0.45f); // underwater slope
-                }
+                var color = BiomeColor(h01, radial, sand, grass, mountain, river);
 
                 surface.SetColor(color);
                 surface.SetNormal(Vector3.Up);
-                surface.SetUV(new Vector2(spec.Center.X + localX, spec.Center.Y + localZ));
+                // Local-meter UVs so a tiled sand albedo tracks the beach
+                // splat instead of stretching across world-space island centers.
+                surface.SetUV(new Vector2(localX, localZ));
                 surface.AddVertex(new Vector3(localX, Mathf.Lerp(minHeight, maxHeight, h01), localZ));
             }
         }
@@ -124,6 +162,29 @@ public static class IslandMeshBuilder
             ?? throw new InvalidOperationException("SurfaceTool.Commit did not produce an ArrayMesh.");
 
         return (mesh, minHeight, maxHeight);
+    }
+
+    /// <summary>
+    ///   Vertex albedo for one height-sample: underwater / beach / river /
+    ///   grass / mountain. Shared by the mesh so biome bands stay aligned
+    ///   with the height-carved river and radial falloff.
+    /// </summary>
+    internal static Color BiomeColor(
+        float h01, float radial, Color sand, Color grass, Color mountain, Color river)
+    {
+        if (h01 < 0.5f)
+            return sand.Darkened(0.45f);
+
+        if (radial > 0.72f && h01 < 0.62f)
+            return sand;
+
+        if (h01 < 0.545f && radial < 0.72f)
+            return river;
+
+        if (h01 > 0.78f)
+            return mountain.Lerp(grass, 0.12f);
+
+        return sand.Lerp(grass, Mathf.Clamp((h01 - 0.55f) / 0.18f, 0f, 1f));
     }
 
     /// <summary>

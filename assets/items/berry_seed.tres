@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "berry_seed"
-DisplayName = "Berry Seed"
-Description = "Plant on farmland to grow berry bushes"
+DisplayName = "浆果种子"
 Type = 0
 MaxStack = 64
 HungerRestore = 0.0

@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "leather_armor"
-DisplayName = "Leather Armor"
-Description = "Tough cured hides that absorb more damage"
+DisplayName = "皮甲"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

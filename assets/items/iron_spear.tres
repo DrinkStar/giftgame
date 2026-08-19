@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "iron_spear"
-DisplayName = "Iron Spear"
-Description = "A forged spear. Deadly in melee or thrown"
+DisplayName = "铁矛"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

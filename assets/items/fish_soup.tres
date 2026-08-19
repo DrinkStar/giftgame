@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "fish_soup"
-DisplayName = "Fish Soup"
-Description = "Hearty fish soup that restores hunger and quenches thirst"
+DisplayName = "鱼汤"
 Type = 2
 MaxStack = 20
 HungerRestore = 45.0

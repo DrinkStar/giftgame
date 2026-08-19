@@ -5,7 +5,6 @@
 [resource]
 script = ExtResource("1_script")
 Id = "shark"
-DisplayName = "Shark"
 MaxHealth = 80.0
 Damage = 15.0
 MoveSpeed = 5.0

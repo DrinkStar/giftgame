@@ -1,10 +1,10 @@
 {
-  "task_id": "godot-dev-20260817-001",
-  "created_at": "2026-08-17T17:46:00+08:00",
-  "updated_at": "2026-08-17T20:20:00+08:00",
-  "stage": "phase4",
-  "current_iteration": "perf-p0-p1",
-  "git_branch": "dev/perf-p0-p1-20260817",
+  "task_id": "godot-dev-20260818-001",
+  "created_at": "2026-08-18T09:10:00+08:00",
+  "updated_at": "2026-08-18T19:22:00+08:00",
+  "stage": "phase5-export",
+  "current_iteration": "irregular-islands",
+  "git_branch": "(no .git in workspace)",
   "last_stable_commit": "ae89640",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
@@ -20,7 +20,9 @@
     "崩溃日志禁止写入存档正文 / 背包明细 / 物品数量表",
     "--run-tests 期间不向 user://logs/ 写会话文件（测试用注入目录）",
     "本迭代不新增 NuGet、不把日志事件打进 GameEvents",
-    "原生引擎段错误不保证被 C# 捕获；内置 godot.log 必须在编辑器与 PC 导出中开启"
+    "原生引擎段错误不保证被 C# 捕获；内置 godot.log 必须在编辑器与 PC 导出中开启",
+    "主菜单是 Game.tscn 持场层，不另做世界场景；持场暂停场景树且不发 GamePaused",
+    "产品场景不自动读档、不自动开第一章；开始游戏/读档跳过第一章并 RaiseTutorialCompleted"
   ],
   "project": {
     "name": "SeaAnomaly",
@@ -31,9 +33,9 @@
     "test_framework": "GoDotTest",
     "main_scene": "res://src/Main.tscn",
     "renderer": "forward_plus",
-    "scene_count": 35,
-    "script_count": 112,
-    "test_script_count": 52,
+    "scene_count": 36,
+    "script_count": 113,
+    "test_script_count": 53,
     "codegraph": "indexed at repo root .codegraph/",
     "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
   },
@@ -61,15 +63,27 @@
         {"id": "T-P.5", "file": "src/ui/HUD.cs + src/core/WeatherService.cs", "action": "modify", "status": "done", "verify": "clock/fog dirty writes"},
         {"id": "T-P.6", "file": "src/building/BuildableInstance.cs + MouseObject.cs", "action": "modify", "status": "done", "verify": "null Object3DModel no NRE"}
       ]
+    },
+    {
+      "name": "main-menu",
+      "status": "verified",
+      "tasks": [
+        {"id": "T-M.1", "file": "src/ui/TutorialUI.cs", "action": "modify", "status": "done", "verify": "AutoStart=false; CompleteChapter1WithoutPlaying"},
+        {"id": "T-M.2", "file": "src/core/save/SaveService.cs", "action": "modify", "status": "done", "verify": "TryLoadPath; AutoLoadOnReady false"},
+        {"id": "T-M.3", "file": "src/ui/MainMenuUI.cs + scenes/ui/main_menu.tscn + src/Game.tscn", "action": "create", "status": "done", "verify": "four buttons + save list"},
+        {"id": "T-M.4", "file": "test/src/MainMenuUITest.cs", "action": "create", "status": "done", "verify": "GoDotTest menu cases"},
+        {"id": "T-M.5", "file": "README.md + .godot-dev/state.json + .cursor/rules", "action": "modify", "status": "done", "verify": "dotnet build; smoke; tests"}
+      ]
     }
   ],
   "pending_todos": [],
-  "checkpoint": "phase4_perf_p0_p1_verified",
+  "checkpoint": "phase4_irregular_islands_verified",
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "godot --headless --path . --quit-after 5 exit 0; WaterMesh headless warning is WARN not crash dump",
-    "tests": "GoDotTest Passed 325 Failed 0",
-    "test_invocation": "godot --headless --path . --run-tests --quit-on-finish"
+    "tests": "GoDotTest Passed 408 Failed 0",
+    "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
+    "export": "re-export 2026-08-18 19:22 after denser vegetation: same command exit 0; pck still 68646116 (65.47 MB, unchanged — vegetation is C# quotas not new assets); SeaAnomaly.dll 573440; file_logging.pc=true"
   },
-  "notes": "Uncommitted CraftUI/StorageUI lock-release tweaks are unrelated and were not committed. Perf P0/P1 from .godot-dev/perf-review.md; PlayerMotion/AI switch/WaterMesh headless semantics unchanged."
+  "notes": "Re-exported Windows Desktop over build/SeaAnomaly.exe after denser vegetation. pck size unchanged vs first pack (procedural counts in IslandBuilder). DLL republished. PlayerDied ≠ GameOver. PlayerMotion/AI switch unchanged. build/ gitignored, not committed."
 }

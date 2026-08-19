@@ -57,7 +57,6 @@ public class CombatIntegrationTest : TestClass, IDisposable
     new()
     {
       Id = "crab",
-      DisplayName = "Test Crab",
       MaxHealth = 30f,
       Damage = 5f,
       MoveSpeed = 2f,
@@ -72,7 +71,6 @@ public class CombatIntegrationTest : TestClass, IDisposable
     new()
     {
       Id = "shark_king",
-      DisplayName = "Test Shark King",
       MaxHealth = 400f,
       Damage = 30f,
       MoveSpeed = 5f,
@@ -92,6 +90,12 @@ public class CombatIntegrationTest : TestClass, IDisposable
     _enemy.CollisionMask.ShouldBe(1u);
     _enemy.GetNodeOrNull<CollisionShape3D>("CollisionShape3D").ShouldNotBeNull();
     _enemy.GetNodeOrNull<MeshInstance3D>("Visual").ShouldNotBeNull();
+
+    var hurtbox = _enemy.GetNodeOrNull<Hurtbox>("Hurtbox");
+    hurtbox.ShouldNotBeNull();
+    hurtbox!.CollisionLayer.ShouldBe(CombatLayers.EnemyHurtboxMask);
+    hurtbox.CollisionMask.ShouldBe(0u);
+    hurtbox.GetNodeOrNull<CollisionShape3D>("CollisionShape3D").ShouldNotBeNull();
   }
 
   [Test]

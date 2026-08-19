@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "fishing_rod"
-DisplayName = "Fishing Rod"
-Description = "Cast it out and wait for a bite"
+DisplayName = "钓竿"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

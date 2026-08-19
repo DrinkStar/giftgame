@@ -18,6 +18,8 @@ public partial class CoconutPalm : StaticBody3D, IInteractable
   [Export] public string InteractionVerb = "Gather coconut";
   [Export] public string ItemId = "coconut";
   [Export] public int MaxHarvests = 2;
+  [Export] public string VisualModelPath = VegetationModels.Palm;
+  [Export] public float VisualScale = VegetationModels.PalmScale;
 
   private int _remaining;
 
@@ -73,6 +75,9 @@ public partial class CoconutPalm : StaticBody3D, IInteractable
       }
     };
     AddChild(crown);
+
+    if (VegetationModels.TryMount(this, VisualModelPath, VisualScale))
+      VegetationModels.HidePlaceholders(this, "Trunk", "Crown");
   }
 
   public string GetInteractionPrompt() =>

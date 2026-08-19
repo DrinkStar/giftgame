@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "trap"
-Description = "Placeholder animal trap (Iter8.5)"
+Description = "捕兽陷阱"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

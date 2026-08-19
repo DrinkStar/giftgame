@@ -37,6 +37,7 @@ public class FarmingDataTest : TestClass
       crop.ShouldNotBeNull();
       crop!.Id.ShouldBe(id);
       crop.DisplayName.ShouldNotBeNullOrEmpty();
+      ContainsHan(crop.DisplayName).ShouldBeTrue($"{id}: {crop.DisplayName}");
       crop.SeedItemId.ShouldBe(seed);
       crop.ProduceItemId.ShouldBe(produce);
       crop.GrowthSeconds.ShouldBe(growth);
@@ -63,6 +64,7 @@ public class FarmingDataTest : TestClass
       item.ShouldNotBeNull();
       item!.Id.ShouldBe(id);
       item.DisplayName.ShouldNotBeNullOrEmpty();
+      ContainsHan(item.DisplayName).ShouldBeTrue($"{id}: {item.DisplayName}");
     }
   }
 
@@ -118,5 +120,36 @@ public class FarmingDataTest : TestClass
 
     FarmingData.GetBySeedId("wheat_seed")!.Id.ShouldBe("wheat");
     FarmingData.GetBySeedId("stone").ShouldBeNull();
+  }
+
+  [Test]
+  public void HarvestPromptUsesChineseCropDisplayName()
+  {
+    var plot = new FarmPlot();
+    try
+    {
+      plot.ApplySaveState(new FarmSaveData
+      {
+        CropId = "potato",
+        ElapsedSeconds = 60f,
+        Ready = true
+      });
+      plot.GetInteractionPrompt().ShouldBe("[E] 收获 土豆");
+    }
+    finally
+    {
+      plot.Free();
+    }
+  }
+
+  private static bool ContainsHan(string text)
+  {
+    foreach (var c in text)
+    {
+      if (c >= 0x4E00 && c <= 0x9FFF)
+        return true;
+    }
+
+    return false;
   }
 }

@@ -112,7 +112,8 @@ public class FoodUseTest : TestClass, IDisposable
   }
 
   /// <summary>
-  ///   T8p.1 (c): an empty selection changes nothing.
+  ///   T8p.1 (c): an empty selection changes nothing when there is no
+  ///   island / river in the fixture.
   /// </summary>
   [Test]
   public void EmptySelectionDoesNothing()
@@ -128,17 +129,19 @@ public class FoodUseTest : TestClass, IDisposable
 
   /// <summary>
   ///   T8p.1 (c): a non-food/non-drink selection (plain resource) changes
-  ///   nothing and consumes nothing.
+  ///   nothing and consumes nothing when there is no island / river.
   /// </summary>
   [Test]
   public void NonFoodSelectionDoesNothing()
   {
     _inventory.AddItem(LoadItem("wood"), 5);
     _stats.Hunger = 50f;
+    _stats.Thirst = 50f;
 
     PressUseItem();
 
     _stats.Hunger.ShouldBe(50f);
+    _stats.Thirst.ShouldBe(50f);
     _inventory.GetItemCount("wood").ShouldBe(5);
   }
 

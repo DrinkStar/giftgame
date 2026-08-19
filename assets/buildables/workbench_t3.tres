@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "workbench_t3"
-Description = "Placeholder tier-3 workbench (Iter8.5). Full cost: 30 wood + 20 stone + 5 iron ingots; single-cost system charges the 30 wood"
+Description = "三级工作台。完整造价：木头30、石头20、铁锭5；当前只收取木头30"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

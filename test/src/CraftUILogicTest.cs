@@ -139,9 +139,9 @@ public class CraftUILogicTest : TestClass, IDisposable
     RecipeList.GetChildCount().ShouldBe(1);
 
     var button = RecipeList.GetChild<Button>(0);
-    button.Text.ShouldContain("Stone Axe");
-    button.Text.ShouldContain("Woodx2");
-    button.Text.ShouldContain("Stonex1");
+    button.Text.ShouldContain("石斧");
+    button.Text.ShouldContain("木头x2");
+    button.Text.ShouldContain("石头x1");
     button.Disabled.ShouldBeFalse();
   }
 
@@ -292,8 +292,8 @@ public class CraftUILogicTest : TestClass, IDisposable
     HintLabel.Visible.ShouldBeFalse();
 
     var button = RecipeList.GetChild<Button>(0);
-    button.Text.ShouldContain("Cooked Meat");
-    button.Text.ShouldContain("Raw Meatx1");
+    button.Text.ShouldContain("熟肉");
+    button.Text.ShouldContain("生肉x1");
     button.Disabled.ShouldBeFalse();
   }
 

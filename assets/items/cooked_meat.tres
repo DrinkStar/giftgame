@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "cooked_meat"
-DisplayName = "Cooked Meat"
-Description = "Roasted meat that restores a lot of hunger"
+DisplayName = "熟肉"
 Type = 2
 MaxStack = 20
 HungerRestore = 40.0

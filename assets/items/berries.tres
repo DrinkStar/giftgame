@@ -7,8 +7,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("2_icon")
 Id = "berries"
-DisplayName = "Berries"
-Description = "Edible berries that restore a little hunger and thirst"
+DisplayName = "浆果"
 Type = 2
 MaxStack = 20
 HungerRestore = 5.0

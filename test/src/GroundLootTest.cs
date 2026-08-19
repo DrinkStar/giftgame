@@ -168,7 +168,7 @@ public class GroundLootTest : TestClass, IDisposable
     var loot = new GroundLoot { Name = "Loot", ItemId = "wood", Amount = 2 };
     await _fixture.AddToRoot(loot, autoRemoveFromRoot: true);
 
-    loot.GetInteractionPrompt().ShouldContain("Pick up");
+    loot.GetInteractionPrompt().ShouldBe("[E] 拾取 木头");
 
     loot.Interact(_player);
 

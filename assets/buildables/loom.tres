@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "loom"
-Description = "Placeholder weaving station (Iter8.5)"
+Description = "织布机"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

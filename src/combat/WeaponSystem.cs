@@ -1,6 +1,8 @@
 // Original (Iter6) — no upstream port
 namespace SeaAnomaly;
 
+using System;
+using System.Collections.Generic;
 using Godot;
 
 /// <summary>
@@ -82,14 +84,19 @@ public partial class WeaponSystem : Node
 
   #endregion Exports
 
-  private const uint EnemyCollisionMask = 128u;
-
   private Camera3D? _camera;
   private InventorySystem? _inventory;
   private OmniLight3D? _torchLight;
   private bool _buildMode;
   private bool _secondarySlotActive;
   private float _attackElapsed = 1f;
+
+  /// <summary>
+  ///   Test seam: when set, river drinking uses this spec list instead of
+  ///   looking up <c>IslandBuilder</c>. FoodUseTest leaves it null so empty
+  ///   / wood selections still do nothing without a generated world.
+  /// </summary>
+  public IReadOnlyList<IslandSpec>? RiverSpecsOverride { get; set; }
 
   public override void _Ready()
   {
@@ -267,16 +274,24 @@ public partial class WeaponSystem : Node
   ///   - the backpack widens the inventory grid by two columns exactly once
   ///     (guarded by <see cref="InventorySystem.BackpackExpanded"/>) and is
   ///     not consumed.
+  ///
+  ///   River drinking runs last: empty hands or a non-consumable selection
+  ///   may sip river water. Armor / fishing / backpack and Food/Drink
+  ///   (including the raw-food cooking gate) return first so they are never
+  ///   stolen by the river.
   /// </summary>
   private void TryUseItem()
   {
-    var sel = _inventory?.SelectedItem;
-    if (sel == null)
-      return;
-
     var stats = GetParentOrNull<PlayerController>()?.Stats;
     if (stats == null)
       return;
+
+    var sel = _inventory?.SelectedItem;
+    if (sel == null)
+    {
+      TryDrinkRiver(stats);
+      return;
+    }
 
     // T8.5.4: armor equip — a Tool with armor reduction equips on F and stays
     // in the inventory (not consumed). Re-equipping overwrites the reduction.
@@ -317,7 +332,7 @@ public partial class WeaponSystem : Node
       case ItemType.Food:
         // FIX(iter8-plan): T8.4b — cooking gate: raw food cannot be eaten raw.
         // The hint rides the existing GuideLine subtitle so the player sees
-        // why the item was refused (no new UI).
+        // why the item was refused (no new UI). Do not fall through to river.
         if (sel.RequiresCooking)
         {
           GameEvents.RaiseGuideLine($"需要烹饪：{sel.DisplayName}");
@@ -326,13 +341,47 @@ public partial class WeaponSystem : Node
 
         stats.Eat(sel.HungerRestore, sel.HealthRestore);
         _inventory?.RemoveItem(sel.Id, 1);
-        break;
+        return;
 
       case ItemType.Drink:
         stats.Drink(sel.ThirstRestore);
         _inventory?.RemoveItem(sel.Id, 1);
-        break;
+        return;
     }
+
+    TryDrinkRiver(stats);
+  }
+
+  private void TryDrinkRiver(PlayerStats stats)
+  {
+    var player = GetParentOrNull<PlayerController>();
+    if (player == null)
+      return;
+
+    if (RiverDrink.TryDrink(stats, player.GlobalPosition, ResolveRiverSpecs()))
+      GameEvents.RaiseGuideLine("喝了河水");
+  }
+
+  private IReadOnlyList<IslandSpec> ResolveRiverSpecs()
+  {
+    if (RiverSpecsOverride != null)
+      return RiverSpecsOverride;
+
+    if (GetTree()?.Root.FindChild("IslandBuilder", recursive: true, owned: false)
+        is not IslandBuilder builder)
+      return Array.Empty<IslandSpec>();
+
+    if (builder.TutorialSpec == null)
+      return builder.GeneratedSpecs;
+
+    if (builder.GeneratedSpecs.Count == 0)
+      return new[] { builder.TutorialSpec };
+
+    var combined = new IslandSpec[builder.GeneratedSpecs.Count + 1];
+    for (int i = 0; i < builder.GeneratedSpecs.Count; i++)
+      combined[i] = builder.GeneratedSpecs[i];
+    combined[^1] = builder.TutorialSpec;
+    return combined;
   }
 
   /// <summary>LMB: melee swing for every tool, weak for bows (Decision 1).</summary>
@@ -350,8 +399,20 @@ public partial class WeaponSystem : Node
     var damage = ResolveMeleeDamage();
 
     _attackElapsed = 0f;
+    PulseAttackVisual();
     PerformMelee(damage);
   }
+
+  /// <summary>
+  ///   Visual layer only — tells the sibling CharacterAnimator to fire an
+  ///   attack one-shot. Missing animator (tests, unwired scenes) is a no-op.
+  /// </summary>
+  private void PulseAttackVisual() =>
+    GetParent()?.GetNodeOrNull<CharacterAnimator>("CharacterAnimator")
+      ?.NotifyAttack(AttackStyleFromCurrentItem());
+
+  private string AttackStyleFromCurrentItem() =>
+    CharacterAnimator.AttackStyleFromItemId(ResolveEffectiveItem()?.Id);
 
   /// <summary>RMB: spear throw / bow shot depending on the resolved attack.</summary>
   private void TrySecondary()
@@ -372,6 +433,7 @@ public partial class WeaponSystem : Node
         if (CombatLogic.IsReady(_attackElapsed, MeleeCooldown))
         {
           _attackElapsed = 0f;
+          PulseAttackVisual();
           // R1 (Iter8p): through the resolution seam (throw_damage multiplier).
           SpawnProjectile(ResolveThrowDamage(), SpearSpeed, SpearGravity);
         }
@@ -384,6 +446,7 @@ public partial class WeaponSystem : Node
         )
         {
           _attackElapsed = 0f;
+          PulseAttackVisual();
           // R1 (Iter8p): through the resolution seam (ranged_damage multiplier).
           SpawnProjectile(ResolveRangedDamage(), ArrowSpeed, ArrowGravity);
         }
@@ -392,8 +455,14 @@ public partial class WeaponSystem : Node
   }
 
   /// <summary>
-  ///   Decision 3: a ray from the camera forward by MeleeRange, masked to the
-  ///   Enemies layer (8) only — the player body (layer 2) can never be hit.
+  ///   Test seam: fires the melee ray without synthesizing mouse input.
+  /// </summary>
+  public void FireMelee(float damage) => PerformMelee(damage);
+
+  /// <summary>
+  ///   Camera-forward ray, MeleeRange, masked to EnemyHurtbox (layer 9).
+  ///   Areas must be enabled so the Hurtbox Area3D is hittable. The player
+  ///   body is on a different layer and cannot be hit.
   /// </summary>
   private void PerformMelee(float damage)
   {
@@ -403,13 +472,15 @@ public partial class WeaponSystem : Node
     var from = _camera.GlobalPosition;
     var forward = -_camera.GlobalTransform.Basis.Z;
     var query = PhysicsRayQueryParameters3D.Create(
-      from, from + forward * MeleeRange, EnemyCollisionMask
+      from, from + forward * MeleeRange, CombatLayers.MeleeRayMask
     );
+    query.CollideWithAreas = true;
+    query.CollideWithBodies = true;
 
     var hit = _camera.GetWorld3D().DirectSpaceState.IntersectRay(query);
     if (
       hit.TryGetValue("collider", out var collider)
-      && collider.AsGodotObject() is EnemyBase enemy
+      && Hurtbox.ResolveEnemy(collider.AsGodotObject()) is { } enemy
     )
     {
       enemy.TakeDamage(damage);

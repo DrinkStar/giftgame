@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "mushroom"
-DisplayName = "Mushroom"
-Description = "An earthy fungus grown in the shade"
+DisplayName = "蘑菇"
 Type = 2
 MaxStack = 20
 HungerRestore = 12.0

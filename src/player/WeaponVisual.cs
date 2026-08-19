@@ -6,8 +6,9 @@ using Godot;
 
 /// <summary>
 ///   T9.2 — shows the currently selected weapon/tool's model in the player's
-///   hand position (a fixed offset node under the Player, not bone-anchored —
-///   the Woman.glb skeleton is not driven). Refreshes on hotbar selection and
+///   hand position (a fixed offset node under the Player, not bone-anchored).
+///   Locomotion/attack clips live on <see cref="CharacterAnimator"/>; this
+///   node only swaps the held mesh. Refreshes on hotbar selection and
 ///   inventory changes; a non-weapon selection hides the mesh. Unknown item
 ///   ids and unwired parents are silent no-ops (fail-closed).
 /// </summary>

@@ -446,4 +446,33 @@ public class SaveServiceTest : TestClass, IDisposable
     savesAfter.Length.ShouldBe(1);
     File.GetLastWriteTimeUtc(savesAfter[0]).ShouldBe(lastWrite);
   }
+
+  /// <summary>TryLoadPath restores a named file and fail-closes on junk.</summary>
+  [Test]
+  public void TryLoadPathLoadsNamedFileAndRejectsBadInputs()
+  {
+    _stats.Health = 42f;
+    var path = _service.SaveGame();
+
+    _stats.Health = 100f;
+    _service.TryLoadPath(path).ShouldBeTrue();
+    _stats.Health.ShouldBe(42f);
+
+    _service.TryLoadPath(null).ShouldBeFalse();
+    _service.TryLoadPath("").ShouldBeFalse();
+    _service.TryLoadPath("user://saves_test/nope.json").ShouldBeFalse();
+
+    var corruptPath = Path.Combine(_tempDirectory, "savegame_path_corrupt.json");
+    File.WriteAllText(corruptPath, "{ not valid json !!!");
+    _service.TryLoadPath(corruptPath).ShouldBeFalse();
+  }
+
+  /// <summary>ListSaveFiles is empty with no saves, then newest-first.</summary>
+  [Test]
+  public void ListSaveFilesReturnsNewestFirst()
+  {
+    _service.ListSaveFiles().Count.ShouldBe(0);
+    _service.SaveGame();
+    _service.ListSaveFiles().Count.ShouldBe(1);
+  }
 }

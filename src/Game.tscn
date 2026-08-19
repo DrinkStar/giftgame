@@ -29,10 +29,6 @@
 [ext_resource type="Resource" path="res://assets/recipes/flour.tres" id="27_recipe_flour"]
 [ext_resource type="Resource" path="res://assets/recipes/bread.tres" id="28_recipe_bread"]
 [ext_resource type="Script" path="res://src/combat/WeaponSystem.cs" id="29_weapon"]
-[ext_resource type="PackedScene" path="res://scenes/combat/enemy.tscn" id="30_enemy"]
-[ext_resource type="Resource" path="res://assets/enemies/boar.tres" id="31_boar"]
-[ext_resource type="Resource" path="res://assets/enemies/wolf.tres" id="32_wolf"]
-[ext_resource type="Resource" path="res://assets/enemies/crab.tres" id="33_crab"]
 [ext_resource type="Resource" path="res://assets/items/wooden_spear.tres" id="34_item_spear"]
 [ext_resource type="Resource" path="res://assets/items/wooden_bow.tres" id="35_item_bow"]
 [ext_resource type="Resource" path="res://assets/items/arrow.tres" id="36_item_arrow"]
@@ -53,13 +49,9 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/place_building.ogg" id="60_sfx_place_building"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/melee_hit.ogg" id="61_sfx_melee_hit"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/death_respawn.ogg" id="62_sfx_death_respawn"]
-[ext_resource type="PackedScene" path="res://assets/models/enemies/boar/Pig.glb" id="49_model_boar"]
-[ext_resource type="PackedScene" path="res://assets/models/enemies/wolf/Wolf.gltf" id="50_model_wolf"]
-[ext_resource type="PackedScene" path="res://assets/models/enemies/crab/Crab.glb" id="56_model_crab"]
 [ext_resource type="PackedScene" path="res://assets/models/player/Woman.glb" id="57_model_player"]
 [ext_resource type="Script" path="res://src/quest/QuestService.cs" id="51_quest_service"]
 [ext_resource type="Script" path="res://src/quest/GuideService.cs" id="52_guide_service"]
-[ext_resource type="Script" path="res://src/quest/StoryPointTrigger.cs" id="53_story_point"]
 [ext_resource type="Script" path="res://src/world/WoodTree.cs" id="54_woodtree"]
 [ext_resource type="Script" path="res://src/world/CoconutPalm.cs" id="55_coconutpalm"]
 [ext_resource type="Script" path="res://src/core/SfxHook.cs" id="63_sfxhook"]
@@ -93,6 +85,9 @@
 [ext_resource type="Script" path="res://src/player/EquipmentVisual.cs" id="91_equipment_visual"]
 [ext_resource type="Script" path="res://src/ui/CreditsUI.cs" id="92_credits"]
 [ext_resource type="Script" path="res://src/player/WeaponVisual.cs" id="93_weapon_visual"]
+[ext_resource type="PackedScene" path="res://scenes/ui/main_menu.tscn" id="94_mainmenu"]
+[ext_resource type="Script" path="res://src/player/CharacterAnimator.cs" id="95_animator"]
+[ext_resource type="Script" path="res://src/combat/Hurtbox.cs" id="96_hurtbox"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.385, 0.454, 0.55, 1)
@@ -112,7 +107,7 @@ ambient_light_source = 3
 size = Vector3(40, 1, 40)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
-albedo_color = Color(0.541176, 0.541176, 0.541176, 1)
+albedo_color = Color(0.87, 0.80, 0.62, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_ground"]
 material = SubResource("StandardMaterial3D_ground")
@@ -121,6 +116,10 @@ size = Vector3(40, 1, 40)
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.5
 height = 2.0
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player_hurtbox"]
+radius = 0.4
+height = 1.84
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_player"]
 albedo_color = Color(0.85098, 0.627451, 0.4, 1)
@@ -139,7 +138,7 @@ environment = SubResource("Environment_env")
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0)
 shadow_enabled = true
-directional_shadow_max_distance = 60.0
+directional_shadow_max_distance = 160.0
 
 [node name="Ground" type="StaticBody3D" parent="."]
 
@@ -147,6 +146,7 @@ directional_shadow_max_distance = 60.0
 shape = SubResource("BoxShape3D_ground")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Ground"]
+visible = false
 mesh = SubResource("BoxMesh_ground")
 
 [node name="PlayerSpawnPoint" type="Marker3D" parent="."]
@@ -165,6 +165,17 @@ mesh = SubResource("CapsuleMesh_player")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
 shape = SubResource("CapsuleShape3D_player")
+
+[node name="Hurtbox" type="Area3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+collision_layer = 512
+collision_mask = 0
+monitoring = false
+monitorable = true
+script = ExtResource("96_hurtbox")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player/Hurtbox"]
+shape = SubResource("CapsuleShape3D_player_hurtbox")
 
 [node name="CameraPivot" type="Node3D" parent="Player"]
 
@@ -230,6 +241,9 @@ PlayerModelPath = NodePath("../PlayerModel")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.15, -0.55)
 script = ExtResource("93_weapon_visual")
 
+[node name="CharacterAnimator" type="Node" parent="Player"]
+script = ExtResource("95_animator")
+
 [node name="TorchLight" type="OmniLight3D" parent="Player"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 visible = false
@@ -243,12 +257,6 @@ PlayerPath = NodePath("../Player")
 
 [node name="GuideService" type="Node" parent="."]
 script = ExtResource("52_guide_service")
-
-[node name="StoryPointTrigger" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 10)
-script = ExtResource("53_story_point")
-StoryPointId = "ruin"
-Reusable = true
 
 [node name="WoodTree1" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.5, 5)
@@ -321,51 +329,6 @@ BuildingSystem = NodePath("../BuildingSystem")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, 6)
 BuildingSystem = NodePath("../BuildingSystem")
 
-[node name="Boar1" parent="." instance=ExtResource("30_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 8)
-EnemyData = ExtResource("31_boar")
-Player = NodePath("../Player")
-DayNightServicePath = NodePath("../Environment/DayNightService")
-ModelPath = NodePath("BoarModel")
-
-[node name="BoarModel" parent="Boar1" instance=ExtResource("49_model_boar")]
-
-[node name="Boar2" parent="." instance=ExtResource("30_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.5, 8)
-EnemyData = ExtResource("31_boar")
-Player = NodePath("../Player")
-DayNightServicePath = NodePath("../Environment/DayNightService")
-ModelPath = NodePath("BoarModel")
-
-[node name="BoarModel" parent="Boar2" instance=ExtResource("49_model_boar")]
-
-[node name="Wolf1" parent="." instance=ExtResource("30_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0.5, 8)
-EnemyData = ExtResource("32_wolf")
-Player = NodePath("../Player")
-DayNightServicePath = NodePath("../Environment/DayNightService")
-ModelPath = NodePath("WolfModel")
-
-[node name="WolfModel" parent="Wolf1" instance=ExtResource("50_model_wolf")]
-
-[node name="Wolf2" parent="." instance=ExtResource("30_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0.5, 8)
-EnemyData = ExtResource("32_wolf")
-Player = NodePath("../Player")
-DayNightServicePath = NodePath("../Environment/DayNightService")
-ModelPath = NodePath("WolfModel")
-
-[node name="WolfModel" parent="Wolf2" instance=ExtResource("50_model_wolf")]
-
-[node name="Crab1" parent="." instance=ExtResource("30_enemy")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0.5, 8)
-EnemyData = ExtResource("33_crab")
-Player = NodePath("../Player")
-DayNightServicePath = NodePath("../Environment/DayNightService")
-ModelPath = NodePath("CrabModel")
-
-[node name="CrabModel" parent="Crab1" instance=ExtResource("56_model_crab")]
-
 [node name="HUD" parent="." node_paths=PackedStringArray("Player", "DayNightService", "WeatherService") instance=ExtResource("12_hud")]
 Player = NodePath("../Player")
 DayNightService = NodePath("../Environment/DayNightService")
@@ -410,7 +373,7 @@ script = ExtResource("68_waterfollow")
 Target = NodePath("../../Player")
 
 [node name="Raft" parent="." instance=ExtResource("88_raft")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 82)
 WaterMeshPath = NodePath("../Water")
 
 [node name="IslandBuilder" type="Node3D" parent="."]
@@ -419,12 +382,22 @@ script = ExtResource("89_islandbuilder")
 [node name="CraftUI" parent="." node_paths=PackedStringArray("Crafting") instance=ExtResource("65_craftui")]
 Crafting = NodePath("../Player/CraftingSystem")
 
-[node name="TutorialUI" parent="." node_paths=PackedStringArray("Player", "Stats") instance=ExtResource("66_tutorial")]
+[node name="TutorialUI" parent="." node_paths=PackedStringArray("Player", "Stats", "IslandBuilder") instance=ExtResource("66_tutorial")]
 Player = NodePath("../Player")
 Stats = NodePath("../Player/PlayerStats")
+AutoStartChapter1 = false
+IslandBuilder = NodePath("../IslandBuilder")
 
 [node name="StorageUI" type="CanvasLayer" parent="."]
 script = ExtResource("90_storageui")
 
 [node name="CreditsUI" type="CanvasLayer" parent="."]
 script = ExtResource("92_credits")
+
+[node name="MainMenuUI" parent="." node_paths=PackedStringArray("Tutorial", "SaveService", "HUD", "IslandBuilder", "BuildingSystem", "GameManager") instance=ExtResource("94_mainmenu")]
+Tutorial = NodePath("../TutorialUI")
+SaveService = NodePath("../SaveService")
+HUD = NodePath("../HUD")
+IslandBuilder = NodePath("../IslandBuilder")
+BuildingSystem = NodePath("../BuildingSystem")
+GameManager = NodePath("../GameManager")

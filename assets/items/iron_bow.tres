@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "iron_bow"
-DisplayName = "Iron Bow"
-Description = "A reinforced bow. Needs arrows to fire"
+DisplayName = "铁弓"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

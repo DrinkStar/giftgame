@@ -2,6 +2,7 @@
 namespace SeaAnomaly;
 
 using System.Collections.Generic;
+using System.IO;
 using Godot;
 
 /// <summary>
@@ -15,12 +16,21 @@ using Godot;
 ///   Wiring: node in Game.tscn with [Export] references to the systems it
 ///   snapshots. All exports are nullable and fail closed — an unwired system
 ///   is simply skipped on save and left untouched on load. The save folder is
-///   injectable so tests write to an isolated user:// folder.
+///   injectable so tests write to an isolated user:// folder. Startup auto-read
+///   is off by default (<see cref="AutoLoadOnReady"/>); the main menu calls
+///   <see cref="TryLoadPath"/> when the player picks a file. F5/F9 still work
+///   after gameplay starts.
 /// </summary>
 public partial class SaveService : Node
 {
   /// <summary>Where the unified save document lives (injectable for tests).</summary>
   [Export] public string SaveFolder = "user://saves";
+
+  /// <summary>
+  ///   When true, <see cref="AutoLoad"/> reads the newest save on startup.
+  ///   The product main menu owns load now, so this defaults to false.
+  /// </summary>
+  [Export] public bool AutoLoadOnReady { get; set; }
 
   /// <summary>
   ///   Save format version this build understands (mirrors
@@ -59,7 +69,7 @@ public partial class SaveService : Node
     // FIX(code-review P2-24): gate quick save/load on the gameplay-input
     // lock — while a modal (crafting/storage) is open, F5/F9 would snapshot
     // mid-UI state or clobber the open panel's inventory; the modal's Esc
-    // closes it first. Mirrors GameManager's ui_cancel gating.
+    // closes it first. Mirrors GameManager's pause-action gating.
     if (GameEvents.GameplayInputLocked)
       return;
 
@@ -80,6 +90,9 @@ public partial class SaveService : Node
   /// </summary>
   public void AutoLoad()
   {
+    if (!AutoLoadOnReady)
+      return;
+
     // Skip the startup auto-read under GoDotTest: test scenes must start from
     // a clean state, never from whatever is in the real user:// save folder.
     if (Chickensoft.GodotNodeInterfaces.RuntimeContext.IsTesting)
@@ -92,6 +105,12 @@ public partial class SaveService : Node
       GD.Print($"SaveService: auto-loaded save '{_currentSaveFile}'.");
     }
   }
+
+  /// <summary>
+  ///   Lists unified save files in <see cref="SaveFolder"/>, newest first.
+  ///   Empty when the folder is missing or has no <c>savegame_*.json</c>.
+  /// </summary>
+  public List<FileInfo> ListSaveFiles() => JsonSaveSystem.GetSaveFilesInfo(SaveFolder);
 
   /// <summary>Builds the current full game snapshot without writing it.</summary>
   public GameSaveData Snapshot()
@@ -189,17 +208,28 @@ public partial class SaveService : Node
   /// </summary>
   public bool TryLoadMostRecent()
   {
-    var files = JsonSaveSystem.GetSaveFilesInfo(SaveFolder);
+    var files = ListSaveFiles();
     if (files.Count == 0)
     {
       return false;
     }
 
-    var data = JsonSaveSystem.Load<GameSaveData>(files[0].FullName);
-    if (data == null)
-    {
+    return TryLoadPath(files[0].FullName);
+  }
+
+  /// <summary>
+  ///   Loads a specific unified save. Returns false when the path is empty,
+  ///   missing, corrupt, or rejected by <see cref="LoadGame"/> — never throws.
+  ///   Raises GameLoaded only on a real load.
+  /// </summary>
+  public bool TryLoadPath(string? path)
+  {
+    if (string.IsNullOrWhiteSpace(path))
       return false;
-    }
+
+    var data = JsonSaveSystem.Load<GameSaveData>(path);
+    if (data == null)
+      return false;
 
     var loaded = LoadGame(data);
     if (loaded)
@@ -209,8 +239,8 @@ public partial class SaveService : Node
       // absolute path, and StripFolder splits on '/', so a raw FullName
       // would make the next F5 build a garbage "user://saves/C:\..." path
       // and throw on Windows.
-      _currentSaveFile = ProjectSettings.LocalizePath(files[0].FullName);
-      GameEvents.RaiseGameLoaded(files[0].FullName);
+      _currentSaveFile = ProjectSettings.LocalizePath(path);
+      GameEvents.RaiseGameLoaded(_currentSaveFile);
     }
 
     return loaded;

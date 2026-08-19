@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "iron_ore"
-DisplayName = "Iron Ore"
-Description = "Raw ore that can be smelted into iron ingots"
+DisplayName = "铁矿"
 Type = 0
 MaxStack = 20
 HungerRestore = 0.0

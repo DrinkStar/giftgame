@@ -3,6 +3,7 @@ namespace SeaAnomaly;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
@@ -136,6 +137,30 @@ public class QuestServiceTest : TestClass, IDisposable
 
   private static Quest? Quest(string name) =>
     QuestManager.instance.questController.GetQuestByName(name);
+
+  /// <summary>
+  ///   HUD tracker seam: chapter 1 opens on quest_radio with its Chinese
+  ///   objective; completing radio advances the snapshot to quest_wood.
+  /// </summary>
+  [Test]
+  public void CurrentTrackerExposesRadioThenWood()
+  {
+    _service.TryGetCurrentTracker(out var id, out var objective, out var done, out var need)
+      .ShouldBeTrue();
+    id.ShouldBe("quest_radio");
+    objective.ShouldBe("抵达无线电塔并阅读日志");
+    done.ShouldBe(0);
+    need.ShouldBe(1);
+    _service.CurrentQuestId.ShouldBe("quest_radio");
+
+    GameEvents.RaiseStoryPointReached("radio");
+
+    _service.TryGetCurrentTracker(out id, out objective, out done, out need).ShouldBeTrue();
+    id.ShouldBe("quest_wood");
+    objective.ShouldBe("收集 5 个木头");
+    done.ShouldBe(0);
+    need.ShouldBe(5);
+  }
 
   /// <summary>
   ///   (a) The internal progress counter counts condition events and forwards
@@ -274,8 +299,7 @@ public class QuestServiceTest : TestClass, IDisposable
 
   /// <summary>
   ///   (f) The product scene wires the full quest stack: QuestService,
-  ///   GuideService and StoryPointTrigger exist under Game with the ruin
-  ///   story point configured.
+  ///   GuideService and a generated ruin StoryPointTrigger on the Ruin island.
   /// </summary>
   [Test]
   public async Task GameSceneContainsQuestNodes()
@@ -285,15 +309,17 @@ public class QuestServiceTest : TestClass, IDisposable
     {
       var questService = game.GetNodeOrNull<QuestService>("QuestService");
       var guideService = game.GetNodeOrNull<GuideService>("GuideService");
-      var trigger = game.GetNodeOrNull<StoryPointTrigger>("StoryPointTrigger");
+      var builder = game.GetNodeOrNull<IslandBuilder>("IslandBuilder");
 
       questService.ShouldNotBeNull();
       guideService.ShouldNotBeNull();
-      trigger.ShouldNotBeNull();
+      builder.ShouldNotBeNull();
 
-      trigger!.StoryPointId.ShouldBe("ruin");
+      var trigger = FindDescendants<StoryPointTrigger>(builder!)
+        .Single(t => t.StoryPointId == "ruin");
       trigger.CollisionMask.ShouldBe(1u);
       trigger.GetNodeOrNull<CollisionShape3D>("CollisionShape3D").ShouldNotBeNull();
+      trigger.GetParent()!.Name.ToString().StartsWith("Island_Ruin").ShouldBeTrue();
     }
     finally
     {
@@ -303,5 +329,20 @@ public class QuestServiceTest : TestClass, IDisposable
       if (game.IsInsideTree())
         game.GetParent()!.RemoveChild(game);
     }
+  }
+
+  private static List<T> FindDescendants<T>(Node root) where T : Node
+  {
+    var result = new List<T>();
+    Collect(root, result);
+    return result;
+  }
+
+  private static void Collect<T>(Node node, List<T> into) where T : Node
+  {
+    if (node is T typed)
+      into.Add(typed);
+    foreach (Node child in node.GetChildren())
+      Collect(child, into);
   }
 }

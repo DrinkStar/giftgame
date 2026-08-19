@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "water_purifier"
-Description = "Placeholder purifier (Iter8.5). Full cost: 6 stone + 4 wood; single-cost system charges the 6 stone"
+Description = "净水器。完整造价：石头6、木头4；当前只收取石头6"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

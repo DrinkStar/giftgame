@@ -15,7 +15,7 @@ height = 0.2
 
 [node name="Projectile" type="Area3D"]
 collision_layer = 0
-collision_mask = 129
+collision_mask = 257
 monitoring = true
 script = ExtResource("1_script")
 

@@ -20,6 +20,8 @@ public partial class WoodTree : StaticBody3D, IInteractable
   [Export] public string InteractionVerb = "Gather wood";
   [Export] public string ItemId = "wood";
   [Export] public int MaxHarvests = 3;
+  [Export] public string VisualModelPath = VegetationModels.Oak;
+  [Export] public float VisualScale = VegetationModels.OakScale;
 
   private int _remaining;
 
@@ -59,6 +61,9 @@ public partial class WoodTree : StaticBody3D, IInteractable
       }
     };
     AddChild(visual);
+
+    if (VegetationModels.TryMount(this, VisualModelPath, VisualScale))
+      VegetationModels.HidePlaceholders(this, "Visual");
   }
 
   public string GetInteractionPrompt() =>

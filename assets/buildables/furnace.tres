@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "furnace"
-Description = "Smelts iron ore into iron ingots and gates furnace recipes (T8.5.6)"
+Description = "熔炉，可将铁矿熔炼成铁锭，并解锁熔炉配方"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(1, 0, 1)

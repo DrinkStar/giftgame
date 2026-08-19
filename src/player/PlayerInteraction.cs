@@ -237,8 +237,8 @@ public partial class PlayerInteraction : Node
 }
 
 /// <summary>
-///   Contract for anything the interaction ray can hit. Prompts are English
-///   (plan Decision 8).
+///   Contract for anything the interaction ray can hit. Player-facing prompt
+///   shells that include DisplayName (loot pickup, crop harvest) are Chinese.
 /// </summary>
 public interface IInteractable
 {

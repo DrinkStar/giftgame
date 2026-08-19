@@ -58,7 +58,6 @@ public class EnemyDropTest : TestClass, IDisposable
     new()
     {
       Id = "crab",
-      DisplayName = "Test Crab",
       MaxHealth = 30f,
       Damage = 5f,
       MoveSpeed = 2f,

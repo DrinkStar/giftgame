@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "egg"
-DisplayName = "Egg"
-Description = "A fresh egg laid by a tamed chicken"
+DisplayName = "鸡蛋"
 Type = 2
 MaxStack = 20
 HungerRestore = 10.0

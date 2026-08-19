@@ -13,10 +13,11 @@ using Godot;
 /// </summary>
 public partial class CreditsUI : CanvasLayer
 {
-  private const string CreditsText =
+  public const string CreditsText =
     "Music by Eric Matyas / www.soundimage.org\n" +
     "Game icons by Delapouite and Lorc — https://game-icons.net (CC BY 3.0)\n" +
     "Models: Kenney (CC0), Quaternius (CC0) via Poly Pizza\n" +
+    "Terrain textures: Poly Haven sand_01, coast_sand_01, rocks_ground_01, rock_ground_02, snow_02 (CC0)\n" +
     "SurvivalIsland concept (personal non-commercial use)";
 
   public override void _Ready()

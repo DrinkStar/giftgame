@@ -35,6 +35,9 @@ public class GuideServiceTest : TestClass, IDisposable
 
     _guide = new GuideService { Name = "GuideService" };
     _fixture.AddToRoot(_guide, autoRemoveFromRoot: true);
+
+    // Static lock can leak from MainMenuUI / CraftUI tests.
+    GameEvents.RaiseGameplayInputLockChanged(false);
   }
 
   /// <summary>
@@ -69,6 +72,7 @@ public class GuideServiceTest : TestClass, IDisposable
       _guide.GetParent()!.RemoveChild(_guide);
 
     _fixture.Cleanup();
+    GameEvents.RaiseGameplayInputLockChanged(false);
     Dispose();
   }
 
@@ -190,5 +194,107 @@ public class GuideServiceTest : TestClass, IDisposable
     {
       GameEvents.GuideLine -= onLine;
     }
+  }
+
+  /// <summary>
+  ///   Main-story QuestStarted lines stay quiet until TutorialCompleted
+  ///   (开始游戏 / 新手教程 both raise it; chapter-1 cards must not overlap).
+  /// </summary>
+  [Test]
+  public void QuestStartedWaitsForTutorialCompletedThenSpeaks()
+  {
+    var lines = new List<string>();
+    Action<string> onLine = text => lines.Add(text);
+    GameEvents.GuideLine += onLine;
+    try
+    {
+      GameEvents.RaiseQuestStarted("quest_radio");
+      lines.ShouldBeEmpty();
+
+      GameEvents.RaiseTutorialCompleted();
+
+      lines.Count.ShouldBe(1);
+      lines[0].ShouldBe(StoryGuideCopy.QuestStartLines["quest_radio"]);
+    }
+    finally
+    {
+      GameEvents.GuideLine -= onLine;
+    }
+  }
+
+  /// <summary>
+  ///   Unknown quest ids fail closed; known ids speak after the story is ready.
+  ///   Input lock queues the line until the menu / modal releases.
+  /// </summary>
+  [Test]
+  public void QuestStartedUnknownSilentAndLockQueuesLine()
+  {
+    var lines = new List<string>();
+    Action<string> onLine = text => lines.Add(text);
+    GameEvents.GuideLine += onLine;
+    try
+    {
+      GameEvents.RaiseTutorialCompleted();
+      GameEvents.RaiseQuestStarted("quest_not_a_real_id");
+      lines.ShouldBeEmpty();
+
+      GameEvents.RaiseGameplayInputLockChanged(true);
+      GameEvents.RaiseQuestStarted("quest_wood");
+      lines.ShouldBeEmpty();
+
+      GameEvents.RaiseGameplayInputLockChanged(false);
+      lines.Count.ShouldBe(1);
+      lines[0].ShouldBe(StoryGuideCopy.QuestStartLines["quest_wood"]);
+    }
+    finally
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+      GameEvents.GuideLine -= onLine;
+    }
+  }
+
+  /// <summary>
+  ///   Chapter-1 (and later) tutorial cards mute story quest lines until
+  ///   TutorialCompleted; shark_king story point narrates, radio does not
+  ///   (it completes a quest the same tick).
+  /// </summary>
+  [Test]
+  public void TutorialCardMutesQuestLineAndSharkKingStoryPointSpeaks()
+  {
+    var lines = new List<string>();
+    Action<string> onLine = text => lines.Add(text);
+    GameEvents.GuideLine += onLine;
+    try
+    {
+      GameEvents.RaiseTutorialCompleted();
+      GameEvents.RaiseTutorialStepChanged(1, 6);
+      GameEvents.RaiseQuestStarted("quest_campfire");
+      lines.ShouldBeEmpty();
+
+      GameEvents.RaiseTutorialCompleted();
+      lines.Count.ShouldBe(1);
+      lines[0].ShouldBe(StoryGuideCopy.QuestStartLines["quest_campfire"]);
+
+      GameEvents.RaiseStoryPointReached("radio");
+      GameEvents.RaiseStoryPointReached("ruin");
+      lines.Count.ShouldBe(1);
+
+      GameEvents.RaiseStoryPointReached("shark_king");
+      lines.Count.ShouldBe(2);
+      lines[1].ShouldBe(StoryGuideCopy.StoryPointLines["shark_king"]);
+    }
+    finally
+    {
+      GameEvents.GuideLine -= onLine;
+    }
+  }
+
+  [Test]
+  public void FormatObjectiveIncludesCountOnlyWhenNeedExceedsOne()
+  {
+    StoryGuideCopy.FormatObjective("收集 5 个木头", 2, 5)
+      .ShouldBe("当前目标：收集 5 个木头（2/5）");
+    StoryGuideCopy.FormatObjective("抵达遗迹", 0, 1)
+      .ShouldBe("当前目标：抵达遗迹");
   }
 }

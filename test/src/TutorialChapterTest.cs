@@ -362,3 +362,106 @@ public class TutorialChapterTest : TestClass, IDisposable
     }
   }
 }
+
+/// <summary>
+///   Main-menu gates: AutoStartChapter1=false must not open chapter 1, and
+///   CompleteChapter1WithoutPlaying unlocks CraftUI plus chapter 2/3.
+/// </summary>
+public class TutorialMenuGateTest : TestClass, IDisposable
+{
+  private Fixture _fixture = default!;
+  private TutorialUI _ui = default!;
+  private PlayerController _player = default!;
+  private PlayerStats _stats = default!;
+
+  public TutorialMenuGateTest(Node testScene) : base(testScene) { }
+
+  [Setup]
+  public async Task Setup()
+  {
+    _fixture = new Fixture(TestScene.GetTree());
+
+    _player = new PlayerController { Name = "Player", Gravity = 0f };
+    _stats = new PlayerStats { Name = "PlayerStats" };
+    _player.AddChild(_stats);
+    _player.Stats = _stats;
+    await _fixture.AddToRoot(_player, autoRemoveFromRoot: true);
+
+    _ui = new TutorialUI
+    {
+      Name = "TutorialUI",
+      Player = _player,
+      Stats = _stats,
+      AutoStartChapter1 = false
+    };
+    await _fixture.AddToRoot(_ui, autoRemoveFromRoot: true);
+    await TestScene.ProcessFrame(2);
+  }
+
+  [Cleanup]
+  public void Cleanup()
+  {
+    Input.MouseMode = Input.MouseModeEnum.Captured;
+
+    if (_ui != null && _ui.IsInsideTree() && _ui.GetParent() != null)
+      _ui.GetParent()!.RemoveChild(_ui);
+
+    _fixture.Cleanup();
+    Dispose();
+  }
+
+  public void Dispose()
+  {
+    if (_ui == null && _player == null)
+      return;
+
+    _ui?.Dispose();
+    _ui = null!;
+    _player?.Dispose();
+    _player = null!;
+    GC.SuppressFinalize(this);
+  }
+
+  /// <summary>
+  ///   Product main menu sets AutoStartChapter1 false: chapter 1 must not
+  ///   start from _Ready or GameStarted.
+  /// </summary>
+  [Test]
+  public void AutoStartDisabledDoesNotStartChapterOne()
+  {
+    GameEvents.RaiseGameStarted();
+    _ui.IsTutorialActive.ShouldBeFalse();
+    _ui.CurrentStep.ShouldBe(0);
+    _ui.GetNodeOrNull<Control>("Dim").ShouldBeNull();
+  }
+
+  /// <summary>
+  ///   Skipping chapter 1 raises TutorialCompleted once (idempotent) and
+  ///   opens the chapter-2 harvest-quest gate.
+  /// </summary>
+  [Test]
+  public void CompleteChapter1WithoutPlayingUnlocksChapterTwo()
+  {
+    var completed = 0;
+    Action onDone = () => completed++;
+    GameEvents.TutorialCompleted += onDone;
+    try
+    {
+      _ui.CompleteChapter1WithoutPlaying();
+      completed.ShouldBe(1);
+      _ui.IsTutorialActive.ShouldBeFalse();
+      _ui.GetNodeOrNull<Control>("Dim").ShouldBeNull();
+
+      _ui.CompleteChapter1WithoutPlaying();
+      completed.ShouldBe(1);
+
+      GameEvents.RaiseQuestStarted("quest_harvest");
+      _ui.IsTutorialActive.ShouldBeTrue();
+      _ui.CurrentStep.ShouldBe(1);
+    }
+    finally
+    {
+      GameEvents.TutorialCompleted -= onDone;
+    }
+  }
+}

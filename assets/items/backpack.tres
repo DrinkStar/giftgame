@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "backpack"
-DisplayName = "Backpack"
-Description = "Carries more supplies: widens your inventory"
+DisplayName = "背包"
 Type = 1
 MaxStack = 1
 HungerRestore = 0.0

@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("2_script")
 Name = "taming_pen"
-Description = "A wooden pen that lets nearby wild animals be tamed"
+Description = "木制围栏，靠近的野生动物可被驯服"
 Object3DModel = ExtResource("1_model")
 SnapBehaviour = 0
 Size = Vector3i(2, 0, 2)

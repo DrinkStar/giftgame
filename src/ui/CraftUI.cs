@@ -56,10 +56,12 @@ public partial class CraftUI : CanvasLayer
   private bool _gateHintShown;
 
   /// <summary>
-  ///   True between Close() and the next ProcessFrame — guards the one-shot
-  ///   lock-release subscription so a second Close() cannot double-subscribe.
+  ///   Frame number at which the deferred lock release fires (see
+  ///   <see cref="_Process"/>), or -1 when nothing is pending. Frame-based
+  ///   (not CallDeferred, not a signal subscription) so the release can be
+  ///   cancelled in _ExitTree and never fires after the object is freed.
   /// </summary>
-  private bool _lockReleasePending;
+  private ulong _releaseLockAtFrame = ulong.MaxValue;
 
   public override void _Ready()
   {
@@ -73,11 +75,21 @@ public partial class CraftUI : CanvasLayer
     Unsubscribe();
     // FIX(release/P2-23): a panel torn down mid-game (scene switch) must not
     // leave the static lock held — release it synchronously here, and drop
-    // any pending frame callback (a CallDeferred in the engine queue could
-    // not be cancelled and would throw "Method not found" on the freed
-    // object).
-    CancelLockRelease();
+    // one-shot deferred lock release, cancelled on teardown.
+    _releaseLockAtFrame = ulong.MaxValue;
     GameEvents.RaiseGameplayInputLockChanged(false);
+  }
+
+  public override void _Process(double delta)
+  {
+    // One-shot deferred lock release: fires exactly one frame after Close().
+    // Pure C# — no engine queue, no signal subscription — so it is
+    // trivially cancellable and stops naturally once this node is freed.
+    if (_releaseLockAtFrame != ulong.MaxValue && Engine.GetProcessFrames() >= _releaseLockAtFrame)
+    {
+      _releaseLockAtFrame = ulong.MaxValue;
+      GameEvents.RaiseGameplayInputLockChanged(false);
+    }
   }
 
   public override void _Input(InputEvent @event)
@@ -195,47 +207,13 @@ public partial class CraftUI : CanvasLayer
     // this node's Esc handling first; if the lock dropped synchronously,
     // GameManager would then toggle pause in the SAME input pass (Esc =
     // close panel + pause).
-    // FIX(release): a C# ProcessFrame subscription instead of
-    // CallDeferred(nameof(...)) — the engine message queue cannot be
+    // FIX(release): implemented as a frame count consumed in _Process rather
+    // than CallDeferred(nameof(...)) — the engine message queue cannot be
     // cancelled, so a deferred call whose object was freed first throws
     // "Method not found" (looked up on the static base type CanvasLayer) in
-    // exported/release builds. A signal subscription is plain C#, is dropped
-    // in _ExitTree, and behaves identically in every build.
-    ScheduleLockRelease();
-  }
-
-  private void ScheduleLockRelease()
-  {
-    var tree = GetTree();
-    if (tree == null)
-    {
-      GameEvents.RaiseGameplayInputLockChanged(false);
-      return;
-    }
-
-    if (_lockReleasePending)
-      return;
-    _lockReleasePending = true;
-    tree.ProcessFrame += ReleaseInputLock;
-  }
-
-  private void ReleaseInputLock()
-  {
-    _lockReleasePending = false;
-    var tree = GetTree();
-    if (tree != null)
-      tree.ProcessFrame -= ReleaseInputLock;
-    GameEvents.RaiseGameplayInputLockChanged(false);
-  }
-
-  private void CancelLockRelease()
-  {
-    if (!_lockReleasePending)
-      return;
-    _lockReleasePending = false;
-    var tree = GetTree();
-    if (tree != null)
-      tree.ProcessFrame -= ReleaseInputLock;
+    // exported/release builds. Frame-based release is plain C#, cancelled in
+    // _ExitTree, and behaves identically in every build.
+    _releaseLockAtFrame = Engine.GetProcessFrames() + 1;
   }
 
   private void Subscribe()

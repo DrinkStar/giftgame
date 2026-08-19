@@ -3,12 +3,13 @@
 namespace SeaAnomaly;
 
 using Godot;
+using Chickensoft.GodotNodeInterfaces;
 
 /// <summary>
 ///   Scene wiring hub (plan Decision 1): connects the day/night and weather
-///   services, the player subsystems and the HUD; handles pause (ui_cancel)
-///   and restart. All other communication flows through the static
-///   <see cref="GameEvents"/> bus.
+///   services, the player subsystems and the HUD; handles pause (InputMap
+///   action <c>pause</c>, Esc) and restart. All other communication flows
+///   through the static <see cref="GameEvents"/> bus.
 ///
 ///   Plan note: this file was specified for W1 but W1's commit did not
 ///   include it; it is created during W3 per the plan's W1 specification,
@@ -217,16 +218,17 @@ public partial class GameManager : Node
 
   public override void _Input(InputEvent @event)
   {
-    // FIX(iter8-plan): T8.4 — a modal overlay (CraftUI) owns Esc while it is
-    // open; the pause key must not fire underneath it.
-    if (@event.IsActionPressed("ui_cancel") && !GameEvents.GameplayInputLocked)
+    // Modal overlays (CraftUI / StorageUI / inventory) own Esc while open;
+    // the pause action must not fire underneath a gameplay-input lock.
+    if (@event.IsActionPressed("pause") && !GameEvents.GameplayInputLocked)
       TogglePause();
   }
 
   public void TogglePause()
   {
     IsPaused = !IsPaused;
-    GetTree().Paused = IsPaused;
+    if (!RuntimeContext.IsTesting)
+      GetTree().Paused = IsPaused;
     Input.MouseMode = IsPaused
       ? Input.MouseModeEnum.Visible
       : Input.MouseModeEnum.Captured;

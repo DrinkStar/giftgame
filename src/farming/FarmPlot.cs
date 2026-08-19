@@ -121,7 +121,7 @@ public partial class FarmPlot : StaticBody3D, IInteractable
       return $"[E] Growing ({percent}%)";
     }
 
-    return $"[E] Harvest {_crop.DisplayName}";
+    return $"[E] 收获 {_crop.DisplayName}";
   }
 
   /// <summary>

@@ -5,7 +5,6 @@
 [resource]
 script = ExtResource("1_script")
 Id = "boar"
-DisplayName = "Boar"
 MaxHealth = 60.0
 Damage = 12.0
 MoveSpeed = 4.0
@@ -16,3 +15,5 @@ Boss = false
 Scale = 1.0
 DropItemId = "raw_meat"
 DropAmount = 1
+Habitat = 1
+WanderRadius = 16.0

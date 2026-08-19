@@ -62,7 +62,6 @@ public class BossPhaseTest : TestClass, IDisposable
     new()
     {
       Id = "shark_king",
-      DisplayName = "Test Shark King",
       MaxHealth = 400f,
       Damage = 30f,
       MoveSpeed = 5f,

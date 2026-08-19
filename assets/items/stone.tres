@@ -7,8 +7,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("2_icon")
 Id = "stone"
-DisplayName = "Stone"
-Description = "A hard rock, useful for crafting tools"
+DisplayName = "石头"
 Type = 0
 MaxStack = 20
 HungerRestore = 0.0

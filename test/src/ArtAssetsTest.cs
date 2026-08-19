@@ -35,7 +35,24 @@ public class ArtAssetsTest : TestClass
     "res://assets/models/enemies/crab/Crab.glb",
     "res://assets/models/player/Woman.glb",
     "res://assets/models/buildings/campfire/Campfire.glb",
-    "res://assets/models/buildings/bed/Bed.glb"
+    "res://assets/models/buildings/bed/Bed.glb",
+    "res://assets/models/vegetation/tree_oak.glb",
+    "res://assets/models/vegetation/tree_pineTallA.glb",
+    "res://assets/models/vegetation/palm-detailed-straight.glb",
+    "res://assets/models/vegetation/grass.glb",
+    "res://assets/models/vegetation/grass_large.glb",
+    "res://assets/models/vegetation/plant_bush.glb",
+    "res://assets/models/vegetation/plant_bushSmall.glb",
+    "res://assets/models/vegetation/rock_smallA.glb",
+    "res://assets/models/vegetation/rock_tallA.glb",
+    "res://assets/models/vegetation/palm-detailed-bend.glb",
+    "res://assets/models/vegetation/rock_largeA.glb",
+    "res://assets/models/vegetation/rocks-sand-a.glb",
+    "res://assets/models/vegetation/log.glb",
+    "res://assets/models/props/barrel.glb",
+    "res://assets/models/props/crate.glb",
+    "res://assets/models/props/ship-wreck.glb",
+    "res://assets/models/props/wooden_chest/WoodenChest.glb"
   };
 
   private static readonly string[] SfxIds =

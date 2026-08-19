@@ -75,8 +75,11 @@ using Godot;
 ///   fires on QuestStarted("quest_harvest"), chapter3 on
 ///   StoryPointReached("shark_king")), and ItemAdded/ItemRemoved/
 ///   BuildingPlaced/MeleeHit/EnemyDied/CropPlanted while a sequence is
-///   active. _ExitTree unsubscribes everything (Decision 13); completion
-///   unsubscribes only the active step events so later triggers stay live.
+///   active. Chapter-1 auto-start (GameStarted + the deferred fallback) is
+///   gated by <see cref="AutoStartChapter1"/> — the product main menu sets
+///   this false so the player chooses 新手教程 / 开始游戏. _ExitTree
+///   unsubscribes everything (Decision 13); completion unsubscribes only
+///   the active step events so later triggers stay live.
 /// </summary>
 public partial class TutorialUI : CanvasLayer
 {
@@ -110,6 +113,21 @@ public partial class TutorialUI : CanvasLayer
   ///   <see cref="GameEvents.ItemRemoved"/>.
   /// </summary>
   [Export] public PlayerStats? Stats;
+
+  /// <summary>
+  ///   When true (the default, so existing tests keep working), chapter 1
+  ///   starts from <see cref="_Ready"/> / <see cref="GameEvents.GameStarted"/>.
+  ///   The product <c>Game.tscn</c> sets this false; the main menu then
+  ///   calls <see cref="StartTutorial()"/> or
+  ///   <see cref="CompleteChapter1WithoutPlaying"/>.
+  /// </summary>
+  [Export] public bool AutoStartChapter1 { get; set; } = true;
+
+  /// <summary>
+  ///   Optional island builder. Chapter-1 complete teleports the player from
+  ///   the tutorial island back to the product spawn. Null-safe for tests.
+  /// </summary>
+  [Export] public IslandBuilder? IslandBuilder;
 
   #endregion Exports
 
@@ -257,8 +275,10 @@ public partial class TutorialUI : CanvasLayer
 
     // Deferred fallback: GameManager raises GameStarted in its own _Ready,
     // which may run before ours — the deferred start covers both orders and
-    // lets the tree settle so relative NodePaths resolve.
-    CallDeferred(nameof(StartTutorial));
+    // lets the tree settle so relative NodePaths resolve. Gated so the
+    // product main menu can own the first-run choice.
+    if (AutoStartChapter1)
+      CallDeferred(nameof(StartTutorial));
   }
 
   public override void _ExitTree()
@@ -336,11 +356,33 @@ public partial class TutorialUI : CanvasLayer
     FinalizeTutorial();
   }
 
+  /// <summary>
+  ///   Marks chapter 1 complete without showing the overlay (main-menu
+  ///   "开始游戏" / load-save). Raises <see cref="GameEvents.TutorialCompleted"/>
+  ///   so CraftUI unlocks, and opens the chapter 2/3 gates. Idempotent —
+  ///   a second call is a no-op. If chapter 1 is already on-screen this
+  ///   falls through to <see cref="SkipTutorial"/>.
+  /// </summary>
+  public void CompleteChapter1WithoutPlaying()
+  {
+    if (_chapter1Done)
+      return;
+
+    if (IsTutorialActive && _activeSequence == Chapter1Sequence)
+    {
+      SkipTutorial();
+      return;
+    }
+
+    _chapter1Done = true;
+    GameEvents.RaiseTutorialCompleted();
+  }
+
   #region Event translation
 
   private void OnGameStarted()
   {
-    if (IsTutorialActive || _chapter1Done)
+    if (!AutoStartChapter1 || IsTutorialActive || _chapter1Done)
       return;
 
     CallDeferred(nameof(StartTutorial));
@@ -513,11 +555,12 @@ public partial class TutorialUI : CanvasLayer
   {
     IsTutorialActive = false;
 
-    if (_activeSequence == Chapter1Sequence)
+    var finished = _activeSequence;
+    if (finished == Chapter1Sequence)
       _chapter1Done = true;
-    else if (_activeSequence == Chapter2Sequence)
+    else if (finished == Chapter2Sequence)
       _chapter2Done = true;
-    else if (_activeSequence == Chapter3Sequence)
+    else if (finished == Chapter3Sequence)
       _chapter3Done = true;
     _activeSequence = "";
 
@@ -529,6 +572,12 @@ public partial class TutorialUI : CanvasLayer
       _stepCard.Visible = false;
 
     Input.MouseMode = Input.MouseModeEnum.Captured;
+
+    // Chapter 1 lived on the dedicated tutorial island; hand the player to
+    // the product spawn (Main / PlayerSpawnPoint) before unlocking CraftUI.
+    if (finished == Chapter1Sequence)
+      IslandBuilder?.EndTutorialSession();
+
     GameEvents.RaiseTutorialCompleted();
   }
 

@@ -11,17 +11,69 @@ using Godot;
 /// </summary>
 public enum IslandTier
 {
-    /// <summary>Low-risk birth island near the origin (trees / palm / radio trigger).</summary>
+    /// <summary>
+    ///   Legacy low-risk islet (radio + crabs). Product
+    ///   <see cref="WorldLayout.Generate"/> no longer emits this tier — radio
+    ///   lives on <see cref="Main"/>. Kept so heightmap tests can still
+    ///   construct a generic spec.
+    /// </summary>
     Spawn,
 
     /// <summary>
-    ///   Mid-risk main island at the world origin. The existing Ground and
-    ///   BuildingSystem stay at the origin — the generator never moves them.
+    ///   Product spawn at the world origin after 开始游戏. Radio, trees,
+    ///   beach, building plateau; wolves/boars stay outside the 40 m
+    ///   spawn-safe ring. The existing Ground and BuildingSystem stay at
+    ///   the origin — the generator never moves them.
     /// </summary>
     Main,
 
     /// <summary>High-risk far-sea storm island — the shark-king boss arena.</summary>
-    Storm
+    Storm,
+
+    /// <summary>
+    ///   Dedicated chapter-1 tutorial island. Not the product spawn: generated
+    ///   from a separate seed stream and visited only by 新手教程.
+    /// </summary>
+    Tutorial,
+
+    /// <summary>Farmland / harvest islet — rolling fields, grass, few trees.</summary>
+    Harvest,
+
+    /// <summary>Ruin / stone islet — tall rock, inscriptions (quest_ruin).</summary>
+    Ruin,
+
+    /// <summary>Mutant woods — dense canopy and quest_mutant hostiles.</summary>
+    Mutant,
+
+    /// <summary>
+    ///   Optional hunting islet beyond the storm ring. Extra trees and
+    ///   wolves/boars on this island only — not on the quest chain.
+    /// </summary>
+    Wild,
+
+    /// <summary>
+    ///   Optional atoll / extra beach beyond the storm ring. Palms, crabs,
+    ///   and sand; no story points.
+    /// </summary>
+    Atoll,
+
+    /// <summary>
+    ///   Optional wreck / salvage islet. Crates, barrels, driftwood and a
+    ///   visible ship wreck landmark. Not the ruin quest island.
+    /// </summary>
+    Wreck,
+
+    /// <summary>
+    ///   Easter-egg volcano far off the quest rings. Jagged ash / lava look;
+    ///   not on the main chain.
+    /// </summary>
+    Volcano,
+
+    /// <summary>
+    ///   Easter-egg alpine / snow mountain locked to far +Z or −Z. Not on
+    ///   the main chain.
+    /// </summary>
+    Polar
 }
 
 /// <summary>

@@ -8,8 +8,7 @@
 script = ExtResource("1_script")
 Icon = ExtResource("icon")
 Id = "corn"
-DisplayName = "Corn"
-Description = "An ear of sweet corn, best roasted over a fire"
+DisplayName = "玉米"
 Type = 2
 MaxStack = 20
 HungerRestore = 18.0
