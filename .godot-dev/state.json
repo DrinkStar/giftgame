@@ -36,7 +36,7 @@
     "scene_count": 36,
     "script_count": 113,
     "test_script_count": 53,
-    "codegraph": "indexed at repo root .codegraph/",
+    "codegraph": "colbymchenry/codegraph v1.6.0 CLI + Cursor MCP (codegraph_explore); index via tools/ensure-codegraph.sh → .codegraph/",
     "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
   },
   "iterations": [
