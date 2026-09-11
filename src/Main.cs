@@ -1,6 +1,7 @@
 //-:cnd:noEmit
 namespace SeaAnomaly;
 
+using System;
 using Godot;
 using Chickensoft.GameTools.Displays;
 
@@ -25,9 +26,7 @@ public partial class Main : Node2D
   public override void _Ready()
   {
     EnsureCrashLogService();
-
-    // Correct any erroneous scaling and guess sensible defaults.
-    GetWindow().LookGood(WindowScaleBehavior.UIFixed, DesignResolution);
+    ApplyDisplayScale();
 
 #if RUN_TESTS
     // If this is a debug build, use GoDotTest to examine the
@@ -45,6 +44,26 @@ public partial class Main : Node2D
     // If we don't need to run tests, we can just switch to the game scene.
     CrashLog.Info("Main: launching Game.tscn");
     CallDeferred("RunScene");
+  }
+
+  /// <summary>
+  ///   Window scale from Chickensoft GameTools. Headless / DRM-less VMs
+  ///   throw when the helper walks <c>/sys/class/drm</c>; skip so
+  ///   <c>--quit-after</c> smoke still reaches Game.tscn.
+  /// </summary>
+  private void ApplyDisplayScale()
+  {
+    if (DisplayServer.GetName() == "headless")
+      return;
+
+    try
+    {
+      GetWindow().LookGood(WindowScaleBehavior.UIFixed, DesignResolution);
+    }
+    catch (Exception ex)
+    {
+      GD.PushWarning($"Main: display scale skipped ({ex.GetType().Name}: {ex.Message})");
+    }
   }
 
   /// <summary>
