@@ -118,18 +118,22 @@ public partial class StorageBox : Node3D, IInteractable
   }
 
   /// <summary>
-  ///   Singleton-style lookup: the first StorageUI anywhere under the current
-  ///   scene (breadth-first walk), so Game.tscn wiring may place it at the
-  ///   top level like CraftUI without this node knowing the exact path.
+  ///   Singleton-style lookup: the first StorageUI anywhere under the tree
+  ///   (breadth-first walk from the root, so it also covers the current
+  ///   scene), so Game.tscn wiring may place it at the top level like CraftUI
+  ///   without this node knowing the exact path. Searching from the root (not
+  ///   just CurrentScene) also finds a UI added to the tree outside the main
+  ///   scene — e.g. by a test harness — without changing production behavior,
+  ///   since the in-game UI still lives under Game.tscn.
   /// </summary>
   protected StorageUI? FindStorageUi()
   {
     var tree = GetTree();
-    if (tree?.CurrentScene == null)
+    if (tree?.Root == null)
       return null;
 
     var queue = new Queue<Node>();
-    queue.Enqueue(tree.CurrentScene);
+    queue.Enqueue(tree.Root);
 
     while (queue.Count > 0)
     {

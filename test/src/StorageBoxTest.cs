@@ -34,6 +34,13 @@ public class StorageBoxTest : TestClass, IDisposable
     // QuestServiceTest for the rationale — leaked nodes keep their
     // subscriptions on the static bus alive across test classes).
     SweepLeakedNodes(TestScene.GetTree().Root);
+
+    // The gameplay-input lock is a STATIC global on GameEvents; SweepLeakedNodes
+    // only removes nodes, it does not clear the lock. A modal torn down in a
+    // prior test class can leave the lock held, which makes StorageUI.Open's
+    // mutual-exclusion gate early-return and IsOpen stay false. Reset it here
+    // so every test starts from a known-unblocked state (mirrors Cleanup below).
+    GameEvents.RaiseGameplayInputLockChanged(false);
   }
 
   [Cleanup]
@@ -304,6 +311,9 @@ public class StorageBoxTest : TestClass, IDisposable
     var inventory = player.GetNode<InventorySystem>("InventorySystem");
     var chest = new WoodenChest();
     await _fixture.AddToRoot(chest, autoRemoveFromRoot: true);
+    // _Ready (mounts the GLB, sets _lidPivot) is deferred to the next frame;
+    // wait so FindLidPivot and Interact see the ready chest.
+    await TestScene.ProcessFrame(2);
 
     var pivot = WoodenChest.FindLidPivot(chest);
     pivot.ShouldNotBeNull();
@@ -331,6 +341,8 @@ public class StorageBoxTest : TestClass, IDisposable
     var player = await BuildPlayer();
     var chest = new WoodenChest();
     await _fixture.AddToRoot(chest, autoRemoveFromRoot: true);
+    // _Ready (mounts the GLB, sets _lidPivot) is deferred to the next frame.
+    await TestScene.ProcessFrame(2);
     var ui = new StorageUI();
     await _fixture.AddToRoot(ui, autoRemoveFromRoot: true);
 

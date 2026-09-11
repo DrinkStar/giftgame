@@ -298,8 +298,39 @@ public class QuestServiceTest : TestClass, IDisposable
   }
 
   /// <summary>
+  ///   Completing quest_mutant grants the chapter-3 prep kit: arrows, cooked
+  ///   meat, and cloth armor (multi-stack RewardAmounts).
+  /// </summary>
+  [Test]
+  public void CompletingMutantQuestGrantsPrepKit()
+  {
+    GameEvents.RaiseStoryPointReached("radio");
+    for (var i = 0; i < 5; i++)
+      GameEvents.RaiseItemAdded("wood", 1);
+    GameEvents.RaiseBuildingPlaced("campfire");
+    GameEvents.RaiseCraftingCompleted("cooked_meat");
+    for (var i = 0; i < 3; i++)
+      GameEvents.RaiseCropHarvested("potato");
+    GameEvents.RaiseStoryPointReached("ruin");
+
+    Quest("quest_mutant")!.Status.ShouldBe(QuestStatus.Current);
+
+    var arrowsBefore = _inventory.GetItemCount("arrow");
+    var meatBefore = _inventory.GetItemCount("cooked_meat");
+    var armorBefore = _inventory.GetItemCount("cloth_armor");
+
+    GameEvents.RaiseEnemyDied("mutant");
+
+    Quest("quest_mutant")!.Status.ShouldBe(QuestStatus.Complete);
+    _inventory.GetItemCount("arrow").ShouldBe(arrowsBefore + 20);
+    _inventory.GetItemCount("cooked_meat").ShouldBe(meatBefore + 3);
+    _inventory.GetItemCount("cloth_armor").ShouldBe(armorBefore + 1);
+    Quest("quest_boss")!.Status.ShouldBe(QuestStatus.Current);
+  }
+
+  /// <summary>
   ///   (f) The product scene wires the full quest stack: QuestService,
-  ///   GuideService and a generated ruin StoryPointTrigger on the Ruin island.
+  ///   GuideService and the final ruin StoryInteractable on the Ruin island.
   /// </summary>
   [Test]
   public async Task GameSceneContainsQuestNodes()
@@ -315,11 +346,10 @@ public class QuestServiceTest : TestClass, IDisposable
       guideService.ShouldNotBeNull();
       builder.ShouldNotBeNull();
 
-      var trigger = FindDescendants<StoryPointTrigger>(builder!)
+      var ruinLog = FindDescendants<StoryInteractable>(builder!)
         .Single(t => t.StoryPointId == "ruin");
-      trigger.CollisionMask.ShouldBe(1u);
-      trigger.GetNodeOrNull<CollisionShape3D>("CollisionShape3D").ShouldNotBeNull();
-      trigger.GetParent()!.Name.ToString().StartsWith("Island_Ruin").ShouldBeTrue();
+      ruinLog.Text.ShouldBe(IslandLore.RuinQuestLogs[^1]);
+      ruinLog.GetParent()!.Name.ToString().StartsWith("Island_Ruin").ShouldBeTrue();
     }
     finally
     {

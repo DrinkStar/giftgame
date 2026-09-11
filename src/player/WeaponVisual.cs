@@ -21,10 +21,10 @@ public partial class WeaponVisual : Node3D
     ["iron_spear"] = "res://assets/models/weapons/iron_spear.fbx",
     ["wooden_bow"] = "res://assets/models/weapons/bow/Bow_Wooden.glb",
     ["iron_bow"] = "res://assets/models/weapons/iron_bow.fbx",
-    ["pickaxe"] = "res://assets/models/weapons/pickaxe.fbx",
+    ["pickaxe"] = "res://assets/models/weapons/pickaxe/Pickaxe.glb",
     ["sickle"] = "res://assets/models/weapons/sickle.fbx",
-    ["fishing_rod"] = "res://assets/models/weapons/fishing_rod.fbx",
-    ["stone_axe"] = "res://assets/models/weapons/pickaxe.fbx" // axe stand-in
+    ["fishing_rod"] = "res://assets/models/weapons/fishing_rod/FishingRod.glb",
+    ["stone_axe"] = "res://assets/models/weapons/stone_axe.fbx"
   };
 
   private MeshInstance3D? _mesh;

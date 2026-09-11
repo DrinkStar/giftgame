@@ -62,11 +62,10 @@ public class CombatLogicTest : TestClass
   }
 
   [Test]
-  public void ResolveAttack_NonTool_ReturnsNone()
+  public void ResolveAttack_NonTool_ReturnsMelee()
   {
-    // Even a spear-shaped id never attacks when the item is not a tool.
-    CombatLogic.ResolveAttack("wooden_spear", true, true, false).ShouldBe(AttackType.None);
-    CombatLogic.ResolveAttack("wood", false, false, false).ShouldBe(AttackType.None);
+    CombatLogic.ResolveAttack("wooden_spear", true, true, false).ShouldBe(AttackType.Melee);
+    CombatLogic.ResolveAttack("wood", false, false, false).ShouldBe(AttackType.Melee);
   }
 
   [Test]

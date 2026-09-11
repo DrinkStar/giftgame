@@ -57,6 +57,7 @@ public partial class WeaponSystem : Node
   [Export] public NodePath InventoryPath = "../InventorySystem";
 
   [Export] public float MeleeDamage = 15f;
+  [Export] public float UnarmedDamage = 8f;
   [Export] public float MeleeRange = 3f;
   [Export] public float MeleeCooldown = 0.5f;
   [Export] public float BowMeleeDamage = 5f;
@@ -210,11 +211,11 @@ public partial class WeaponSystem : Node
   public AttackType ResolveCurrentAttack()
   {
     if (_inventory == null)
-      return AttackType.None;
+      return AttackType.Melee;
 
     var sel = ResolveEffectiveItem();
     if (sel == null)
-      return AttackType.None;
+      return AttackType.Melee;
 
     var isTool = sel.Type == ItemType.Tool;
     return CombatLogic.ResolveAttack(
@@ -237,7 +238,13 @@ public partial class WeaponSystem : Node
   public float ResolveMeleeDamage()
   {
     var sel = ResolveEffectiveItem();
-    var baseDamage = sel?.Id.Contains("bow") == true ? BowMeleeDamage : MeleeDamage;
+    float baseDamage;
+    if (sel == null || sel.Type != ItemType.Tool)
+      baseDamage = UnarmedDamage;
+    else if (sel.Id.Contains("bow"))
+      baseDamage = BowMeleeDamage;
+    else
+      baseDamage = MeleeDamage;
     return baseDamage * (Progression?.GetMultiplier("melee_damage") ?? 1f);
   }
 
@@ -390,12 +397,7 @@ public partial class WeaponSystem : Node
     if (!CombatLogic.IsReady(_attackElapsed, MeleeCooldown))
       return;
 
-    var sel = ResolveEffectiveItem();
-    if (sel == null || sel.Type != ItemType.Tool)
-      return;
-
-    // R1 (Iter8p): damage flows through the public resolution seam so the
-    // progression multiplier applies (×1 until a talent tree is wired).
+    // Empty hands and non-tools punch; tools keep their melee (axe / bow).
     var damage = ResolveMeleeDamage();
 
     _attackElapsed = 0f;
@@ -460,9 +462,9 @@ public partial class WeaponSystem : Node
   public void FireMelee(float damage) => PerformMelee(damage);
 
   /// <summary>
-  ///   Camera-forward ray, MeleeRange, masked to EnemyHurtbox (layer 9).
-  ///   Areas must be enabled so the Hurtbox Area3D is hittable. The player
-  ///   body is on a different layer and cannot be hit.
+  ///   Camera-forward ray, camera-to-body plus MeleeRange, masked to
+  ///   EnemyHurtbox (layer 9). Same pierce helper as E-interact so the
+  ///   third-person follow camera can still punch a crab in front.
   /// </summary>
   private void PerformMelee(float damage)
   {
@@ -471,13 +473,22 @@ public partial class WeaponSystem : Node
 
     var from = _camera.GlobalPosition;
     var forward = -_camera.GlobalTransform.Basis.Z;
-    var query = PhysicsRayQueryParameters3D.Create(
-      from, from + forward * MeleeRange, CombatLayers.MeleeRayMask
-    );
-    query.CollideWithAreas = true;
-    query.CollideWithBodies = true;
+    var body = GetParentOrNull<Node3D>()?.GlobalPosition ?? from;
+    var gap = from.DistanceTo(body);
+    var to = from + forward * AimQuery.MaxDistance(from, body, MeleeRange);
+    var exclude = new Godot.Collections.Array<Rid>();
+    if (GetParentOrNull<PlayerController>() is { } player)
+      exclude.Add(player.GetRid());
 
-    var hit = _camera.GetWorld3D().DirectSpaceState.IntersectRay(query);
+    var hit = AimQuery.IntersectPiercing(
+      _camera.GetWorld3D().DirectSpaceState,
+      from,
+      to,
+      CombatLayers.MeleeRayMask,
+      exclude,
+      collider => Hurtbox.ResolveEnemy(collider) != null,
+      gap
+    );
     if (
       hit.TryGetValue("collider", out var collider)
       && Hurtbox.ResolveEnemy(collider.AsGodotObject()) is { } enemy

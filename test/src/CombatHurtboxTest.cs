@@ -95,7 +95,13 @@ public class CombatHurtboxTest : TestClass, IDisposable
     wolf.BoxSize.ShouldNotBe(crab.BoxSize);
     wolf.BoxSize.Z.ShouldBeLessThan(4f);
 
-    Hurtbox.ForSpecies("shark").BoxSize.ShouldBe(Hurtbox.ForSpecies("shark_king").BoxSize);
+    Hurtbox.ForSpecies("shark_pup").BoxSize
+      .ShouldBe(Hurtbox.ForSpecies("shark_king").BoxSize);
+    Hurtbox.ForSpecies("shark").BoxSize
+      .ShouldNotBe(Hurtbox.ForSpecies("shark_king").BoxSize);
+    Hurtbox.ForSpecies("shark_king").BoxSize.X.ShouldBe(0.9f);
+    Hurtbox.ForSpecies("shark_king").BoxSize.Y.ShouldBe(1.2f);
+    Hurtbox.ForSpecies("shark_king").BoxSize.Z.ShouldBe(1.0f);
   }
 
   [Test]

@@ -27,7 +27,8 @@ public class ArtAssetsTest : TestClass
     "berries",
     "stone_axe",
     "wooden_spear",
-    "torch"
+    "torch",
+    "milk"
   };
 
   private static readonly string[] ModelPaths =
@@ -36,6 +37,8 @@ public class ArtAssetsTest : TestClass
     "res://assets/models/player/Woman.glb",
     "res://assets/models/buildings/campfire/Campfire.glb",
     "res://assets/models/buildings/bed/Bed.glb",
+    "res://assets/models/weapons/pickaxe/Pickaxe.glb",
+    "res://assets/models/weapons/fishing_rod/FishingRod.glb",
     "res://assets/models/vegetation/tree_oak.glb",
     "res://assets/models/vegetation/tree_pineTallA.glb",
     "res://assets/models/vegetation/palm-detailed-straight.glb",

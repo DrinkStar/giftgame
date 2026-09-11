@@ -569,7 +569,7 @@ public partial class CharacterAnimator : Node
 
     var camera = player.GetViewport()?.GetCamera3D();
     var basis = camera is null ? Basis.Identity : camera.GlobalBasis;
-    var world = (basis * new Vector3(input.X, 0f, input.Y)) with { Y = 0f };
+    var world = new PlayerMotion().GetMoveDirection(input, basis);
     FaceHorizontal(world, dt);
   }
 
@@ -706,7 +706,7 @@ public partial class CharacterAnimator : Node
         "hitrecieve", "hitrecieve_2", "hit_react", "hitreact",
         "idle_hitreact", "bat_hit", "hit"
       },
-      CharacterAnimKind.Death => new[] { "death", "bat_death", "spider_death" },
+      CharacterAnimKind.Death => new[] { "death", "dead", "bat_death", "spider_death" },
       _ => Array.Empty<string>()
     };
   }

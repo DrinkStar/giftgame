@@ -9,12 +9,12 @@ using Godot;
 ///   boss <see cref="EnemyBase"/>. Reads the boss's <see cref="EnemyHealth"/>
 ///   each physics tick and drives the phase transitions:
 ///
-///   - Phase 1 (>60% hp): nothing to do — the boss fights normally.
-///   - Phase 2 (30–60%): summons one minion every
+///   - Phase 1 (>70% hp): nothing to do — the boss fights normally.
+///   - Phase 2 (40–70%): summons one minion every
 ///     <see cref="MinionSpawnInterval"/> seconds, capped at
 ///     <see cref="MaxAliveMinions"/> alive (spawn decision delegated to
 ///     <see cref="CombatLogic.ShouldSpawnMinion"/>).
-///   - Phase 3 (<30%): rage — speed ×1.8, damage ×1.5, shorter attack
+///   - Phase 3 (≤40%): rage — speed ×2.2, damage ×1.8, shorter attack
 ///     interval, applied by <see cref="EnemyBase"/> reading
 ///     <see cref="CurrentPhase"/>, plus a dark-red visual tint applied here.
 ///
@@ -36,8 +36,24 @@ public partial class BossPhaseController : Node
   /// <summary>Packed scene instantiated for each minion (enemy.tscn).</summary>
   [Export] public PackedScene? MinionScene;
 
-  /// <summary>EnemyData assigned to spawned minions (e.g. shark.tres).</summary>
+  /// <summary>EnemyData assigned to spawned minions (e.g. shark_pup.tres).</summary>
   [Export] public EnemyData? MinionData;
+
+  /// <summary>
+  ///   Optional GLB/PackedScene mounted as <c>EnemyModel</c> before the minion
+  ///   enters the tree (same pattern as IslandBuilder). Empty = capsule only.
+  /// </summary>
+  [Export] public PackedScene? MinionModelScene;
+
+  /// <summary>
+  ///   Local Y lift applied to <see cref="MinionModelScene"/> so Gobkit rest
+  ///   pose feet can sit on the CharacterBody origin. Generic models default
+  ///   to zero; asset-specific wiring must opt into its measured lift.
+  /// </summary>
+  [Export] public float MinionModelFootLiftY;
+
+  /// <summary>Gobkit Shark.glb foot lift at import root_scale 0.002.</summary>
+  public const float GobkitSharkFootLiftY = 0.64f;
 
   /// <summary>Player NodePath assigned to spawned minions.</summary>
   [Export] public NodePath PlayerPath = new();
@@ -51,8 +67,13 @@ public partial class BossPhaseController : Node
   /// </summary>
   [Export] public NodePath DayNightServicePath = new();
 
-  [Export] public float MinionSpawnInterval = 10f;
-  [Export] public int MaxAliveMinions = 3;
+  [Export] public float MinionSpawnInterval = 6f;
+  [Export] public int MaxAliveMinions = 5;
+
+  /// <summary>Five deterministic slots around the boss prevent spawn overlap.</summary>
+  public const int MinionSpawnSlots = 5;
+  public const float MinionSpawnRadius = 3f;
+  public const float MinionSpawnHeight = 1.5f;
 
   /// <summary>Dark-red tint applied to the boss in phase 3.</summary>
   [Export] public Color RageTint = new(0.35f, 0.04f, 0.04f);
@@ -62,6 +83,7 @@ public partial class BossPhaseController : Node
   private readonly List<EnemyBase> _minions = new();
   private int _phase = 1;
   private float _spawnTimer;
+  private int _spawnSequence;
 
   /// <summary>Current boss phase (1/2/3); read by EnemyBase for rage math.</summary>
   public int CurrentPhase => _phase;
@@ -126,6 +148,22 @@ public partial class BossPhaseController : Node
     _minions.RemoveAll(m => !IsInstanceValid(m) || m.IsQueuedForDeletion());
   }
 
+  /// <summary>
+  ///   Deterministic five-slot ring. Sequence continues across minion deaths,
+  ///   so a replay with the same combat timing uses the same spawn positions.
+  /// </summary>
+  public static Vector3 MinionSpawnOffset(int sequence)
+  {
+    var slot = ((sequence % MinionSpawnSlots) + MinionSpawnSlots)
+      % MinionSpawnSlots;
+    var angle = slot * Mathf.Tau / MinionSpawnSlots;
+    return new Vector3(
+      Mathf.Cos(angle) * MinionSpawnRadius,
+      MinionSpawnHeight,
+      Mathf.Sin(angle) * MinionSpawnRadius
+    );
+  }
+
   private void SpawnMinion()
   {
     if (MinionScene == null || MinionData == null)
@@ -160,12 +198,25 @@ public partial class BossPhaseController : Node
     if (_dayNight != null)
       minion.DayNightServicePath = new NodePath(_dayNight.GetPath());
 
-    parent.AddChild(minion);
+    // Mount before AddChild so EnemyBase._Ready sees ModelPath + AnimationPlayer.
+    if (MinionModelScene != null)
+    {
+      var model = MinionModelScene.Instantiate<Node3D>();
+      if (model != null)
+      {
+        model.Name = "EnemyModel";
+        model.Position = new Vector3(0f, MinionModelFootLiftY, 0f);
+        minion.AddChild(model);
+        minion.ModelPath = new NodePath("EnemyModel");
+      }
+    }
 
-    // FIX(code-review P2-05): spawn slightly above the boss so the minion
-    // never starts embedded in terrain/slopes; gravity settles it (swimmers
-    // ignore gravity, so the offset is harmless there).
-    minion.GlobalPosition = _boss!.GlobalPosition + new Vector3(2f, 1.5f, 2f);
+    parent.AddChild(minion);
+    // Spawn slightly above a deterministic ring around the boss. Gravity
+    // settles land minions while distinct slots avoid collision piles.
+    minion.GlobalPosition =
+      _boss!.GlobalPosition + MinionSpawnOffset(_spawnSequence);
+    _spawnSequence++;
 
     _minions.Add(minion);
   }

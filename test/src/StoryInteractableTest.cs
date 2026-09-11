@@ -153,6 +153,138 @@ public class StoryInteractableTest : TestClass, IDisposable
   }
 
   /// <summary>
+  ///   StoryPointId="" 的 StoryInteractable 是纯叙述对象：Interact 只抬
+  ///   GuideLine，不抬 StoryPointReached（不重复推进 quest 链）。
+  /// </summary>
+  [Test]
+  public async Task EmptyStoryPointIdOnlyRaisesGuideLine()
+  {
+    var log = new StoryInteractable
+    {
+      StoryPointId = "",
+      Text = "纯叙述日志"
+    };
+    await _fixture.AddToRoot(log, autoRemoveFromRoot: true);
+
+    var guides = new List<string>();
+    var reached = new List<string>();
+    Action<string> onGuide = text => guides.Add(text);
+    Action<string> onReached = id => reached.Add(id);
+    GameEvents.GuideLine += onGuide;
+    GameEvents.StoryPointReached += onReached;
+
+    var player = new PlayerController();
+    try
+    {
+      log.Interact(player);
+
+      guides.Count.ShouldBe(1);
+      guides[0].ShouldBe("纯叙述日志");
+      reached.Count.ShouldBe(0);
+    }
+    finally
+    {
+      GameEvents.GuideLine -= onGuide;
+      GameEvents.StoryPointReached -= onReached;
+      player.Free();
+    }
+  }
+
+  /// <summary>
+  ///   Reusable=true 的散落文本可重读：每次 Interact 都重新抬 GuideLine
+  ///   （字幕再弹一次），提示不消失；StoryPointId="" 时两次都不抬
+  ///   StoryPointReached。
+  /// </summary>
+  [Test]
+  public async Task ReusableLogCanBeReRead()
+  {
+    var log = new StoryInteractable
+    {
+      Reusable = true,
+      StoryPointId = "",
+      Text = "散落世界观文本"
+    };
+    await _fixture.AddToRoot(log, autoRemoveFromRoot: true);
+
+    log.CanInteract().ShouldBeTrue();
+
+    var guides = new List<string>();
+    var reached = new List<string>();
+    Action<string> onGuide = text => guides.Add(text);
+    Action<string> onReached = id => reached.Add(id);
+    GameEvents.GuideLine += onGuide;
+    GameEvents.StoryPointReached += onReached;
+
+    var player = new PlayerController();
+    try
+    {
+      log.Interact(player);
+
+      guides.Count.ShouldBe(1);
+      guides[0].ShouldBe("散落世界观文本");
+      log.CanInteract().ShouldBeTrue();
+
+      log.Interact(player);
+
+      guides.Count.ShouldBe(2);
+      guides[1].ShouldBe("散落世界观文本");
+      reached.Count.ShouldBe(0);
+      log.CanInteract().ShouldBeTrue();
+    }
+    finally
+    {
+      GameEvents.GuideLine -= onGuide;
+      GameEvents.StoryPointReached -= onReached;
+      player.Free();
+    }
+  }
+
+  /// <summary>
+  ///   Reusable=true 且 StoryPointId 非空时，StoryPointReached 只在首次
+  ///   Interact 抬一次：重读只再抬 GuideLine，不重复推进 quest 链。
+  /// </summary>
+  [Test]
+  public async Task ReusableLogRaisesStoryPointReachedOnlyOnce()
+  {
+    var log = new StoryInteractable
+    {
+      Reusable = true,
+      StoryPointId = "radio",
+      Text = "主线日志"
+    };
+    await _fixture.AddToRoot(log, autoRemoveFromRoot: true);
+
+    var guides = new List<string>();
+    var reached = new List<string>();
+    Action<string> onGuide = text => guides.Add(text);
+    Action<string> onReached = id => reached.Add(id);
+    GameEvents.GuideLine += onGuide;
+    GameEvents.StoryPointReached += onReached;
+
+    var player = new PlayerController();
+    try
+    {
+      log.Interact(player);
+
+      guides.Count.ShouldBe(1);
+      reached.Count.ShouldBe(1);
+      reached[0].ShouldBe("radio");
+
+      log.Interact(player);
+
+      guides.Count.ShouldBe(2);
+      reached.Count.ShouldBe(1);
+      log.CanInteract().ShouldBeTrue();
+    }
+    finally
+    {
+      GameEvents.GuideLine -= onGuide;
+      GameEvents.StoryPointReached -= onReached;
+      player.Free();
+    }
+  }
+
+  /// <summary>
   ///   ② The QuestService radio branch: quest_radio is the chapter-1 opener
   ///   (Current on service _Ready, quest_wood still New), completes on
   ///   StoryPointReached("radio") and grants the wood ×5 reward, then

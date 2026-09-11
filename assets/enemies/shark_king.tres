@@ -6,11 +6,11 @@
 script = ExtResource("1_script")
 Id = "shark_king"
 MaxHealth = 400.0
-Damage = 30.0
-MoveSpeed = 5.0
-AttackRange = 3.0
-AttackCooldown = 1.5
-Behavior = 2
+Damage = 36.0
+MoveSpeed = 7.0
+AttackRange = 3.8
+AttackCooldown = 1.1
+Behavior = 0
 Boss = true
 Scale = 2.0
 DropItemId = ""

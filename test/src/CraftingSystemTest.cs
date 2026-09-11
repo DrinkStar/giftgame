@@ -17,7 +17,8 @@ using Shouldly;
 ///   completely-full refund tests pin the plan Decision 3 fix: upstream lost
 ///   everything on a failed completion, and the naive "full refund on
 ///   failure" fix would double-grant on partial placement — we refund only
-///   the unplaced fraction.
+///   the unplaced fraction (ceil-divided so ResultAmount &gt; 1 never floors
+///   a fractional refund to zero).
 /// </summary>
 public class CraftingSystemTest : TestClass, IDisposable
 {
@@ -239,6 +240,48 @@ public class CraftingSystemTest : TestClass, IDisposable
   }
 
   [Test]
+  public void CompleteCraftingCeilRefundsWhenResultAmountExceedsIngredientAmount()
+  {
+    // arrow-shaped recipe: wood×1 + stone×1 → result×5. Floor division would
+    // refund (1*2)/5 = 0 when only 3 of 5 fit; ceil must return 1 each so
+    // materials are not silently lost.
+    var junk = MakeItem("test_junk", maxStack: 10);
+    var wood = MakeItem("test_wood", maxStack: 10);
+    var stone = MakeItem("test_stone", maxStack: 10);
+    var arrow = MakeItem("test_arrow", maxStack: 1);
+    var recipe = MakeRecipe("arrows", arrow, 5, (wood, 1), (stone, 1));
+
+    // 40 junk stacks + wood + stone = 42 of 45 slots; 3 empty so only 3 of
+    // 5 arrows place. Leftover wood/stone keep those two slots occupied after
+    // StartCrafting consumes 1 each.
+    _inventory.AddItem(junk, 400).ShouldBe(0);
+    _inventory.AddItem(wood, 5).ShouldBe(0);
+    _inventory.AddItem(stone, 5).ShouldBe(0);
+
+    string? failed = null;
+    Action<string> onFailed = reason => failed = reason;
+
+    GameEvents.CraftingFailed += onFailed;
+    try
+    {
+      _crafting.StartCrafting(recipe).ShouldBeTrue();
+      _inventory.GetItemCount("test_wood").ShouldBe(4);
+      _inventory.GetItemCount("test_stone").ShouldBe(4);
+
+      _crafting._Process(recipe.CraftingTime);
+
+      _inventory.GetItemCount("test_arrow").ShouldBe(3);
+      _inventory.GetItemCount("test_wood").ShouldBe(5);
+      _inventory.GetItemCount("test_stone").ShouldBe(5);
+      failed.ShouldBe("Inventory partially full");
+    }
+    finally
+    {
+      GameEvents.CraftingFailed -= onFailed;
+    }
+  }
+
+  [Test]
   public void CompleteCraftingRefundsEverythingWhenCompletelyFull()
   {
     var junk = MakeItem("test_junk", maxStack: 10);
@@ -301,6 +344,40 @@ public class CraftingSystemTest : TestClass, IDisposable
     recipe.Ingredients[0].Amount.ShouldBe(2);
     recipe.Ingredients[1].Item!.Id.ShouldBe("stone");
     recipe.Ingredients[1].Amount.ShouldBe(1);
+  }
+
+  [Test]
+  public void ArrowRecipeTresLoadsAndCraftsFiveArrows()
+  {
+    var recipe = GD.Load<CraftingRecipe>("res://assets/recipes/arrow.tres");
+    recipe.ShouldNotBeNull();
+    recipe!.Id.ShouldBe("arrow");
+    recipe.DisplayName.ShouldBe("木箭");
+    recipe.Result.ShouldNotBeNull();
+    recipe.Result!.Id.ShouldBe("arrow");
+    recipe.ResultAmount.ShouldBe(5);
+    recipe.CraftingTime.ShouldBe(2f);
+    recipe.RequiresCampfire.ShouldBeFalse();
+    recipe.RequiresWorkbench.ShouldBeFalse();
+    recipe.Ingredients.Count.ShouldBe(2);
+    recipe.Ingredients[0].Item!.Id.ShouldBe("wood");
+    recipe.Ingredients[0].Amount.ShouldBe(1);
+    recipe.Ingredients[1].Item!.Id.ShouldBe("stone");
+    recipe.Ingredients[1].Amount.ShouldBe(1);
+
+    var wood = GD.Load<ItemData>("res://assets/items/wood.tres")!;
+    var stone = GD.Load<ItemData>("res://assets/items/stone.tres")!;
+    _inventory.AddItem(wood, 1);
+    _inventory.AddItem(stone, 1);
+    _crafting.Recipes.Add(recipe);
+
+    _crafting.CanCraft(recipe).ShouldBeTrue();
+    _crafting.StartCrafting(recipe).ShouldBeTrue();
+    _crafting._Process(2.0);
+
+    _inventory.GetItemCount("arrow").ShouldBe(5);
+    _inventory.GetItemCount("wood").ShouldBe(0);
+    _inventory.GetItemCount("stone").ShouldBe(0);
   }
 
   [Test]

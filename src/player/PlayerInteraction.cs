@@ -85,19 +85,21 @@ public partial class PlayerInteraction : Node
     var spaceState = _player.GetWorld3D().DirectSpaceState;
     var from = _camera.GlobalPosition;
     var direction = -_camera.GlobalTransform.Basis.Z; // Camera forward.
-    var to = from + direction * InteractionDistance;
+    var gap = from.DistanceTo(_player.GlobalPosition);
+    var to = from + direction * AimQuery.MaxDistance(from, _player.GlobalPosition, InteractionDistance);
 
-    var query = PhysicsRayQueryParameters3D.Create(from, to);
-    // Layers 1 (World), 3 (Interactables), 4 (Animals) and 5 (Buildings —
-    // FIX(iter5-plan): added so farm plots placed through the building system
-    // are ray-reachable, plan Decision 8); the player's own body is excluded
-    // by RID so the ray can pass through it.
-    query.CollisionMask = 0b11101;
-    query.CollideWithAreas = true;
-    query.CollideWithBodies = true;
-    query.Exclude = _rayExclude;
-
-    var result = spaceState.IntersectRay(query);
+    // Layers 1 (World), 3 (Interactables), 4 (Animals) and 5 (Buildings).
+    // Skip the follow-camera gap in one jump; do not exclude the island RID
+    // or a look at a hillside would also select trees behind it.
+    var result = AimQuery.IntersectPiercing(
+      spaceState,
+      from,
+      to,
+      0b11101,
+      _rayExclude,
+      collider => FindInteractable(collider) is { } hit && hit.CanInteract(),
+      gap
+    );
 
     if (result.Count == 0)
     {

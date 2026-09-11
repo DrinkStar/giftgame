@@ -4,8 +4,8 @@ namespace SeaAnomaly;
 using Godot;
 
 /// <summary>
-///   Forced-tutorial overlay, extended in Iter8.5 (T8.5.10/T8.5.11) to run
-///   THREE sequences on one CanvasLayer chrome:
+///   Forced-tutorial overlay, extended in Iter8.5 (T8.5.10/T8.5.11) and
+///   chapter-2 thickening: FOUR sequences on one CanvasLayer chrome:
 ///   <list type="bullet">
 ///     <item>
 ///       <b>chapter1</b> (default, 6 steps): the original T8.3 new-player
@@ -13,11 +13,16 @@ using Godot;
 ///       <see cref="StartTutorial()"/> keeps starting this sequence.
 ///     </item>
 ///     <item>
-///       <b>chapter2</b> (2 steps, T8.5.10): plant a farm plot
-///       (<see cref="GameEvents.CropPlanted"/>, any crop) then read the ruin
-///       log (<see cref="GameEvents.StoryPointReached"/> == "ruin").
-///       Triggered by <see cref="GameEvents.QuestStarted"/>("quest_harvest")
-///       once chapter1 completed.
+///       <b>chapter2</b> (1 step): plant a farm plot
+///       (<see cref="GameEvents.CropPlanted"/>, any crop). Triggered by
+///       <see cref="GameEvents.QuestStarted"/>("quest_harvest") once
+///       chapter1 completed.
+///     </item>
+///     <item>
+///       <b>chapter2_ruin</b> (1 step): read the final ruin log
+///       (<see cref="GameEvents.StoryPointReached"/> == "ruin"). Triggered by
+///       <see cref="GameEvents.QuestStarted"/>("quest_ruin") once chapter1
+///       completed.
 ///     </item>
 ///     <item>
 ///       <b>chapter3</b> (1 step, T8.5.11): board the raft and sail away.
@@ -48,8 +53,8 @@ using Godot;
 ///     thirst, FIX(iter8));
 ///   4 campfire / 5 bed — BuildingPlaced with the matching buildable name;
 ///   6 combat — MeleeHit or EnemyDied.
-///   chapter2 step 1 — CropPlanted (any crop);
-///   chapter2 step 2 — StoryPointReached("ruin");
+///   chapter2 — CropPlanted (any crop);
+///   chapter2_ruin — StoryPointReached("ruin");
 ///   chapter3 step 1 — player distance from the origin &gt; 15 m (_Process).
 ///
 ///   Mouse policy (T8.3): steps 1-3 are keyboard-driven → Captured; steps
@@ -67,12 +72,13 @@ using Godot;
 ///   Wiring guards: <see cref="Player"/> is an optional direct node reference
 ///   (null-safe). When unwired, chapter1 step 1 completes immediately so a
 ///   missing wiring never soft-locks the forced tutorial; chapter3 step 1
-///   (sail detection needs the player) does the same. Chapter2 is purely
-///   event-driven and never depends on the player.
+///   (sail detection needs the player) does the same. Chapter2 / chapter2_ruin
+///   are purely event-driven and never depend on the player.
 ///
 ///   SUBSCRIBES GameStarted/QuestStarted/StoryPointReached ALWAYS (the
 ///   chapter triggers must be live while no tutorial is active — chapter2
-///   fires on QuestStarted("quest_harvest"), chapter3 on
+///   fires on QuestStarted("quest_harvest"), chapter2_ruin on
+///   QuestStarted("quest_ruin"), chapter3 on
 ///   StoryPointReached("shark_king")), and ItemAdded/ItemRemoved/
 ///   BuildingPlaced/MeleeHit/EnemyDied/CropPlanted while a sequence is
 ///   active. Chapter-1 auto-start (GameStarted + the deferred fallback) is
@@ -88,8 +94,11 @@ public partial class TutorialUI : CanvasLayer
   /// <summary>Chapter 1: the original 6-step new-player tutorial.</summary>
   public const string Chapter1Sequence = "chapter1";
 
-  /// <summary>Chapter 2: plant a farm plot, read the ruin log (T8.5.10).</summary>
+  /// <summary>Chapter 2 plant card: one farm-plot plant (quest_harvest).</summary>
   public const string Chapter2Sequence = "chapter2";
+
+  /// <summary>Chapter 2 ruin card: read the final ruin log (quest_ruin).</summary>
+  public const string Chapter2RuinSequence = "chapter2_ruin";
 
   /// <summary>Chapter 3: board the raft and sail away (T8.5.11).</summary>
   public const string Chapter3Sequence = "chapter3";
@@ -148,17 +157,28 @@ public partial class TutorialUI : CanvasLayer
     "对海蟹按左键攻击"
   };
 
-  /// <summary>Chapter 2 step titles (T8.5.10).</summary>
+  /// <summary>Chapter 2 plant-card titles.</summary>
   private static readonly string[] Chapter2Titles =
   {
-    "种一格农田", "阅读遗迹日志"
+    "种一格农田"
   };
 
-  /// <summary>Chapter 2 step bodies (T8.5.10).</summary>
+  /// <summary>Chapter 2 plant-card bodies.</summary>
   private static readonly string[] Chapter2Bodies =
   {
-    "手持种子，在农田格上按 E 种下一格作物",
-    "前往遗迹，阅读石台上的日志"
+    "手持种子，在农田格上按 E 种下一格作物"
+  };
+
+  /// <summary>Chapter 2 ruin-card titles.</summary>
+  private static readonly string[] Chapter2RuinTitles =
+  {
+    "阅读遗迹日志"
+  };
+
+  /// <summary>Chapter 2 ruin-card bodies.</summary>
+  private static readonly string[] Chapter2RuinBodies =
+  {
+    "前往遗迹岛，读完三段石刻（最后一段推进任务）"
   };
 
   /// <summary>Chapter 3 step title (T8.5.11).</summary>
@@ -212,6 +232,7 @@ public partial class TutorialUI : CanvasLayer
 
   private bool _chapter1Done;
   private bool _chapter2Done;
+  private bool _chapter2RuinDone;
   private bool _chapter3Done;
 
   private Control? _dim;
@@ -235,19 +256,24 @@ public partial class TutorialUI : CanvasLayer
   {
     Chapter1Sequence => _chapter1Done,
     Chapter2Sequence => _chapter2Done,
+    Chapter2RuinSequence => _chapter2RuinDone,
     Chapter3Sequence => _chapter3Done,
     _ => false
   };
 
   /// <summary>
   ///   Builds the flow for a sequence: chapter1 = the T8.3 6-step order
-  ///   (all externally driven), chapter2 = plant/read_log, chapter3 = sail.
+  ///   (all externally driven), chapter2 = plant, chapter2_ruin = read_log,
+  ///   chapter3 = sail.
   /// </summary>
   private static TutorialFlow CreateFlow(string sequenceId) => sequenceId switch
   {
     Chapter2Sequence => new TutorialFlow(
-      2,
-      new TutorialFlow.Step("plant", null),
+      1,
+      new TutorialFlow.Step("plant", null)
+    ),
+    Chapter2RuinSequence => new TutorialFlow(
+      1,
       new TutorialFlow.Step("read_log", null)
     ),
     Chapter3Sequence => new TutorialFlow(
@@ -448,7 +474,7 @@ public partial class TutorialUI : CanvasLayer
   }
 
   /// <summary>
-  ///   Iter8.5: completes chapter 2 step 2 on the ruin log
+  ///   Iter8.5: completes chapter2_ruin on the final ruin log
   ///   (StoryPointReached("ruin")) and — when no tutorial is active and
   ///   chapter1 finished — starts chapter 3 on the shark-king story point.
   ///   Subscribed always (from _Ready) so the chapter3 trigger can never be
@@ -456,11 +482,11 @@ public partial class TutorialUI : CanvasLayer
   /// </summary>
   private void OnStoryPointReached(string storyPointId)
   {
-    // Chapter 2 step 2: reading the ruin log.
+    // Chapter 2 ruin card: reading the final ruin log.
     if (
       IsTutorialActive
-      && _activeSequence == Chapter2Sequence
-      && _flow.CurrentStep == 2
+      && _activeSequence == Chapter2RuinSequence
+      && _flow.CurrentStep == 1
       && storyPointId == "ruin"
     )
     {
@@ -474,14 +500,18 @@ public partial class TutorialUI : CanvasLayer
   }
 
   /// <summary>
-  ///   Iter8.5 chapter 2 trigger: the harvest quest starts the farming
-  ///   tutorial, but only after the chapter-1 tutorial completed (the forced
-  ///   new-player tutorial must finish first).
+  ///   Chapter 2 plant card on quest_harvest; ruin card on quest_ruin.
+  ///   Both gated on chapter1 completion.
   /// </summary>
   private void OnQuestStarted(string questId)
   {
-    if (!IsTutorialActive && _chapter1Done && !_chapter2Done && questId == "quest_harvest")
+    if (IsTutorialActive || !_chapter1Done)
+      return;
+
+    if (!_chapter2Done && questId == "quest_harvest")
       StartTutorial(Chapter2Sequence);
+    else if (!_chapter2RuinDone && questId == "quest_ruin")
+      StartTutorial(Chapter2RuinSequence);
   }
 
   #endregion Event translation
@@ -560,6 +590,8 @@ public partial class TutorialUI : CanvasLayer
       _chapter1Done = true;
     else if (finished == Chapter2Sequence)
       _chapter2Done = true;
+    else if (finished == Chapter2RuinSequence)
+      _chapter2RuinDone = true;
     else if (finished == Chapter3Sequence)
       _chapter3Done = true;
     _activeSequence = "";
@@ -683,7 +715,7 @@ public partial class TutorialUI : CanvasLayer
 
   /// <summary>
   ///   Recreates the step dots so their count matches the active sequence
-  ///   (chapter1: 6, chapter2: 2, chapter3: 1).
+  ///   (chapter1: 6, chapter2 / chapter2_ruin / chapter3: 1).
   /// </summary>
   private void RebuildDots()
   {
@@ -719,12 +751,14 @@ public partial class TutorialUI : CanvasLayer
     var titles = _activeSequence switch
     {
       Chapter2Sequence => Chapter2Titles,
+      Chapter2RuinSequence => Chapter2RuinTitles,
       Chapter3Sequence => Chapter3Titles,
       _ => StepTitles
     };
     var bodies = _activeSequence switch
     {
       Chapter2Sequence => Chapter2Bodies,
+      Chapter2RuinSequence => Chapter2RuinBodies,
       Chapter3Sequence => Chapter3Bodies,
       _ => StepBodies
     };

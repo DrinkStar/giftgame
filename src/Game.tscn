@@ -79,6 +79,7 @@
 [ext_resource type="Resource" path="res://assets/recipes/iron_armor.tres" id="85_recipe_iarmor"]
 [ext_resource type="Resource" path="res://assets/recipes/backpack.tres" id="86_recipe_backpack"]
 [ext_resource type="Resource" path="res://assets/recipes/salted_meat.tres" id="87_recipe_salted"]
+[ext_resource type="Resource" path="res://assets/recipes/arrow.tres" id="97_recipe_arrow"]
 [ext_resource type="PackedScene" path="res://scenes/raft/raft.tscn" id="88_raft"]
 [ext_resource type="Script" path="res://src/world/island/IslandBuilder.cs" id="89_islandbuilder"]
 [ext_resource type="Script" path="res://src/ui/StorageUI.cs" id="90_storageui"]
@@ -178,6 +179,7 @@ script = ExtResource("96_hurtbox")
 shape = SubResource("CapsuleShape3D_player_hurtbox")
 
 [node name="CameraPivot" type="Node3D" parent="Player"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player/CameraPivot"]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 2, 5)
@@ -225,7 +227,7 @@ StartingItems = Array[Dictionary]([{
 
 [node name="CraftingSystem" type="Node" parent="Player"]
 script = ExtResource("7_crafting")
-Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot"), ExtResource("27_recipe_flour"), ExtResource("28_recipe_bread"), ExtResource("71_recipe_cooked_fish"), ExtResource("72_recipe_fish_soup"), ExtResource("73_recipe_stew"), ExtResource("74_recipe_msoup"), ExtResource("75_recipe_cornbread"), ExtResource("76_recipe_salad"), ExtResource("77_recipe_grilled"), ExtResource("78_recipe_juice"), ExtResource("79_recipe_ispear"), ExtResource("80_recipe_ibow"), ExtResource("81_recipe_pickaxe"), ExtResource("82_recipe_sickle"), ExtResource("83_recipe_cloth"), ExtResource("84_recipe_leather"), ExtResource("85_recipe_iarmor"), ExtResource("86_recipe_backpack"), ExtResource("87_recipe_salted")])
+Recipes = Array[ExtResource("8_recipe_script")]([ExtResource("16_recipe_axe"), ExtResource("17_recipe_meat"), ExtResource("18_recipe_ingot"), ExtResource("27_recipe_flour"), ExtResource("28_recipe_bread"), ExtResource("71_recipe_cooked_fish"), ExtResource("72_recipe_fish_soup"), ExtResource("73_recipe_stew"), ExtResource("74_recipe_msoup"), ExtResource("75_recipe_cornbread"), ExtResource("76_recipe_salad"), ExtResource("77_recipe_grilled"), ExtResource("78_recipe_juice"), ExtResource("79_recipe_ispear"), ExtResource("80_recipe_ibow"), ExtResource("81_recipe_pickaxe"), ExtResource("82_recipe_sickle"), ExtResource("83_recipe_cloth"), ExtResource("84_recipe_leather"), ExtResource("85_recipe_iarmor"), ExtResource("86_recipe_backpack"), ExtResource("87_recipe_salted"), ExtResource("97_recipe_arrow")])
 
 [node name="WeaponSystem" type="Node" parent="Player"]
 script = ExtResource("29_weapon")

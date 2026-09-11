@@ -33,7 +33,7 @@ public class LocalizationTest : TestClass
   public void AllRecipeDisplayNamesAreChinese()
   {
     var count = AssertHanResources("res://assets/recipes", "CraftingRecipe");
-    count.ShouldBe(22);
+    count.ShouldBe(23);
   }
 
   [Test]

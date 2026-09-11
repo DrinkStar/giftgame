@@ -4,19 +4,18 @@ namespace SeaAnomaly;
 using Godot;
 
 /// <summary>
-///   T9.x — attribution screen. Sources.md records two license obligations
-///   that must reach players: "Music by Eric Matyas / www.soundimage.org"
-///   (BGM, soundimage.org custom license) and "Game icons by Delapouite and
-///   Lorc — game-icons.net (CC BY 3.0)". Shown as a bottom-of-screen overlay
-///   while the game is paused (GamePaused/GameResumed), fail-closed when the
-///   events are missing.
+///   T9.x — attribution screen. Sources.md records license obligations
+///   that must reach players: Eric Matyas BGM (soundimage.org), game-icons
+///   CC BY (Delapouite / Lorc / Rihlsul), and CC0 model/texture credits
+///   (Kenney, Quaternius, Gobkit, Poly Haven). Shown while paused via
+///   GamePaused/GameResumed; fail-closed when the events are missing.
 /// </summary>
 public partial class CreditsUI : CanvasLayer
 {
   public const string CreditsText =
     "Music by Eric Matyas / www.soundimage.org\n" +
-    "Game icons by Delapouite and Lorc — https://game-icons.net (CC BY 3.0)\n" +
-    "Models: Kenney (CC0), Quaternius (CC0) via Poly Pizza\n" +
+    "Game icons by Delapouite, Lorc, and Rihlsul — https://game-icons.net (CC BY 3.0)\n" +
+    "Models: Kenney (CC0), Quaternius (CC0) via Poly Pizza, Gobkit (CC0)\n" +
     "Terrain textures: Poly Haven sand_01, coast_sand_01, rocks_ground_01, rock_ground_02, snow_02 (CC0)\n" +
     "SurvivalIsland concept (personal non-commercial use)";
 

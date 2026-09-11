@@ -30,7 +30,7 @@ public static class WorldLayout
     ///   trees, beach and a 40 m spawn-safe ring, without reading as a
     ///   huge empty disc or a 36 m tutorial clone.
     /// </summary>
-    public const float MainRadius = 80f;
+    public const float MainRadius = 120f;
 
     /// <summary>
     ///   Main island terrain amplitude in meters. Inland ridges reach
@@ -51,16 +51,16 @@ public static class WorldLayout
     ///   MainRadius + HarvestMaxRadius so the farm islet never overlaps Main;
     ///   the leftover water is a short swim / paddle.
     /// </summary>
-    public const float StoryMinDistance = 148f;
+    public const float StoryMinDistance = 216f;
 
     /// <summary>Farthest story-island center (mutant woods), still raft-plausible.</summary>
-    public const float StoryMaxDistance = 198f;
+    public const float StoryMaxDistance = 265f;
 
     /// <summary>Harvest / farmland island radius range.</summary>
-    public const float HarvestMinRadius = 42f;
+    public const float HarvestMinRadius = 63f;
 
     /// <summary>Harvest / farmland island radius range.</summary>
-    public const float HarvestMaxRadius = 50f;
+    public const float HarvestMaxRadius = 75f;
 
     /// <summary>Harvest island terrain amplitude (rolling fields).</summary>
     public const float HarvestHeightScale = 7f;
@@ -69,10 +69,10 @@ public static class WorldLayout
     public const float HarvestNoiseScale = 0.042f;
 
     /// <summary>Ruin / stone island radius range.</summary>
-    public const float RuinMinRadius = 36f;
+    public const float RuinMinRadius = 54f;
 
     /// <summary>Ruin / stone island radius range.</summary>
-    public const float RuinMaxRadius = 44f;
+    public const float RuinMaxRadius = 66f;
 
     /// <summary>Ruin island terrain amplitude (rockier, taller).</summary>
     public const float RuinHeightScale = 16f;
@@ -81,10 +81,10 @@ public static class WorldLayout
     public const float RuinNoiseScale = 0.055f;
 
     /// <summary>Mutant woods island radius range.</summary>
-    public const float MutantMinRadius = 46f;
+    public const float MutantMinRadius = 69f;
 
     /// <summary>Mutant woods island radius range.</summary>
-    public const float MutantMaxRadius = 54f;
+    public const float MutantMaxRadius = 81f;
 
     /// <summary>Mutant woods terrain amplitude.</summary>
     public const float MutantHeightScale = 11f;
@@ -93,16 +93,16 @@ public static class WorldLayout
     public const float MutantNoiseScale = 0.038f;
 
     /// <summary>Minimum storm-island center distance from the origin.</summary>
-    public const float StormMinDistance = 255f;
+    public const float StormMinDistance = 410f;
 
     /// <summary>Maximum storm-island center distance from the origin.</summary>
-    public const float StormMaxDistance = 310f;
+    public const float StormMaxDistance = 470f;
 
     /// <summary>Minimum storm-island radius in meters.</summary>
-    public const float StormMinRadius = 30f;
+    public const float StormMinRadius = 36f;
 
     /// <summary>Maximum storm-island radius in meters.</summary>
-    public const float StormMaxRadius = 38f;
+    public const float StormMaxRadius = 46f;
 
     /// <summary>Storm-island terrain amplitude in meters (rockier boss arena).</summary>
     public const float StormHeightScale = 14f;
@@ -115,20 +115,20 @@ public static class WorldLayout
     ///   (StormMaxDistance + StormMaxRadius) plus ExploreMaxRadius and
     ///   <see cref="IslandShoreGap"/>.
     /// </summary>
-    public const float ExploreMinDistance = 412f;
+    public const float ExploreMinDistance = 600f;
 
     /// <summary>
     ///   Farthest exploration-island center. Stays inside
     ///   TutorialMinDistance − TutorialMaxRadius − ExploreMaxRadius − gap
     ///   so the separate tutorial stream can never overlap these islets.
     /// </summary>
-    public const float ExploreMaxDistance = 436f;
+    public const float ExploreMaxDistance = 640f;
 
     /// <summary>Wild / hunting islet radius range.</summary>
-    public const float WildMinRadius = 38f;
+    public const float WildMinRadius = 57f;
 
     /// <summary>Wild / hunting islet radius range.</summary>
-    public const float WildMaxRadius = 44f;
+    public const float WildMaxRadius = 66f;
 
     /// <summary>Wild islet terrain amplitude (wooded ridges).</summary>
     public const float WildHeightScale = 12f;
@@ -137,10 +137,10 @@ public static class WorldLayout
     public const float WildNoiseScale = 0.036f;
 
     /// <summary>Atoll / extra-beach radius range.</summary>
-    public const float AtollMinRadius = 34f;
+    public const float AtollMinRadius = 51f;
 
     /// <summary>Atoll / extra-beach radius range.</summary>
-    public const float AtollMaxRadius = 42f;
+    public const float AtollMaxRadius = 63f;
 
     /// <summary>Atoll terrain amplitude (low sand ring).</summary>
     public const float AtollHeightScale = 6f;
@@ -149,10 +149,10 @@ public static class WorldLayout
     public const float AtollNoiseScale = 0.048f;
 
     /// <summary>Wreck / salvage islet radius range.</summary>
-    public const float WreckMinRadius = 32f;
+    public const float WreckMinRadius = 48f;
 
     /// <summary>Wreck / salvage islet radius range.</summary>
-    public const float WreckMaxRadius = 38f;
+    public const float WreckMaxRadius = 57f;
 
     /// <summary>Wreck islet terrain amplitude.</summary>
     public const float WreckHeightScale = 10f;
@@ -168,16 +168,16 @@ public static class WorldLayout
     ///   plus <see cref="IslandShoreGap"/> so the tutorial stream cannot
     ///   overlap volcano / polar islands.
     /// </summary>
-    public const float EasterMinDistance = 760f;
+    public const float EasterMinDistance = 960f;
 
     /// <summary>Farthest easter-egg center |Z| (still a long raft voyage).</summary>
-    public const float EasterMaxDistance = 920f;
+    public const float EasterMaxDistance = 1120f;
 
     /// <summary>Volcano islet radius range.</summary>
-    public const float VolcanoMinRadius = 36f;
+    public const float VolcanoMinRadius = 54f;
 
     /// <summary>Volcano islet radius range.</summary>
-    public const float VolcanoMaxRadius = 44f;
+    public const float VolcanoMaxRadius = 66f;
 
     /// <summary>Volcano terrain amplitude (tall cone / ridges).</summary>
     public const float VolcanoHeightScale = 20f;
@@ -186,10 +186,10 @@ public static class WorldLayout
     public const float VolcanoNoiseScale = 0.046f;
 
     /// <summary>Polar / snow mountain radius range.</summary>
-    public const float PolarMinRadius = 40f;
+    public const float PolarMinRadius = 60f;
 
     /// <summary>Polar / snow mountain radius range.</summary>
-    public const float PolarMaxRadius = 48f;
+    public const float PolarMaxRadius = 72f;
 
     /// <summary>Polar terrain amplitude (alpine peak).</summary>
     public const float PolarHeightScale = 18f;
@@ -212,12 +212,12 @@ public static class WorldLayout
 
     /// <summary>
     ///   Minimum tutorial-island center distance from the origin. Must clear
-    ///   StormMaxDistance + StormMaxRadius + TutorialMaxRadius.
+    ///   the exploration ring (ExploreMaxDistance + radii + gap).
     /// </summary>
-    public const float TutorialMinDistance = 540f;
+    public const float TutorialMinDistance = 770f;
 
     /// <summary>Maximum tutorial-island center distance from the origin.</summary>
-    public const float TutorialMaxDistance = 600f;
+    public const float TutorialMaxDistance = 830f;
 
     /// <summary>Minimum tutorial-island radius in meters.</summary>
     public const float TutorialMinRadius = 36f;

@@ -8,6 +8,6 @@ Id = "carrot"
 DisplayName = "胡萝卜"
 SeedItemId = "carrot_seed"
 ProduceItemId = "carrot"
-GrowthSeconds = 75.0
+GrowthSeconds = 55.0
 MinYield = 2
 MaxYield = 3

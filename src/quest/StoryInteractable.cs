@@ -5,22 +5,32 @@ using Godot;
 
 /// <summary>
 ///   T8.5.9: a readable story object (book / stone tablet / log) on the
-///   Interactables physics layer (layer 3, value 4). Interacting once raises
-///   <see cref="GameEvents.GuideLine"/> with <see cref="Text"/> and
-///   <see cref="GameEvents.StoryPointReached"/> with
-///   <see cref="StoryPointId"/>; the interaction is one-shot (a second
-///   interact is a no-op and the prompt disappears), mirroring
-///   <see cref="StoryPointTrigger"/>'s _fired guard. Geometry (collision +
-///   visual) is built in code like <see cref="WoodTree"/>, so scenes only
-///   carry the script node with the two exports set.
+///   Interactables physics layer (layer 3, value 4). Interacting raises
+///   <see cref="GameEvents.GuideLine"/> with <see cref="Text"/> and — on the
+///   first read only — <see cref="GameEvents.StoryPointReached"/> with
+///   <see cref="StoryPointId"/>. By default the interaction is one-shot (a
+///   second interact is a no-op and the prompt disappears), mirroring
+///   <see cref="StoryPointTrigger"/>'s _fired guard; setting
+///   <see cref="Reusable"/> keeps the prompt so scattered lore logs can be
+///   re-read (GuideLine re-fires every read, StoryPointReached still only
+///   fires once). Geometry (collision + visual) is built in code like
+///   <see cref="WoodTree"/>, so scenes only carry the script node with the
+///   exports set.
 /// </summary>
 public partial class StoryInteractable : StaticBody3D, IInteractable
 {
   /// <summary>Story point id delivered to QuestService (e.g. "radio", "shark_king").</summary>
   [Export] public string StoryPointId = "";
 
-  /// <summary>Guide narration shown once when the log is read.</summary>
+  /// <summary>Guide narration shown when the log is read.</summary>
   [Export] public string Text = "";
+
+  /// <summary>
+  ///   When true the log stays interactable after the first read and every
+  ///   read re-raises GuideLine; StoryPointReached still fires only on the
+  ///   first read. Mainline quest logs keep the default (false).
+  /// </summary>
+  [Export] public bool Reusable;
 
   private bool _fired;
 
@@ -69,20 +79,23 @@ public partial class StoryInteractable : StaticBody3D, IInteractable
 
   public string GetInteractionPrompt() => "[E] Read log";
 
-  public bool CanInteract() => !_fired;
+  public bool CanInteract() => Reusable || !_fired;
 
   public bool RequiresHold() => false;
 
   public void Interact(PlayerController player)
   {
-    if (_fired)
+    if (_fired && !Reusable)
       return;
 
+    bool firstTime = !_fired;
     _fired = true;
     GameEvents.RaiseGuideLine(Text);
 
-    // An empty StoryPointId reads as a pure narration object (no quest hook).
-    if (!string.IsNullOrEmpty(StoryPointId))
+    // An empty StoryPointId reads as a pure narration object (no quest
+    // hook); a non-empty one advances the quest chain only on the first
+    // read, so a re-read never re-triggers quest progress.
+    if (firstTime && !string.IsNullOrEmpty(StoryPointId))
       GameEvents.RaiseStoryPointReached(StoryPointId);
   }
 }

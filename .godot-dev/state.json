@@ -1,9 +1,9 @@
 {
   "task_id": "godot-dev-20260818-001",
   "created_at": "2026-08-18T09:10:00+08:00",
-  "updated_at": "2026-08-18T19:22:00+08:00",
-  "stage": "phase5-export",
-  "current_iteration": "irregular-islands",
+  "updated_at": "2026-08-21T11:35:00+08:00",
+  "stage": "phase4-aim-swim-tide",
+  "current_iteration": "enlarge-islands",
   "git_branch": "(no .git in workspace)",
   "last_stable_commit": "ae89640",
   "contracts": [
@@ -81,9 +81,9 @@
   "verification": {
     "build": "dotnet build 0 errors",
     "smoke": "godot --headless --path . --quit-after 5 exit 0; WaterMesh headless warning is WARN not crash dump",
-    "tests": "GoDotTest Passed 408 Failed 0",
+    "tests": "2026-08-21 enlarge-islands: IslandGeneratorTest 20/0; IslandVegetationTest 5/0; TutorialIslandTest 4/0; EnemyHabitatTest 9/0; GameTest 4/0. CombatHurtbox suite still aborts on pre-existing disposed-GCHandle. Full suite remains unstable.",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
     "export": "re-export 2026-08-18 19:22 after denser vegetation: same command exit 0; pck still 68646116 (65.47 MB, unchanged — vegetation is C# quotas not new assets); SeaAnomaly.dll 573440; file_logging.pc=true"
   },
-  "notes": "Re-exported Windows Desktop over build/SeaAnomaly.exe after denser vegetation. pck size unchanged vs first pack (procedural counts in IslandBuilder). DLL republished. PlayerDied ≠ GameOver. PlayerMotion/AI switch unchanged. build/ gitignored, not committed."
+  "notes": "2026-08-21 enlarge-islands: product radii ×1.5 (Main 80→120), Storm ×1.2 (30–38→36–46), tutorial size unchanged (ring pushed 770–830). Vegetation/enemies ×2.25 area (Storm ×1.44); shark_king + tutorial crab stay 1. HeightScale/NoiseScale unchanged. DefaultResolution 129→193. SpawnSafeRadius 40 and BuildingPlateauRadius 24 unchanged. Prior aim-swim-tide still in tree."
 }

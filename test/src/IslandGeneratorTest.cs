@@ -16,8 +16,9 @@ using Shouldly;
 ///   ② world-layout determinism — the same seed yields the same specs and a
 ///   different seed yields different ones; ③ normalized height is ~0 outside
 ///   the radial mask; ④ story-ring distances — harvest/ruin/mutant then storm;
-///   ⑤ IslandBuilder (in a live tree) produces island
-///   bodies plus the "radio", "ruin" and "shark_king" StoryPointTriggers.
+///   ⑤ IslandBuilder (in a live tree) produces island bodies plus radio /
+///   shark_king StoryPointTriggers and three Ruin StoryInteractables (final
+///   log raises "ruin").
 /// </summary>
 public class IslandGeneratorTest : TestClass, IDisposable
 {
@@ -363,16 +364,17 @@ public class IslandGeneratorTest : TestClass, IDisposable
     [Test]
     public void StarterIslandIsLargeAndDoesNotOverlapSpawnRing()
     {
-        WorldLayout.MainRadius.ShouldBeGreaterThanOrEqualTo(72f);
-        WorldLayout.MainRadius.ShouldBeLessThan(96f);
+        WorldLayout.MainRadius.ShouldBeGreaterThanOrEqualTo(108f);
+        WorldLayout.MainRadius.ShouldBeLessThanOrEqualTo(132f);
         IslandBuilder.SpawnSafeRadius.ShouldBe(40f);
         WorldLayout.StoryMinDistance.ShouldBeGreaterThan(
             WorldLayout.MainRadius + WorldLayout.HarvestMaxRadius);
     }
 
     /// <summary>
-    ///   ⑤ IslandBuilder places island bodies and the per-tier story points;
-    ///   radio on Main, ruin on the Ruin island, shark_king on Storm.
+    ///   ⑤ IslandBuilder places island bodies and per-tier story hooks;
+    ///   radio Area on Main, shark_king Area on Storm, ruin via the third
+    ///   StoryInteractable on the Ruin island (no walk-in Area).
     /// </summary>
     [Test]
     public async Task BuilderPlacesStoryPointsAndIslands()
@@ -383,7 +385,7 @@ public class IslandGeneratorTest : TestClass, IDisposable
         var triggers = FindDescendants<StoryPointTrigger>(_builder);
         triggers.Count(t => t.StoryPointId == "radio").ShouldBe(1);
         triggers.Count(t => t.StoryPointId == "shark_king").ShouldBe(1);
-        triggers.Count(t => t.StoryPointId == "ruin").ShouldBe(1);
+        triggers.Count(t => t.StoryPointId == "ruin").ShouldBe(0);
 
         var islands = FindDescendants<StaticBody3D>(_builder)
             .Where(b => b.Name.ToString().StartsWith("Island_"))
@@ -401,8 +403,10 @@ public class IslandGeneratorTest : TestClass, IDisposable
             .Any(t => t.StoryPointId == "ruin").ShouldBeFalse();
 
         var ruinIsland = islands.Single(b => b.Name.ToString().StartsWith("Island_Ruin"));
-        FindDescendants<StoryPointTrigger>(ruinIsland)
-            .Any(t => t.StoryPointId == "ruin").ShouldBeTrue();
+        var ruinLogs = FindDescendants<StoryInteractable>(ruinIsland).ToList();
+        ruinLogs.Count.ShouldBe(IslandLore.RuinQuestLogs.Length);
+        ruinLogs.Count(l => l.StoryPointId == "ruin").ShouldBe(1);
+        ruinLogs.Count(l => string.IsNullOrEmpty(l.StoryPointId)).ShouldBe(2);
 
         islands.Any(b => b.Name.ToString().StartsWith("Island_Tutorial"))
             .ShouldBeFalse();
@@ -460,30 +464,66 @@ public class IslandGeneratorTest : TestClass, IDisposable
             .Single(b => b.Name.ToString().StartsWith("Island_Atoll"));
 
         FindDescendants<EnemyBase>(main)
-            .Count(e => e.Name.ToString().StartsWith("Enemy_crab_")).ShouldBe(2);
+            .Count(e => e.Name.ToString().StartsWith("Enemy_crab_")).ShouldBe(5);
         FindDescendants<EnemyBase>(main)
-            .Count(e => e.Name.ToString().StartsWith("Enemy_boar_")).ShouldBe(2);
+            .Count(e => e.Name.ToString().StartsWith("Enemy_boar_")).ShouldBe(5);
         FindDescendants<EnemyBase>(main)
-            .Count(e => e.Name.ToString().StartsWith("Enemy_wolf_")).ShouldBe(2);
+            .Count(e => e.Name.ToString().StartsWith("Enemy_wolf_")).ShouldBe(5);
         FindDescendants<EnemyBase>(harvest).Count.ShouldBe(0);
         FindDescendants<EnemyBase>(ruin).Count.ShouldBe(0);
         FindDescendants<EnemyBase>(wild)
-            .Count(e => e.Name.ToString().StartsWith("Enemy_wolf_")).ShouldBe(2);
+            .Count(e => e.Name.ToString().StartsWith("Enemy_wolf_")).ShouldBe(5);
         FindDescendants<EnemyBase>(wild)
-            .Count(e => e.Name.ToString().StartsWith("Enemy_boar_")).ShouldBe(2);
+            .Count(e => e.Name.ToString().StartsWith("Enemy_boar_")).ShouldBe(5);
         FindDescendants<EnemyBase>(atoll)
-            .Count(e => e.Name.ToString().StartsWith("Enemy_crab_")).ShouldBe(3);
+            .Count(e => e.Name.ToString().StartsWith("Enemy_crab_")).ShouldBe(7);
 
         var mutant = enemies.Count(e => e.Name.ToString().StartsWith("Enemy_mutant_"));
         var stormBeast = enemies.Count(e => e.Name.ToString().StartsWith("Enemy_storm_beast_"));
-        mutant.ShouldBe(2);
+        var sharkKings = enemies
+            .Where(e => e.Name.ToString().StartsWith("Enemy_shark_king_"))
+            .ToList();
+        mutant.ShouldBe(5);
         stormBeast.ShouldBeGreaterThan(0);
+        sharkKings.Count.ShouldBe(1);
+
+        // Product wiring, not just the storm_zone lab: the king owns the phase
+        // controller and phase 2 is configured with the land shark-pup resource.
+        var sharkKing = sharkKings.Single();
+        var phase = sharkKing.GetNodeOrNull<BossPhaseController>("BossPhaseController");
+        phase.ShouldNotBeNull();
+        phase!.MinionData.ShouldNotBeNull();
+        phase.MinionData!.Id.ShouldBe("shark_pup");
+        phase.MinionData.Behavior.ShouldBe(EnemyBehavior.MeleeChase);
+        phase.MinionModelScene.ShouldNotBeNull();
+        phase.MinionSpawnParentPath.ToString().ShouldBe("../..");
+        phase.MinionModelFootLiftY.ShouldBe(
+            BossPhaseController.GobkitSharkFootLiftY, tolerance: 0.001f);
+
+        // The product king must occupy the Storm island's central highland
+        // habitat band: radius 0.1–0.4R and normalized height 0.7–1.0.
+        var stormSpec = WorldLayout.Generate(12345)
+            .Single(s => s.Tier == IslandTier.Storm);
+        float kingRadius = new Vector2(
+            sharkKing.Position.X, sharkKing.Position.Z).Length();
+        float kingHeight01 = sharkKing.Position.Y / stormSpec.HeightScale + 0.5f;
+        kingRadius.ShouldBeGreaterThanOrEqualTo(stormSpec.Radius * 0.1f - 0.01f);
+        kingRadius.ShouldBeLessThanOrEqualTo(stormSpec.Radius * 0.4f + 0.01f);
+        kingHeight01.ShouldBeGreaterThanOrEqualTo(0.7f - 0.001f);
+        kingHeight01.ShouldBeLessThanOrEqualTo(1.0f + 0.001f);
 
         foreach (var enemy in enemies)
         {
             enemy.EnemyData.ShouldNotBeNull();
             enemy.GetNodeOrNull<Node3D>("EnemyModel").ShouldNotBeNull();
         }
+
+        // Stop the old enemies before freeing their cached player reference;
+        // otherwise they keep physics-processing a disposed PlayerController
+        // while the fail-closed half of this test creates a second builder.
+        _builder.GetParent()?.RemoveChild(_builder);
+        _builder.Free();
+        _builder = null!;
 
         // Fail-closed: without a player nothing is spawned — remove the player
         // and a fresh builder must place no enemies.
@@ -493,6 +533,86 @@ public class IslandGeneratorTest : TestClass, IDisposable
         var noPlayerBuilder = new IslandBuilder { WorldSeed = 999 };
         await _fixture.AddToRoot(noPlayerBuilder, autoRemoveFromRoot: true);
         FindDescendants<EnemyBase>(noPlayerBuilder).Count.ShouldBe(0);
+    }
+
+    /// <summary>
+    ///   世界观剧情文本散落：每个非教程产品岛至少一个可读
+    ///   StoryInteractable；非 Ruin 岛 StoryPointId 为空（纯叙述）；Ruin 岛
+    ///   为有序三段，末段 StoryPointId="ruin"。教程岛保持干净。
+    ///   StoryInteractable 不依赖 PlayerController，所以无玩家也会放置。
+    /// </summary>
+    [Test]
+    public async Task BuilderPlacesStoryInteractablesOnEveryNonTutorialTier()
+    {
+        _builder = new IslandBuilder { WorldSeed = 12345 };
+        await _fixture.AddToRoot(_builder, autoRemoveFromRoot: true);
+
+        var islands = FindDescendants<StaticBody3D>(_builder)
+            .Where(b => b.Name.ToString().StartsWith("Island_"))
+            .ToList();
+
+        // 主线 5 岛 + 探索 3 岛必定生成；彩蛋火山/雪山按 seed roll 1–2 个。
+        var coreTiers = new[]
+        {
+            IslandTier.Main, IslandTier.Harvest, IslandTier.Ruin,
+            IslandTier.Mutant, IslandTier.Storm,
+            IslandTier.Wild, IslandTier.Atoll, IslandTier.Wreck
+        };
+        foreach (var tier in coreTiers)
+        {
+            var body = islands.Single(b =>
+                b.Name.ToString().StartsWith($"Island_{tier}_"));
+            if (tier == IslandTier.Ruin)
+                AssertRuinQuestLogs(body);
+            else
+                AssertPureNarrationLogs(body);
+        }
+        islands.Count.ShouldBeGreaterThanOrEqualTo(coreTiers.Length + 1);
+
+        // 彩蛋岛只要生成了，也必须带可读文本。
+        foreach (var egg in islands.Where(b =>
+            b.Name.ToString().StartsWith("Island_Volcano_")
+            || b.Name.ToString().StartsWith("Island_Polar_")))
+        {
+            AssertPureNarrationLogs(egg);
+        }
+
+        // 教程岛不散落。
+        _builder.EnsureTutorialIsland();
+        var tutorial = FindDescendants<StaticBody3D>(_builder)
+            .Single(b => b.Name.ToString().StartsWith("Island_Tutorial"));
+        FindDescendants<StoryInteractable>(tutorial).Count.ShouldBe(0);
+    }
+
+    /// <summary>
+    ///   Asserts the island body carries at least one readable log, all of
+    ///   them pure narration (empty StoryPointId, non-empty Text).
+    /// </summary>
+    private static void AssertPureNarrationLogs(StaticBody3D body)
+    {
+        var logs = FindDescendants<StoryInteractable>(body).ToList();
+        logs.Count.ShouldBeGreaterThanOrEqualTo(1);
+        foreach (var log in logs)
+        {
+            log.StoryPointId.ShouldBe("");
+            log.Text.ShouldNotBeNullOrEmpty();
+        }
+    }
+
+    /// <summary>
+    ///   Ruin island: three ordered quest logs; only the last raises "ruin".
+    /// </summary>
+    private static void AssertRuinQuestLogs(StaticBody3D body)
+    {
+        var logs = FindDescendants<StoryInteractable>(body)
+            .OrderBy(l => l.Name.ToString())
+            .ToList();
+        logs.Count.ShouldBe(IslandLore.RuinQuestLogs.Length);
+        for (var i = 0; i < logs.Count; i++)
+        {
+            logs[i].Text.ShouldBe(IslandLore.RuinQuestLogs[i]);
+            logs[i].StoryPointId.ShouldBe(i == logs.Count - 1 ? "ruin" : "");
+        }
     }
 
     /// <summary>
@@ -713,7 +833,7 @@ public class IslandGeneratorTest : TestClass, IDisposable
         FindDescendants<VegetationProp>(harvest)
             .Count(p => p.Name.ToString().StartsWith("Grass_"))
             .ShouldBeLessThanOrEqualTo(IslandBuilder.HarvestGrassCount);
-        FindDescendants<WoodTree>(harvest).Count.ShouldBeLessThanOrEqualTo(6);
+        FindDescendants<WoodTree>(harvest).Count.ShouldBeLessThanOrEqualTo(12);
 
         var mutant = FindDescendants<StaticBody3D>(_builder)
             .Single(b => b.Name.ToString().StartsWith("Island_Mutant"));
@@ -721,7 +841,7 @@ public class IslandGeneratorTest : TestClass, IDisposable
             + FindDescendants<VegetationProp>(mutant)
                 .Count(p => p.Name.ToString().StartsWith("DecoTree_"));
         mutantCanopy.ShouldBeGreaterThanOrEqualTo(30);
-        mutantCanopy.ShouldBeLessThanOrEqualTo(50);
+        mutantCanopy.ShouldBeLessThanOrEqualTo(110);
     }
 
     /// <summary>

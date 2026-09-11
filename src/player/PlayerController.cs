@@ -20,6 +20,7 @@ public partial class PlayerController : CharacterBody3D
   public const string MoveRightAction = "move_right";
   public const string JumpAction = "jump";
   public const string SprintAction = "sprint";
+  public const string SwimDiveAction = PlayerSwim.DiveAction;
 
   #endregion Input action names
 
@@ -75,6 +76,7 @@ public partial class PlayerController : CharacterBody3D
 
   private PlayerMotion _motion = new();
   private Godot.Collections.Array<Rid>? _raftExclude;
+  private WaterMesh? _water;
 
   public override void _Ready()
   {
@@ -142,8 +144,19 @@ public partial class PlayerController : CharacterBody3D
       Velocity - carry, input, cameraBasis, (float)delta, Running
     );
 
-    // Only jump from the ground (tracked by the motion object).
-    if (Input.IsActionJustPressed(JumpAction) && _motion.IsGrounded)
+    var surfaceY = ResolveSurfaceHeight();
+    var inWater = PlayerSwim.IsInWater(GlobalPosition.Y, surfaceY);
+    if (inWater)
+    {
+      velocity = PlayerSwim.Apply(
+        velocity,
+        Input.IsActionPressed(JumpAction),
+        PlayerSwim.IsDiveHeld(),
+        GlobalPosition.Y,
+        surfaceY
+      );
+    }
+    else if (Input.IsActionJustPressed(JumpAction) && _motion.IsGrounded)
     {
       Stats?.DrainStamina(Stats.JumpStaminaCost);
       velocity = _motion.Jump(velocity);
@@ -215,5 +228,12 @@ public partial class PlayerController : CharacterBody3D
     }
 
     return Vector3.Zero;
+  }
+
+  private float ResolveSurfaceHeight()
+  {
+    if (_water == null || !GodotObject.IsInstanceValid(_water))
+      _water = GetTree()?.Root.FindChild("Water", recursive: true, owned: false) as WaterMesh;
+    return _water?.GetWaveHeight(GlobalPosition) ?? 0f;
   }
 }

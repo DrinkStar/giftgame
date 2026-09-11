@@ -433,6 +433,7 @@ public partial class EnemyBase : CharacterBody3D
       "crab" => new Color(0.8f, 0.2f, 0.2f),
       "shark" => new Color(0.2f, 0.7f, 0.8f),
       "shark_king" => new Color(0.1f, 0.4f, 0.5f),
+      "shark_pup" => new Color(0.25f, 0.65f, 0.75f),
       "spider" => new Color(0.3f, 0.3f, 0.3f),
       "bat" => new Color(0.1f, 0.1f, 0.1f),
       "storm_beast" => new Color(0.4f, 0.45f, 0.6f),

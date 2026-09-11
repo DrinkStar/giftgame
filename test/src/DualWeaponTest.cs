@@ -212,14 +212,12 @@ public class DualWeaponTest : TestClass, IDisposable
   }
 
   [Test]
-  public void NonWeaponSecondary_ResolvesNone()
+  public void NonWeaponSecondary_ResolvesMelee()
   {
-    // wood is a Resource, not a Tool — even as the active slot it can
-    // never attack.
     _inventory.SecondaryItem = LoadItem("wood");
     _weapon.SecondarySlotActive = true;
 
     _weapon.ResolveEffectiveItem()?.Id.ShouldBe("wood");
-    _weapon.ResolveCurrentAttack().ShouldBe(AttackType.None);
+    _weapon.ResolveCurrentAttack().ShouldBe(AttackType.Melee);
   }
 }

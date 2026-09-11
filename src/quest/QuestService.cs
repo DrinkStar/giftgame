@@ -15,10 +15,11 @@ using Godot;
 ///   carries an item Id only (no amount), so this service owns both
 ///   (plan Decisions 3+4):
 ///   - <see cref="_progress"/> counts condition events per quest;
-///   - <see cref="_rewardAmounts"/> is the item-Id → (itemId, amount) table
-///     consulted when a quest completes (no Contains matching, review-frozen);
-///   - the library <c>ItemReward&lt;string&gt;</c> stores the reward item Id for
-///     documentation parity only.
+///   - <see cref="RewardAmounts"/> is the item-Id → entries table
+///     consulted when a quest completes (no Contains matching, review-frozen;
+///     each quest may grant one or more item stacks);
+///   - the library <c>ItemReward&lt;string&gt;</c> stores the primary reward
+///     item Id for documentation parity only.
 ///
 ///   Three chapters are defined in code (plan Decision 6): chapter 1
 ///   (radio → wood ×5 → campfire → cooked meat), chapter 2 (the anomaly:
@@ -56,21 +57,29 @@ public partial class QuestService : Node
   };
 
   /// <summary>
-  ///   Reward amounts per quest Id: item Id + amount (plan Decision 3 — the
-  ///   library's ItemReward carries only the Id, never an amount).
+  ///   Reward stacks per quest Id (plan Decision 3 — the library's ItemReward
+  ///   carries only the primary Id, never amounts). Most quests grant one
+  ///   stack; quest_mutant grants a pre-boss kit of several stacks.
   /// </summary>
-  private static readonly Dictionary<string, (string ItemId, int Amount)>
+  private static readonly Dictionary<string, (string ItemId, int Amount)[]>
     RewardAmounts = new()
     {
       // T8.5.9: chapter-1 opener — wood ×5 for contacting the guide.
-      ["quest_radio"] = ("wood", 5),
-      ["quest_wood"] = ("wood", 3),
-      ["quest_campfire"] = ("berries", 5),
-      ["quest_cooked_meat"] = ("arrow", 10),
-      ["quest_harvest"] = ("cooked_meat", 1),
-      ["quest_ruin"] = ("stone", 5),
-      ["quest_mutant"] = ("arrow", 5),
-      ["quest_boss"] = ("berries", 10)
+      ["quest_radio"] = new[] { ("wood", 5) },
+      ["quest_wood"] = new[] { ("wood", 3) },
+      ["quest_campfire"] = new[] { ("berries", 5) },
+      // Chapter 2 opener: wheat seeds so Main farmland is never soft-locked.
+      ["quest_cooked_meat"] = new[] { ("wheat_seed", 5) },
+      ["quest_harvest"] = new[] { ("cooked_meat", 1) },
+      ["quest_ruin"] = new[] { ("stone", 5) },
+      // Chapter 3 prep kit before sailing to the shark king.
+      ["quest_mutant"] = new[]
+      {
+        ("arrow", 20),
+        ("cooked_meat", 3),
+        ("cloth_armor", 1)
+      },
+      ["quest_boss"] = new[] { ("berries", 10) }
     };
 
   /// <summary>Three chapters, each a strictly ordered quest list (Decision 6).</summary>
@@ -169,7 +178,7 @@ public partial class QuestService : Node
           "quest_campfire", "生火取暖", "建造一个篝火", new ItemReward<string>("berries")
         ),
         controller.CreateQuest(
-          "quest_cooked_meat", "烹饪熟食", "烤制熟肉", new ItemReward<string>("arrow")
+          "quest_cooked_meat", "烹饪熟食", "烤制熟肉", new ItemReward<string>("wheat_seed")
         )
       },
       new()
@@ -250,13 +259,13 @@ public partial class QuestService : Node
   }
 
   /// <summary>
-  ///   Grants the completion reward by item Id + amount table (plan Decision
-  ///   4, review-frozen: no Contains matching; the .tres must exist under
-  ///   assets/items/).
+  ///   Grants each completion reward stack by item Id + amount (no Contains
+  ///   matching; each .tres must exist under assets/items/). Missing entries
+  ///   are skipped with a warning so a bad row does not block the rest.
   /// </summary>
   private void GrantReward(string questId)
   {
-    if (!RewardAmounts.TryGetValue(questId, out var entry))
+    if (!RewardAmounts.TryGetValue(questId, out var entries))
     {
       GD.PushWarning($"QuestService: no reward table entry for '{questId}'.");
       return;
@@ -265,16 +274,19 @@ public partial class QuestService : Node
     if (_inventory == null)
       return;
 
-    var item = GD.Load<ItemData>($"res://assets/items/{entry.ItemId}.tres");
-    if (item == null)
+    foreach (var (itemId, amount) in entries)
     {
-      GD.PushWarning(
-        $"QuestService: reward item '{entry.ItemId}' missing at res://assets/items/{entry.ItemId}.tres."
-      );
-      return;
-    }
+      var item = GD.Load<ItemData>($"res://assets/items/{itemId}.tres");
+      if (item == null)
+      {
+        GD.PushWarning(
+          $"QuestService: reward item '{itemId}' missing at res://assets/items/{itemId}.tres."
+        );
+        continue;
+      }
 
-    _inventory.AddItem(item, entry.Amount);
+      _inventory.AddItem(item, amount);
+    }
   }
 
   private void HandleProgress(string questId, int target, int increment = 1)

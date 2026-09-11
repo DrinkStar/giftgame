@@ -54,6 +54,30 @@ public class WeaponVisualTest : TestClass
   }
 
   [Test]
+  public void SelectingPickaxeShowsQuaterniusPickaxeMesh()
+  {
+    _inventory.AddItem(LoadItem("pickaxe"), 1);
+
+    _visual.DisplayedItemId.ShouldBe("pickaxe");
+    var mesh = _visual.GetNodeOrNull<MeshInstance3D>("WeaponMesh");
+    mesh.ShouldNotBeNull();
+    mesh!.Visible.ShouldBeTrue();
+    mesh.Mesh.ShouldNotBeNull();
+  }
+
+  [Test]
+  public void SelectingFishingRodShowsQuaterniusRodMesh()
+  {
+    _inventory.AddItem(LoadItem("fishing_rod"), 1);
+
+    _visual.DisplayedItemId.ShouldBe("fishing_rod");
+    var mesh = _visual.GetNodeOrNull<MeshInstance3D>("WeaponMesh");
+    mesh.ShouldNotBeNull();
+    mesh!.Visible.ShouldBeTrue();
+    mesh.Mesh.ShouldNotBeNull();
+  }
+
+  [Test]
   public void SelectingPlainResourceHidesWeapon()
   {
     _inventory.AddItem(LoadItem("wood"), 5);

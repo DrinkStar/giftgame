@@ -72,11 +72,11 @@ public class CombatIntegrationTest : TestClass, IDisposable
     {
       Id = "shark_king",
       MaxHealth = 400f,
-      Damage = 30f,
-      MoveSpeed = 5f,
-      AttackRange = 3f,
-      AttackCooldown = 1.5f,
-      Behavior = EnemyBehavior.Swimmer,
+      Damage = 36f,
+      MoveSpeed = 7f,
+      AttackRange = 3.8f,
+      AttackCooldown = 1.1f,
+      Behavior = EnemyBehavior.MeleeChase,
       Boss = true,
       Scale = 2f
     };

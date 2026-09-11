@@ -170,6 +170,32 @@ public class GuideServiceTest : TestClass, IDisposable
   }
 
   /// <summary>
+  ///   quest_boss 是主线终章：完成后播 EpilogueLine（沙盒结局），
+  ///   不调 RaiseGameOver；其他 quest 仍播 NewGoalLine。
+  /// </summary>
+  [Test]
+  public void QuestCompletedBossEmitsEpilogueLine()
+  {
+    var lines = new List<string>();
+    Action<string> onLine = text => lines.Add(text);
+    GameEvents.GuideLine += onLine;
+    try
+    {
+      GameEvents.RaiseQuestCompleted("quest_boss");
+      lines.Count.ShouldBe(1);
+      lines[0].ShouldBe(StoryGuideCopy.EpilogueLine);
+
+      GameEvents.RaiseQuestCompleted("quest_wood");
+      lines.Count.ShouldBe(2);
+      lines[1].ShouldBe("新的目标出现了。");
+    }
+    finally
+    {
+      GameEvents.GuideLine -= onLine;
+    }
+  }
+
+  /// <summary>
   ///   The remaining Decision 5 mappings: CropHarvested, PlayerDied and
   ///   QuestCompleted narrate their lines immediately and in order.
   /// </summary>

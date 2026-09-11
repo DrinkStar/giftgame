@@ -24,11 +24,11 @@ public class FarmingDataTest : TestClass
     (string Id, string Seed, string Produce, float Growth, int Min, int Max)[] table =
     {
       ("potato", "potato_seed", "potato", 60f, 2, 4),
-      ("carrot", "carrot_seed", "carrot", 75f, 2, 3),
-      ("berry", "berry_seed", "berries", 90f, 3, 6),
-      ("mushroom", "mushroom_seed", "mushroom", 120f, 2, 4),
-      ("corn", "corn_seed", "corn", 100f, 2, 3),
-      ("wheat", "wheat_seed", "wheat", 80f, 3, 5)
+      ("carrot", "carrot_seed", "carrot", 55f, 2, 3),
+      ("berry", "berry_seed", "berries", 50f, 3, 6),
+      ("mushroom", "mushroom_seed", "mushroom", 60f, 2, 4),
+      ("corn", "corn_seed", "corn", 55f, 2, 3),
+      ("wheat", "wheat_seed", "wheat", 50f, 3, 5)
     };
 
     foreach (var (id, seed, produce, growth, min, max) in table)

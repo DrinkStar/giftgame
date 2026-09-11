@@ -16,16 +16,17 @@ using Godot.Collections;
 ///   AddItem(Result) and, on failure, only emitted "Inventory full" — the
 ///   consumed ingredients AND the crafted result were both silently lost.
 ///
-///   Upstream hole #3 (double grant): the naive fix "refund every ingredient
-///   whenever the result cannot be fully placed" would let a PARTIALLY
-///   placed result (AddItem places what fits) coexist with a FULL ingredient
-///   refund — the player keeps the placed results and gets all materials
-///   back, duplicating value for free. The plan fix refunds ONLY the
-///   unplaced fraction: remaining / ResultAmount of each ingredient's
-///   per-craft consumption (remaining * ingredient.Amount / ResultAmount),
-///   which for ResultAmount == 1 (all shipped recipes) degrades to "full
-///   refund only when nothing was placed, no refund otherwise".
-/// </summary>
+  ///   Upstream hole #3 (double grant): the naive fix "refund every ingredient
+  ///   whenever the result cannot be fully placed" would let a PARTIALLY
+  ///   placed result (AddItem places what fits) coexist with a FULL ingredient
+  ///   refund — the player keeps the placed results and gets all materials
+  ///   back, duplicating value for free. The plan fix refunds ONLY the
+  ///   unplaced fraction: remaining / ResultAmount of each ingredient's
+  ///   per-craft consumption, rounded UP so ResultAmount &gt; 1 recipes (e.g.
+  ///   arrow×5 from wood×1) never silently drop a fractional refund to zero.
+  ///   For ResultAmount == 1 this still degrades to "full refund only when
+  ///   nothing was placed, no refund otherwise".
+  /// </summary>
 public partial class CraftingSystem : Node
 {
   [Export] public Array<CraftingRecipe> Recipes = new();
@@ -170,19 +171,21 @@ public partial class CraftingSystem : Node
     var recipe = _currentRecipe;
 
     // Fixed refund (plan Decision 3, see class docs): AddItem returns the
-    // count of results that could NOT be placed. Refund exactly the
-    // unplaced fraction of the ingredients — remaining / ResultAmount of
-    // each ingredient's per-craft consumption. Integer division truncates;
-    // every shipped recipe has ResultAmount == 1 so the refund is exact.
+    // count of results that could NOT be placed. Refund the unplaced
+    // fraction of each ingredient (ceil so Amount * remaining < ResultAmount
+    // still returns at least one unit — avoids silent material loss on
+    // multi-output recipes like arrow×5).
     var remaining = _inventory.AddItem(recipe.Result, recipe.ResultAmount);
     if (remaining > 0)
     {
       foreach (var ingredient in recipe.Ingredients)
       {
-        if (ingredient.Item != null)
+        if (ingredient.Item != null && recipe.ResultAmount > 0)
         {
-          var refund = (ingredient.Amount * remaining) / recipe.ResultAmount;
-          _inventory.AddItem(ingredient.Item, refund);
+          var refund = (ingredient.Amount * remaining + recipe.ResultAmount - 1)
+            / recipe.ResultAmount;
+          if (refund > 0)
+            _inventory.AddItem(ingredient.Item, refund);
         }
       }
 

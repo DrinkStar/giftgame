@@ -139,8 +139,17 @@ public partial class GuideService : Node
 
   private void OnPlayerDied() => GameEvents.RaiseGuideLine(DeathLine);
 
-  private void OnQuestCompleted(string questId) =>
-    GameEvents.RaiseGuideLine(NewGoalLine);
+  private void OnQuestCompleted(string questId)
+  {
+    // quest_boss 是主线终章：杀鲨王后播尾声台词，HUD 切沙盒自由探索，
+    // 不调 RaiseGameOver（沙盒结局）。OnBossDefeated 已播 BossLine
+    // 「海域之主的时代…结束了。」；EpilogueLine 接在后面连播
+    // （GuideLine 是 subtitle 队列，连播可接受）。
+    if (questId == "quest_boss")
+      GameEvents.RaiseGuideLine(StoryGuideCopy.EpilogueLine);
+    else
+      GameEvents.RaiseGuideLine(NewGoalLine);
+  }
 
   private void OnPeriodChanged(DayPeriod period)
   {

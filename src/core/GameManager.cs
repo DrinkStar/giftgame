@@ -242,6 +242,13 @@ public partial class GameManager : Node
   public void RestartGame()
   {
     GetTree().Paused = false;
+    // FIX(review): the gameplay-input lock is a static global on GameEvents.
+    // ReloadCurrentScene frees the old tree (its UI nodes release the lock in
+    // _ExitTree), but a stale `true` must never survive the reload — a missed
+    // _ExitTree would otherwise leave the player permanently input-locked.
+    // Reset it synchronously before reloading so the fresh scene always
+    // starts unblocked (see also StorageUI/CraftUI _ExitTree releases).
+    GameEvents.RaiseGameplayInputLockChanged(false);
     GetTree().ReloadCurrentScene();
   }
 }

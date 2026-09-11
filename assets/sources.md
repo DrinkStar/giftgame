@@ -16,7 +16,8 @@ All models downloaded 2026-08-14.
 | bat (蝙蝠) | `models/enemies/bat/Bat.fbx` | Quaternius "Monster Pack Animated" (Animated Monster, Aug 2018), mirrored at https://github.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius | CC0 1.0 | ok |
 | storm_beast (海兽) | `models/enemies/storm_beast/Squidle.glb` | Quaternius Ultimate Monsters pack, mirrored at https://github.com/Dallolz/moorfall-assets | CC0 1.0 | ok (substitute: Cute Monsters pack Cthulhu unavailable — Quaternius downloads are Google Drive links, unreachable from this machine; opengameart.org has no CC0 3D cthulhu. Squidle (squid sea-creature, CC0 Quaternius) used as storm_beast stand-in) |
 | mutant (异化者) | `models/enemies/mutant/Alien.glb` | Quaternius Alien via Poly Pizza https://poly.pizza/m/sUTLXji0aL | CC0 1.0 | ok (Cute Monsters alien unavailable — Google Drive blocked; this is the Ultimate Animated Animals alien, same author, CC0) |
-| shark_king (鲨鱼王) | `models/enemies/shark_king/Shark.glb` | Copy of the shark model above (Pirate Kit via Poly Pizza https://poly.pizza/m/AyHTK3zUSG); scale 2.0 applied in code | CC0 1.0 | ok (reuse of shark asset per plan) |
+| shark_king (鲨鱼王) | `models/enemies/shark_king/Shark.glb` | Gobkit Free Animal Pack Shark (https://gobkit.com/freebies/animal/Shark.glb); raw master timeline kept as `SharkKing_gobkit_raw.glb`; split into Idle/Attack/Death/Walk via `tools/split_gobkit_shark.py` (frames 0–29 / 30–59 / 60–89 / 90–119 @ 24fps); import `root_scale=0.002` (cm→~1.4m); scale 2.0 in EnemyData | CC0 1.0 | ok (land-arena boss) |
+| shark_pup (鲨鱼王小兵) | same Gobkit GLB as shark_king | Boss phase-2 minion; `shark_pup.tres` MeleeChase HP50/伤10; model mounted via `BossPhaseController.MinionModelScene` | CC0 1.0 | ok |
 | spear (矛) | `models/weapons/spear/Spear.fbx` | Quaternius Medieval Weapons Pack (Sept 2018), mirrored at https://github.com/beep2bleep/FreeAssetsByKenneyNLandQuaternius | CC0 1.0 | ok (deviation: opengameart.org "19 low-poly fantasy weapons" is CC0 but ships only a .blend, excluded by project rule) |
 | bow (弓) | `models/weapons/bow/Bow_Wooden.glb` | Quaternius Medieval Weapons Pack (GLB conversion), mirrored at https://github.com/Dallolz/moorfall-assets | CC0 1.0 | ok |
 
@@ -75,7 +76,7 @@ All icons are white-on-transparent 512px PNGs fetched from `https://game-icons.n
 |---|---|---|---|---|
 | icon wood | `icons/wood.png` | delapouite/wood-pile | CC BY 3.0 (Delapouite) | ok |
 | icon stone | `icons/stone.png` | delapouite/stone-pile | CC BY 3.0 (Delapouite) | ok |
-| icon coconut | `icons/coconut.png` | delapouite/palm-tree | CC BY 3.0 (Delapouite) | ok (substitute: game-icons.net has no coconut icon — palm-tree stands for the coconut-palm gatherable) |
+| icon coconut | `icons/coconut.png` | delapouite/coconuts | CC BY 3.0 (Delapouite) | ok (replaced palm-tree stand-in 2026-08-20) |
 | icon berries | `icons/berries.png` | delapouite/berries-bowl | CC BY 3.0 (Delapouite) | ok |
 | icon stone_axe | `icons/stone_axe.png` | lorc/stone-axe | CC BY 3.0 (Lorc) | ok |
 | icon wooden_spear | `icons/wooden_spear.png` | delapouite/spear-feather | CC BY 3.0 (Delapouite) | ok |
@@ -130,7 +131,7 @@ All downloaded 2026-08-15 from `https://game-icons.net/icons/ffffff/transparent/
 | iron_ore | delapouite/stone-pile | iron_ingot | lorc/anvil |
 | berry_juice / berry_seed / fruit_salad | delapouite/berries-bowl | mushroom_seed / wheat_seed | copies of the crop icons (mushroom/wheat) |
 
-`milk` has no matching game-icons asset — HUD falls back to DisplayName. 41 of 49 items now carry icons (7 pre-existing + 34 new).
+`milk` uses rihlsul/milk-carton (CC BY 3.0) — see Iter9p / S+M audit fix below. All 49 items carry icons (2026-08-20).
 
 ### Models — weapon kit (Quaternius CC0, via beep2bleep GitHub mirror)
 
@@ -138,13 +139,27 @@ Downloaded 2026-08-15 from the `FreeAssetsByKenneyNLandQuaternius` mirror (Quate
 
 | Item model | File | Source (mirror path) | License | Status |
 |---|---|---|---|---|
-| pickaxe | `models/weapons/pickaxe.fbx` | .../Medieval Weapons Pack - Sept 2018/FBX/Axe_Small.fbx | CC0 (Quaternius) | ok (axe stand-in for the pick) |
+| pickaxe | `models/weapons/pickaxe/Pickaxe.glb` | Quaternius "Stone Pickaxe" via Poly Pizza https://poly.pizza/m/pvOeJ5EcpW ; file https://static.poly.pizza/da91e155-332b-459d-86c2-66149fd05604.glb | CC0 (Quaternius) | ok (replaced Axe_Small stand-in 2026-08-20) |
 | sickle | `models/weapons/sickle.fbx` | .../FBX/Scythe.fbx | CC0 | ok |
-| fishing_rod | `models/weapons/fishing_rod.fbx` | .../FBX/Spear.fbx | CC0 | ok (pole stand-in) |
+| fishing_rod | `models/weapons/fishing_rod/FishingRod.glb` | Quaternius "Fishing Rod" via Poly Pizza https://poly.pizza/m/9AOHhRPHE7 ; file https://static.poly.pizza/d02f4dd8-c33d-4995-b044-06786446879c.glb | CC0 (Quaternius) | ok (replaced Spear stand-in 2026-08-20) |
 | iron_spear | `models/weapons/iron_spear.fbx` | .../FBX/Spear.fbx | CC0 | ok |
 | iron_bow | `models/weapons/iron_bow.fbx` | .../FBX/Bow_Evil.fbx | CC0 | ok |
+| stone_axe | `models/weapons/stone_axe.fbx` | Quaternius Medieval Weapons Pack Axe_Small.fbx (kept when pickaxe was replaced) | CC0 | ok |
 
-Display wiring: `src/player/WeaponVisual.cs` shows the selected weapon/tool's model at a hand offset on the player (hotbar selection + inventory refresh); the pre-existing bow/spear models are now also displayed.
+Display wiring: `src/player/WeaponVisual.cs` shows the selected weapon/tool's model at a hand offset on the player (hotbar selection + inventory refresh).
+
+## S+M audit fix (2026-08-20)
+
+Icons + weapon semantic replacements from asset-style audit §5 (W+I scope).
+
+| Asset | File | Source | License | Status |
+|---|---|---|---|---|
+| icon milk | `icons/milk.png` | rihlsul/milk-carton — https://game-icons.net/1x1/rihlsul/milk-carton.html | CC BY 3.0 (Rihlsul) | ok |
+| icon coconut | `icons/coconut.png` | delapouite/coconuts (see Iter8p row above) | CC BY 3.0 | ok |
+| pickaxe model | `models/weapons/pickaxe/Pickaxe.glb` | Quaternius Stone Pickaxe (see Iter9 row above) | CC0 | ok |
+| fishing_rod model | `models/weapons/fishing_rod/FishingRod.glb` | Quaternius Fishing Rod (see Iter9 row above) | CC0 | ok |
+
+CreditsUI now lists Gobkit (CC0 shark_king) and Rihlsul (milk icon) alongside existing attributions.
 
 ## Island vegetation (tutorial ridges)
 

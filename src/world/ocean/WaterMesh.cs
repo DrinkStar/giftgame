@@ -37,6 +37,14 @@ public partial class WaterMesh : MeshInstance3D
   [Export]
   public Color FoamColor { get; set; } = new(0.73f, 0.67f, 0.62f);
 
+  /// <summary>
+  ///   Resting sea plane (world Y). Negative lowers the visual ocean so
+  ///   beaches sit above the waves without changing island HeightScale /
+  ///   seed layout. Headless GetWaveHeight still returns 0 (contract).
+  /// </summary>
+  [Export]
+  public float RestLevel { get; set; } = -0.75f;
+
   public WaveCascadeParameters[] Parameters { get; private set; } = System.Array.Empty<WaveCascadeParameters>();
 
   private WaveGenerator? _waveGenerator;
@@ -76,9 +84,9 @@ public partial class WaterMesh : MeshInstance3D
     var cascade0 = new WaveCascadeParameters
     {
       TileLength = new Vector2(88, 88),
-      DisplacementScale = 1.0f,
+      DisplacementScale = 0.55f,
       NormalScale = 1.0f,
-      WindSpeed = 10.0f,
+      WindSpeed = 7.0f,
       WindDirectionDegrees = 20.0f,
       FetchLengthKm = 150.0f,
       Swell = 0.8f,
@@ -90,9 +98,9 @@ public partial class WaterMesh : MeshInstance3D
     var cascade1 = new WaveCascadeParameters
     {
       TileLength = new Vector2(57, 57),
-      DisplacementScale = 0.75f,
+      DisplacementScale = 0.4f,
       NormalScale = 1.0f,
-      WindSpeed = 5.0f,
+      WindSpeed = 3.5f,
       WindDirectionDegrees = 15.0f,
       FetchLengthKm = 150.0f,
       Swell = 0.8f,
@@ -218,8 +226,9 @@ public partial class WaterMesh : MeshInstance3D
     );
     Color sample = SampleDisplacement(sampleUv);
     // The G channel is the vertical displacement; scale by the cascade's
-    // displacement scale.
-    return sample.G * cascade0.DisplacementScale;
+    // displacement scale and add RestLevel so buoyancy matches the lowered
+    // visual sea. Headless / no-readback still returns 0 (contract).
+    return RestLevel + sample.G * cascade0.DisplacementScale;
   }
 
   private Color SampleDisplacement(Vector2 uv)

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="CraftingRecipe" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://src/inventory/CraftingRecipe.cs" id="1_recipe"]
+[ext_resource type="Script" path="res://src/inventory/CraftingIngredient.cs" id="2_ingredient"]
+[ext_resource type="Resource" path="res://assets/items/wood.tres" id="3_wood"]
+[ext_resource type="Resource" path="res://assets/items/stone.tres" id="4_stone"]
+[ext_resource type="Resource" path="res://assets/items/arrow.tres" id="5_arrow"]
+
+[sub_resource type="Resource" id="ing_1"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("3_wood")
+Amount = 1
+
+[sub_resource type="Resource" id="ing_2"]
+script = ExtResource("2_ingredient")
+Item = ExtResource("4_stone")
+Amount = 1
+
+[resource]
+script = ExtResource("1_recipe")
+Id = "arrow"
+DisplayName = "木箭"
+Result = ExtResource("5_arrow")
+ResultAmount = 5
+Ingredients = Array[ExtResource("2_ingredient")]([SubResource("ing_1"), SubResource("ing_2")])
+RequiresCampfire = false
+RequiresWorkbench = false
+RequiresFurnace = false
+CraftingTime = 2.0

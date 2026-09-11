@@ -18,10 +18,10 @@ public enum ItemType
 }
 
 /// <summary>
-///   Data-only item definition (plan Decisions 7/15). The upstream Icon
-///   texture is kept as a field but the shipped .tres files omit the Icon
-///   line because no icon assets exist in this project; UI falls back to
-///   <see cref="DisplayName"/>.
+///   Data-only item definition (plan Decisions 7/15). Icon textures live under
+///   <c>res://assets/icons/</c> (game-icons.net, CC BY) and are wired on each
+///   shipped <c>.tres</c>; UI falls back to <see cref="DisplayName"/> only when
+///   Icon is unset.
 /// </summary>
 [GlobalClass]
 public partial class ItemData : Resource

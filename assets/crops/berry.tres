@@ -8,6 +8,6 @@ Id = "berry"
 DisplayName = "浆果"
 SeedItemId = "berry_seed"
 ProduceItemId = "berries"
-GrowthSeconds = 90.0
+GrowthSeconds = 50.0
 MinYield = 3
 MaxYield = 6

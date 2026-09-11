@@ -40,8 +40,8 @@ public partial class WoodTree : StaticBody3D, IInteractable
     var shape = new CollisionShape3D
     {
       Name = "CollisionShape3D",
-      Position = new Vector3(0, 1f, 0),
-      Shape = new BoxShape3D { Size = new Vector3(0.8f, 2f, 0.8f) }
+      Position = new Vector3(0, 1.4f, 0),
+      Shape = new BoxShape3D { Size = new Vector3(1.2f, 2.8f, 1.2f) }
     };
     AddChild(shape);
 

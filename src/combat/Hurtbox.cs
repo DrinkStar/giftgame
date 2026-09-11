@@ -77,7 +77,8 @@ public partial class Hurtbox : Area3D
   ///     <item>mutant Alien AABB X=3.87 arms → torso box 1.4×2.6×1.0</item>
   ///     <item>storm_beast Squidle Y starts ~1.3 → box 3.2×2.0×1.8 @ y=2.3</item>
   ///     <item>bat flying AABB 5m tall → body box 1.4×1.2×1.6</item>
-  ///     <item>shark/shark_king AABB Z=9.9 swim extent → box 1.6×1.4×4.0 (king Scale=2)</item>
+  ///     <item>shark (Pirate Kit swim) AABB Z≈9.9 → box 1.6×1.4×4.0</item>
+  ///     <item>shark_king/shark_pup (Gobkit @ root_scale 0.002) rest ≈0.98×1.38×0.87 → box 0.9×1.2×1.0 @ y=0.6; Scale multiplies</item>
   ///     <item>spider AABB XZ~6m legs → body box 2.4×1.2×2.2</item>
   ///   </list>
   /// </summary>
@@ -90,12 +91,13 @@ public partial class Hurtbox : Area3D
     "mutant" => new Profile(new Vector3(1.4f, 2.6f, 1.0f), new Vector3(0f, 1.3f, 0f)),
     "storm_beast" => new Profile(new Vector3(3.2f, 2.0f, 1.8f), new Vector3(0f, 2.3f, 0f)),
     "bat" => new Profile(new Vector3(1.4f, 1.2f, 1.6f), new Vector3(0f, 0.4f, 0f)),
-    "shark" or "shark_king" => new Profile(
+    "shark" => new Profile(
       new Vector3(1.6f, 1.4f, 4.0f), new Vector3(0f, 0.3f, 0f)),
+    "shark_king" or "shark_pup" => new Profile(
+      new Vector3(0.9f, 1.2f, 1.0f), new Vector3(0f, 0.6f, 0f)),
     "spider" => new Profile(new Vector3(2.4f, 1.2f, 2.2f), new Vector3(0f, 0.6f, 0f)),
     _ => new Profile(EnemyRadius, EnemyHeight, Vector3.Zero)
   };
-
   /// <summary>
   ///   Walks the collider (Hurtbox or any ancestor) to an <see cref="EnemyBase"/>.
   ///   Direct <c>EnemyBase</c> colliders are a documented body-fallback for

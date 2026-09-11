@@ -37,8 +37,8 @@ using Godot;
 /// </summary>
 public static class IslandHeightmap
 {
-    /// <summary>Default grid resolution (vertices per axis): 129² total.</summary>
-    public const int DefaultResolution = 129;
+    /// <summary>Default grid resolution (vertices per axis): 193² total.</summary>
+    public const int DefaultResolution = 193;
 
     /// <summary>
     ///   Radius fraction at which the radial falloff starts, measured against
@@ -139,7 +139,7 @@ public static class IslandHeightmap
     /// </summary>
     /// <param name="spec">Island description; must not be null.</param>
     /// <param name="resolution">
-    ///   Grid size per axis (default 129). The world cell size is derived as
+    ///   Grid size per axis (default 193). The world cell size is derived as
     ///   <c>spec.Radius * 2 / (resolution - 1)</c>.
     /// </param>
     /// <returns>

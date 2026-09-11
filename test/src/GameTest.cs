@@ -107,9 +107,9 @@ public class GameTest : TestClass
     var main = FindDescendants<StaticBody3D>(builder)
       .Single(b => b.Name.ToString().StartsWith("Island_Main"));
     FindDescendants<EnemyBase>(main)
-      .Count(e => e.Name.ToString().StartsWith("Enemy_boar_")).ShouldBe(2);
+      .Count(e => e.Name.ToString().StartsWith("Enemy_boar_")).ShouldBe(5);
     FindDescendants<EnemyBase>(main)
-      .Count(e => e.Name.ToString().StartsWith("Enemy_wolf_")).ShouldBe(2);
+      .Count(e => e.Name.ToString().StartsWith("Enemy_wolf_")).ShouldBe(5);
     FindDescendants<EnemyBase>(main)
       .Count(e => e.Name.ToString().StartsWith("Enemy_crab_"))
       .ShouldBeGreaterThan(0);

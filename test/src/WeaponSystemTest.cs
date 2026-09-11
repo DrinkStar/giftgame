@@ -12,7 +12,7 @@ using Shouldly;
 ///   attack of the currently selected item is resolved through
 ///   <see cref="CombatLogic.ResolveAttack"/> against a real InventorySystem
 ///   instance (spear = throw, bow + arrows = shoot, bow without arrows =
-///   weak-melee fallback, axe = melee, non-tool = none).
+///   weak-melee fallback, axe = melee, non-tool / empty = unarmed melee).
 /// </summary>
 public class WeaponSystemTest : TestClass, IDisposable
 {
@@ -113,17 +113,18 @@ public class WeaponSystemTest : TestClass, IDisposable
   }
 
   [Test]
-  public void NonToolSelected_ResolvesNone()
+  public void NonToolSelected_ResolvesMelee()
   {
     _inventory.SelectedHotbarSlot = 4;
-    _weapon.ResolveCurrentAttack().ShouldBe(AttackType.None);
+    _weapon.ResolveCurrentAttack().ShouldBe(AttackType.Melee);
   }
 
   [Test]
-  public void EmptyHotbarSlot_ResolvesNone()
+  public void EmptyHotbarSlot_ResolvesMelee()
   {
     _inventory.RemoveItem("wood", 5).ShouldBeTrue();
     _inventory.SelectedHotbarSlot = 4;
-    _weapon.ResolveCurrentAttack().ShouldBe(AttackType.None);
+    _weapon.ResolveCurrentAttack().ShouldBe(AttackType.Melee);
+    _weapon.ResolveMeleeDamage().ShouldBe(8f);
   }
 }

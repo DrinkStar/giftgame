@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://uba1o7qcyg0k"
-path="res://.godot/imported/pickaxe.fbx-569d9849fd5a1e7f764db1c4cdde8597.scn"
+uid="uid://ch4nrv3t670fu"
+path="res://.godot/imported/stone_axe.fbx-5769fe40bb301cef95c6fd079a9e0d01.scn"
 
 [deps]
 
-source_file="res://assets/models/weapons/pickaxe.fbx"
-dest_files=["res://.godot/imported/pickaxe.fbx-569d9849fd5a1e7f764db1c4cdde8597.scn"]
+source_file="res://assets/models/weapons/stone_axe.fbx"
+dest_files=["res://.godot/imported/stone_axe.fbx-5769fe40bb301cef95c6fd079a9e0d01.scn"]
 
 [params]
 

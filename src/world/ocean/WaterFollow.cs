@@ -37,6 +37,7 @@ public partial class WaterFollow : Node
       return;
 
     var position = Target.GlobalPosition;
-    _water.GlobalPosition = new Vector3(position.X, 0f, position.Z);
+    var rest = _water is WaterMesh mesh ? mesh.RestLevel : 0f;
+    _water.GlobalPosition = new Vector3(position.X, rest, position.Z);
   }
 }

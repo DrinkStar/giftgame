@@ -8,6 +8,6 @@ Id = "corn"
 DisplayName = "玉米"
 SeedItemId = "corn_seed"
 ProduceItemId = "corn"
-GrowthSeconds = 100.0
+GrowthSeconds = 55.0
 MinYield = 2
 MaxYield = 3

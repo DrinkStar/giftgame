@@ -63,71 +63,71 @@ public class BossPhaseTest : TestClass, IDisposable
     {
       Id = "shark_king",
       MaxHealth = 400f,
-      Damage = 30f,
-      MoveSpeed = 5f,
-      AttackRange = 3f,
-      AttackCooldown = 1.5f,
-      Behavior = EnemyBehavior.Swimmer,
+      Damage = 36f,
+      MoveSpeed = 7f,
+      AttackRange = 3.8f,
+      AttackCooldown = 1.1f,
+      Behavior = EnemyBehavior.MeleeChase,
       Boss = true,
       Scale = 2f
     };
 
   [Test]
-  public void BossPhase_AboveSixtyPercent_ReturnsPhaseOne()
+  public void BossPhase_AboveSeventyPercent_ReturnsPhaseOne()
   {
-    CombatLogic.BossPhase(0.65f).ShouldBe(1);
+    CombatLogic.BossPhase(0.75f).ShouldBe(1);
     CombatLogic.BossPhase(1f).ShouldBe(1);
-    CombatLogic.BossPhase(0.61f).ShouldBe(1);
+    CombatLogic.BossPhase(0.71f).ShouldBe(1);
   }
 
   [Test]
-  public void BossPhase_BetweenThirtyAndSixty_ReturnsPhaseTwo()
+  public void BossPhase_BetweenFortyAndSeventy_ReturnsPhaseTwo()
   {
-    CombatLogic.BossPhase(0.45f).ShouldBe(2);
-    // The 60% boundary itself belongs to phase 2 (phase 1 is strictly > 60%).
-    CombatLogic.BossPhase(0.6f).ShouldBe(2);
-    CombatLogic.BossPhase(0.31f).ShouldBe(2);
+    CombatLogic.BossPhase(0.55f).ShouldBe(2);
+    // The 70% boundary itself belongs to phase 2 (phase 1 is strictly > 70%).
+    CombatLogic.BossPhase(0.7f).ShouldBe(2);
+    CombatLogic.BossPhase(0.41f).ShouldBe(2);
   }
 
   [Test]
-  public void BossPhase_BelowThirty_ReturnsPhaseThree()
+  public void BossPhase_AtOrBelowForty_ReturnsPhaseThree()
   {
     CombatLogic.BossPhase(0.15f).ShouldBe(3);
-    // The 30% boundary itself belongs to phase 3 (phase 2 is strictly > 30%).
-    CombatLogic.BossPhase(0.3f).ShouldBe(3);
+    // The 40% boundary itself belongs to phase 3 (phase 2 is strictly > 40%).
+    CombatLogic.BossPhase(0.4f).ShouldBe(3);
     CombatLogic.BossPhase(0f).ShouldBe(3);
   }
 
   [Test]
   public void ShouldSpawnMinion_ElapsedBelowInterval_ReturnsFalse()
   {
-    CombatLogic.ShouldSpawnMinion(9.9f, 10f, 0, 3).ShouldBeFalse();
-    CombatLogic.ShouldSpawnMinion(0f, 10f, 0, 3).ShouldBeFalse();
+    CombatLogic.ShouldSpawnMinion(5.9f, 6f, 0, 5).ShouldBeFalse();
+    CombatLogic.ShouldSpawnMinion(0f, 6f, 0, 5).ShouldBeFalse();
   }
 
   [Test]
   public void ShouldSpawnMinion_TimerReadyUnderAliveCap_ReturnsTrue()
   {
-    CombatLogic.ShouldSpawnMinion(10f, 10f, 0, 3).ShouldBeTrue();
-    CombatLogic.ShouldSpawnMinion(15f, 10f, 2, 3).ShouldBeTrue();
+    CombatLogic.ShouldSpawnMinion(6f, 6f, 0, 5).ShouldBeTrue();
+    CombatLogic.ShouldSpawnMinion(15f, 6f, 4, 5).ShouldBeTrue();
   }
 
   [Test]
   public void ShouldSpawnMinion_AliveAtOrAboveCap_ReturnsFalse()
   {
-    CombatLogic.ShouldSpawnMinion(10f, 10f, 3, 3).ShouldBeFalse();
-    CombatLogic.ShouldSpawnMinion(99f, 10f, 4, 3).ShouldBeFalse();
+    CombatLogic.ShouldSpawnMinion(6f, 6f, 5, 5).ShouldBeFalse();
+    CombatLogic.ShouldSpawnMinion(99f, 6f, 6, 5).ShouldBeFalse();
   }
 
   [Test]
   public void BossRage_PhaseThree_ReturnsRageMultipliers()
   {
     var rage = CombatLogic.BossRage(3);
-    rage.SpeedMultiplier.ShouldBe(1.8f);
-    rage.DamageMultiplier.ShouldBe(1.5f);
+    rage.SpeedMultiplier.ShouldBe(2.2f);
+    rage.DamageMultiplier.ShouldBe(1.8f);
 
     // Phase 3 also shortens the attack interval.
-    CombatLogic.BossRageCooldownMultiplier(3).ShouldBe(0.6f);
+    CombatLogic.BossRageCooldownMultiplier(3).ShouldBe(0.45f);
   }
 
   [Test]
@@ -152,8 +152,8 @@ public class BossPhaseTest : TestClass, IDisposable
     GameEvents.BossPhaseChanged += handler;
     try
     {
-      // 400 hp: 160 damage → 0.6 (phase 2), 120 more → 0.3 (phase 3).
-      _enemy.TakeDamage(160f);
+      // 400 hp: 120 damage → 0.7 (phase 2), 120 more → 0.4 (phase 3).
+      _enemy.TakeDamage(120f);
       _controller._PhysicsProcess(0.016);
 
       _enemy.TakeDamage(120f);
@@ -185,7 +185,7 @@ public class BossPhaseTest : TestClass, IDisposable
     GameEvents.BossPhaseChanged += handler;
     try
     {
-      // 50 damage on 400 hp stays above 60%: phase 1, no event.
+      // 50 damage on 400 hp stays above 70%: phase 1, no event.
       _enemy.TakeDamage(50f);
       _controller._PhysicsProcess(0.016);
       _controller._PhysicsProcess(0.016);
@@ -206,8 +206,12 @@ public class BossPhaseTest : TestClass, IDisposable
     king.ShouldNotBeNull();
     king!.Boss.ShouldBeTrue();
     king.Scale.ShouldBe(2f);
-    king.Behavior.ShouldBe(EnemyBehavior.Swimmer);
+    king.Behavior.ShouldBe(EnemyBehavior.MeleeChase);
     king.MaxHealth.ShouldBe(400f);
+    king.Damage.ShouldBe(36f);
+    king.MoveSpeed.ShouldBe(7f);
+    king.AttackRange.ShouldBe(3.8f);
+    king.AttackCooldown.ShouldBe(1.1f);
   }
 
   /// <summary>
@@ -220,7 +224,7 @@ public class BossPhaseTest : TestClass, IDisposable
   public void SpawnMinion_NonEnemyScene_FailsClosedWithoutThrowing()
   {
     _enemy.EnemyData = CreateSharkKingData();
-    _enemy.TakeDamage(160f); // 400 → 0.6 = phase 2
+    _enemy.TakeDamage(120f); // 400 → 0.7 = phase 2
 
     // A scene whose root is a plain Node3D (not an EnemyBase).
     var packed = new PackedScene();
@@ -228,11 +232,109 @@ public class BossPhaseTest : TestClass, IDisposable
     _controller.MinionScene = packed;
     _controller.MinionData = CreateSharkKingData();
     _controller.MinionSpawnInterval = 0f;
-    _controller.MaxAliveMinions = 3;
+    _controller.MaxAliveMinions = 5;
 
     // Interval elapsed → spawn attempt; must not throw.
     Should.NotThrow(() => _controller._PhysicsProcess(1.0));
 
     _controller.CurrentPhase.ShouldBe(2);
+  }
+
+  [Test]
+  public void SpawnMinion_WithModelScene_MountsModelBeforeReady()
+  {
+    _enemy.EnemyData = CreateSharkKingData();
+    _enemy.TakeDamage(120f); // 400 → 0.7 = phase 2
+
+    var spawnParent = new Node3D { Name = "MinionSpawnParent" };
+    _enemy.GetParent()!.AddChild(spawnParent);
+
+    _controller.MinionScene =
+      GD.Load<PackedScene>("res://scenes/combat/enemy.tscn");
+    _controller.MinionData =
+      GD.Load<EnemyData>("res://assets/enemies/shark_pup.tres");
+    _controller.MinionModelScene = GD.Load<PackedScene>(
+      "res://assets/models/enemies/shark_king/Shark.glb"
+    );
+    _controller.MinionModelFootLiftY =
+      BossPhaseController.GobkitSharkFootLiftY;
+    _controller.MinionSpawnParentPath = new NodePath(spawnParent.GetPath());
+    _controller.MinionSpawnInterval = 0f;
+    _controller.MaxAliveMinions = 1;
+
+    try
+    {
+      _controller._PhysicsProcess(1.0);
+
+      var minion = spawnParent.GetNodeOrNull<EnemyBase>("Enemy");
+      minion.ShouldNotBeNull();
+      ReferenceEquals(minion!.GetParent(), spawnParent).ShouldBeTrue();
+      ReferenceEquals(minion.GetParent(), _enemy).ShouldBeFalse();
+      minion.EnemyData.ShouldNotBeNull();
+      minion.EnemyData!.Id.ShouldBe("shark_pup");
+      minion.ModelPath.ToString().ShouldBe("EnemyModel");
+      var model = minion.GetNodeOrNull<Node3D>("EnemyModel");
+      model.ShouldNotBeNull();
+      model!.Position.Y.ShouldBe(
+        BossPhaseController.GobkitSharkFootLiftY, tolerance: 0.001f
+      );
+      var offset = minion.GlobalPosition - _enemy.GlobalPosition;
+      new Vector2(offset.X, offset.Z).Length().ShouldBe(
+        BossPhaseController.MinionSpawnRadius, tolerance: 0.001f
+      );
+      offset.Y.ShouldBe(
+        BossPhaseController.MinionSpawnHeight, tolerance: 0.001f
+      );
+    }
+    finally
+    {
+      spawnParent.Free();
+    }
+  }
+
+  [Test]
+  public void MinionSpawnOffset_UsesFiveDeterministicRingSlots()
+  {
+    var first = BossPhaseController.MinionSpawnOffset(0);
+    for (var i = 0; i < BossPhaseController.MinionSpawnSlots; i++)
+    {
+      var offset = BossPhaseController.MinionSpawnOffset(i);
+      new Vector2(offset.X, offset.Z).Length().ShouldBe(
+        BossPhaseController.MinionSpawnRadius, tolerance: 0.001f
+      );
+      offset.Y.ShouldBe(
+        BossPhaseController.MinionSpawnHeight, tolerance: 0.001f
+      );
+    }
+
+    BossPhaseController.MinionSpawnOffset(
+      BossPhaseController.MinionSpawnSlots
+    ).ShouldBe(first);
+  }
+
+  [Test]
+  public void StormZone_WiresLandPupAsBossSibling()
+  {
+    var packed = GD.Load<PackedScene>("res://scenes/storm_zone.tscn");
+    packed.ShouldNotBeNull();
+    var scene = packed!.Instantiate<Node3D>();
+    try
+    {
+      var phase = scene.GetNodeOrNull<BossPhaseController>(
+        "SharkKing/BossPhaseController"
+      );
+      phase.ShouldNotBeNull();
+      phase!.MinionSpawnParentPath.ToString().ShouldBe("../..");
+      phase.MinionData.ShouldNotBeNull();
+      phase.MinionData!.Id.ShouldBe("shark_pup");
+      phase.MinionModelScene.ShouldNotBeNull();
+      phase.MinionModelFootLiftY.ShouldBe(
+        BossPhaseController.GobkitSharkFootLiftY, tolerance: 0.001f
+      );
+    }
+    finally
+    {
+      scene.Free();
+    }
   }
 }

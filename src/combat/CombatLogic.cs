@@ -56,9 +56,10 @@ public static class CombatLogic
   ///   Resolves the attack the selected item can perform (Decision 1). The
   ///   id match order is case-sensitive <c>Contains("spear")</c> →
   ///   <c>Contains("bow")</c> → <c>Contains("axe")</c>, everything else that
-  ///   is a tool melees ("stone_axe" melees on purpose). Non-tools never
-  ///   attack. Ammo gates: spears need a held spear (primary), bows need an
-  ///   arrow (secondary); without ammo both fall back to melee.
+  ///   is a tool melees ("stone_axe" melees on purpose). Non-tools and empty
+  ///   hands melee (unarmed punch). Ammo gates: spears need a held spear
+  ///   (primary), bows need an arrow (secondary); without ammo both fall
+  ///   back to melee.
   /// </summary>
   public static AttackType ResolveAttack(
     string selectedId,
@@ -68,7 +69,7 @@ public static class CombatLogic
   )
   {
     if (!isTool)
-      return AttackType.None;
+      return AttackType.Melee;
 
     if (selectedId.Contains("spear"))
       return hasPrimaryAmmo ? AttackType.Throw : AttackType.Melee;
@@ -186,17 +187,17 @@ public static class CombatLogic
 
   #region Iter6.1 boss phases (todo 4)
 
-  /// <summary>Phase 2 (minion summons) starts at or below 60% hp.</summary>
-  public const float BossPhase2Threshold = 0.6f;
+  /// <summary>Phase 2 (minion summons) starts at or below 70% hp.</summary>
+  public const float BossPhase2Threshold = 0.7f;
 
-  /// <summary>Phase 3 (rage) starts below 30% hp.</summary>
-  public const float BossPhase3Threshold = 0.3f;
+  /// <summary>Phase 3 (rage) starts at or below 40% hp.</summary>
+  public const float BossPhase3Threshold = 0.4f;
 
-  public const float BossRageSpeedBoost = 1.8f;
-  public const float BossRageDamageBoost = 1.5f;
+  public const float BossRageSpeedBoost = 2.2f;
+  public const float BossRageDamageBoost = 1.8f;
 
-  /// <summary>Phase 3 attack interval factor (0.6 = 40% shorter cooldown).</summary>
-  public const float BossRageCooldownFactor = 0.6f;
+  /// <summary>Phase 3 attack interval factor (0.45 = 55% shorter cooldown).</summary>
+  public const float BossRageCooldownFactor = 0.45f;
 
   /// <summary>Speed/damage multipliers applied by a phase-3 boss rage.</summary>
   public readonly struct BossRageFactors
@@ -212,8 +213,8 @@ public static class CombatLogic
   }
 
   /// <summary>
-  ///   Boss phase from the hp ratio: 1 above 60%, 2 between 30% and 60%
-  ///   (inclusive at the top), 3 below 30%.
+  ///   Boss phase from the hp ratio: 1 above 70%, 2 between 40% and 70%
+  ///   (inclusive at the top), 3 at or below 40%.
   /// </summary>
   public static int BossPhase(float hpRatio) =>
     hpRatio > BossPhase2Threshold ? 1 : hpRatio > BossPhase3Threshold ? 2 : 3;
@@ -227,7 +228,7 @@ public static class CombatLogic
   ) => elapsed >= interval && alive < max;
 
   /// <summary>
-  ///   Boss rage multipliers: speed ×1.8 and damage ×1.5 in phase 3, base 1f
+  ///   Boss rage multipliers: speed ×2.2 and damage ×1.8 in phase 3, base 1f
   ///   before that (phase 0 = no controller attached).
   /// </summary>
   public static BossRageFactors BossRage(int phase) =>
@@ -235,7 +236,7 @@ public static class CombatLogic
       ? new BossRageFactors(BossRageSpeedBoost, BossRageDamageBoost)
       : new BossRageFactors(1f, 1f);
 
-  /// <summary>Phase 3 shortens the boss attack interval (0.6× cooldown).</summary>
+  /// <summary>Phase 3 shortens the boss attack interval (0.45× cooldown).</summary>
   public static float BossRageCooldownMultiplier(int phase) =>
     phase >= 3 ? BossRageCooldownFactor : 1f;
 

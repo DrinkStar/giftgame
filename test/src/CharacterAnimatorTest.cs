@@ -55,7 +55,13 @@ public class CharacterAnimatorTest : TestClass
     "MonsterArmature|Walk"
   };
 
-  private static readonly string[] SharkClips = { "Armature|Swim" };
+  private static readonly string[] SharkClips =
+  {
+    "Idle",
+    "Attack",
+    "Death",
+    "Walk"
+  };
 
   [Test]
   public void WomanClips_ResolveIdleWalkRunAttack()
@@ -154,6 +160,16 @@ public class CharacterAnimatorTest : TestClass
       .ShouldBe("MonsterArmature|Walk");
     CharacterAnimator.ResolveClip(CrabClips, CharacterAnimKind.Attack)
       .ShouldBe("MonsterArmature|Bite_Front");
+    CharacterAnimator.ResolveClip(SharkClips, CharacterAnimKind.Idle)
+      .ShouldBe("Idle");
+    CharacterAnimator.ResolveClip(SharkClips, CharacterAnimKind.Walk)
+      .ShouldBe("Walk");
+    CharacterAnimator.ResolveClip(SharkClips, CharacterAnimKind.Run)
+      .ShouldBe("Walk");
+    CharacterAnimator.ResolveClip(SharkClips, CharacterAnimKind.Attack)
+      .ShouldBe("Attack");
+    CharacterAnimator.ResolveClip(SharkClips, CharacterAnimKind.Death)
+      .ShouldBe("Death");
   }
 
   [Test]
@@ -162,10 +178,6 @@ public class CharacterAnimatorTest : TestClass
     CharacterAnimator.ExtraYawDegreesForEnemy("crab").ShouldBe(90f);
     CharacterAnimator.ExtraYawDegreesForEnemy("wolf").ShouldBe(0f);
     CharacterAnimator.ExtraYawDegreesForEnemy(null).ShouldBe(0f);
-    CharacterAnimator.ResolveClip(SharkClips, CharacterAnimKind.Idle)
-      .ShouldBe("Armature|Swim");
-    CharacterAnimator.ResolveClip(SharkClips, CharacterAnimKind.Walk)
-      .ShouldBe("Armature|Swim");
   }
 
   [Test]

@@ -204,13 +204,12 @@ public class TutorialChapterTest : TestClass, IDisposable
   private void FinishChapter1() => _ui.SkipTutorial();
 
   /// <summary>
-  ///   T8.5.10 chapter2 sequence: after chapter1 completed,
-  ///   QuestStarted("quest_harvest") activates the 2-step farming tutorial —
-  ///   step1 completes on any CropPlanted, step2 on StoryPointReached("ruin")
-  ///   — and finishing raises TutorialCompleted exactly once (chapter2's).
+  ///   Chapter2 plant card: after chapter1 completed,
+  ///   QuestStarted("quest_harvest") activates the 1-step plant tutorial —
+  ///   completes on any CropPlanted and raises TutorialCompleted once.
   /// </summary>
   [Test]
-  public void ChapterTwoStartsOnHarvestQuestAndCompletesOnCropAndLog()
+  public void ChapterTwoStartsOnHarvestQuestAndCompletesOnCropPlanted()
   {
     FinishChapter1();
     _ui.IsTutorialActive.ShouldBeFalse();
@@ -220,7 +219,6 @@ public class TutorialChapterTest : TestClass, IDisposable
     GameEvents.TutorialCompleted += onDone;
     try
     {
-      // Trigger: the harvest quest starts chapter2's farming tutorial.
       GameEvents.RaiseQuestStarted("quest_harvest");
       _ui.IsTutorialActive.ShouldBeTrue();
       _ui.CurrentStep.ShouldBe(1);
@@ -229,14 +227,43 @@ public class TutorialChapterTest : TestClass, IDisposable
       title.ShouldNotBeNull();
       title!.Text.ShouldBe("种一格农田");
 
-      // Step1: any CropPlanted completes the plant step.
       GameEvents.RaiseCropPlanted("potato");
-      _ui.CurrentStep.ShouldBe(2);
+      _ui.IsTutorialActive.ShouldBeFalse();
+      _ui.CurrentStep.ShouldBe(2); // 1 step + 1
+      completed.ShouldBe(1);
+    }
+    finally
+    {
+      GameEvents.TutorialCompleted -= onDone;
+    }
+  }
 
-      // Step2: reading the ruin log completes chapter2.
+  /// <summary>
+  ///   Chapter2 ruin card: QuestStarted("quest_ruin") shows the read-log
+  ///   card; StoryPointReached("ruin") completes it.
+  /// </summary>
+  [Test]
+  public void ChapterTwoRuinStartsOnRuinQuestAndCompletesOnLog()
+  {
+    FinishChapter1();
+    _ui.IsTutorialActive.ShouldBeFalse();
+
+    var completed = 0;
+    Action onDone = () => completed++;
+    GameEvents.TutorialCompleted += onDone;
+    try
+    {
+      GameEvents.RaiseQuestStarted("quest_ruin");
+      _ui.IsTutorialActive.ShouldBeTrue();
+      _ui.CurrentStep.ShouldBe(1);
+
+      var title = _ui.GetNodeOrNull<Label>("StepCard/VBox/Title");
+      title.ShouldNotBeNull();
+      title!.Text.ShouldBe("阅读遗迹日志");
+
       GameEvents.RaiseStoryPointReached("ruin");
       _ui.IsTutorialActive.ShouldBeFalse();
-      _ui.CurrentStep.ShouldBe(3); // 2 steps + 1
+      _ui.CurrentStep.ShouldBe(2);
       completed.ShouldBe(1);
     }
     finally

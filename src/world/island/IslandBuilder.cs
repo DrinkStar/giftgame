@@ -23,9 +23,9 @@ using Godot;
 ///     clearing, sparse trees, no hostiles.</description>
 ///   </item>
 ///   <item>
-///     <description><see cref="IslandTier.Ruin"/>: stone islet plus a
-///     reusable <see cref="StoryPointTrigger"/> with
-///     <c>StoryPointId = "ruin"</c>.</description>
+///     <description><see cref="IslandTier.Ruin"/>: stone islet plus three
+///     ordered <see cref="StoryInteractable"/> quest logs; the third raises
+///     <c>StoryPointId = "ruin"</c> (no walk-in Area trigger).</description>
 ///   </item>
 ///   <item>
 ///     <description><see cref="IslandTier.Mutant"/>: dense woods and
@@ -71,6 +71,11 @@ using Godot;
     ///   </item>
 ///   </list>
 ///
+///   Every non-tutorial tier also gets one readable
+///   <see cref="StoryInteractable"/> (texts in <see cref="IslandLore"/>):
+///   pure narration with an empty StoryPointId so the quest chain is never
+///   re-fired. The tutorial island deliberately stays clean.
+///
 ///   Everything is deterministic: the default <see cref="WorldSeed"/> of
 ///   12345 plus the per-island seeds drawn from the layout reproduce the
 ///   same archipelago on every run. Harvestable trees and decorative
@@ -85,7 +90,7 @@ public partial class IslandBuilder : Node3D
     /// <summary>World generation seed; the fixed default keeps the archipelago deterministic.</summary>
     [Export] public long WorldSeed = 12345;
 
-    /// <summary>Heightmap / mesh / collision grid size per axis (129² default).</summary>
+    /// <summary>Heightmap / mesh / collision grid size per axis (193² default).</summary>
     [Export] public int Resolution = IslandHeightmap.DefaultResolution;
 
     /// <summary>Generate during <c>_Ready</c>; disable to call <see cref="Generate"/> manually.</summary>
@@ -125,25 +130,25 @@ public partial class IslandBuilder : Node3D
     private const float RockSpacingRuin = 4.5f;
 
     /// <summary>Main-island harvestable grassland trees (plus deco canopy).</summary>
-    private const int MainTreeCount = 22;
+    private const int MainTreeCount = 50;
 
     /// <summary>Main-island decorative Kenney canopy (not harvestable).</summary>
-    private const int MainDecoTreeCount = 16;
+    private const int MainDecoTreeCount = 36;
 
     /// <summary>Main-island beach palm count.</summary>
-    private const int MainPalmCount = 12;
+    private const int MainPalmCount = 27;
 
     /// <summary>Main-island decorative beach palms (not harvestable).</summary>
-    private const int MainDecoPalmCount = 6;
+    private const int MainDecoPalmCount = 14;
 
-    /// <summary>Main Kenney grass clumps off the 24 m plateau (cap 80–200).</summary>
-    public const int MainGrassCount = 140;
+    /// <summary>Main Kenney grass clumps off the 24 m plateau (cap 200–360).</summary>
+    public const int MainGrassCount = 315;
 
     /// <summary>Main understory shrubs off the plateau.</summary>
-    private const int MainShrubCount = 28;
+    private const int MainShrubCount = 63;
 
     /// <summary>Main rocks on steep / high ground — never on the plateau.</summary>
-    private const int MainRockCount = 8;
+    private const int MainRockCount = 18;
 
     /// <summary>
     ///   Tutorial-island grassland trees. Each <see cref="WoodTree"/> yields
@@ -170,172 +175,172 @@ public partial class IslandBuilder : Node3D
     public const int TutorialRockCount = 4;
 
     /// <summary>Harvest farmland trees (few — field look).</summary>
-    private const int HarvestTreeCount = 4;
+    private const int HarvestTreeCount = 9;
 
     /// <summary>Harvest decorative trees at the field edge.</summary>
-    private const int HarvestDecoTreeCount = 2;
+    private const int HarvestDecoTreeCount = 5;
 
     /// <summary>Harvest beach palms.</summary>
-    private const int HarvestPalmCount = 2;
+    private const int HarvestPalmCount = 5;
 
-    /// <summary>Harvest grass — field, not a bald disc (cap ~100).</summary>
-    public const int HarvestGrassCount = 96;
+    /// <summary>Harvest grass — field, not a bald disc (cap ~220).</summary>
+    public const int HarvestGrassCount = 216;
 
     /// <summary>Harvest hedgerow shrubs.</summary>
-    private const int HarvestShrubCount = 12;
+    private const int HarvestShrubCount = 27;
 
     /// <summary>Harvest rocks (almost none on the field).</summary>
-    private const int HarvestRockCount = 2;
+    private const int HarvestRockCount = 5;
 
     /// <summary>Ruin canopy (sparse).</summary>
-    private const int RuinTreeCount = 5;
+    private const int RuinTreeCount = 11;
 
     /// <summary>Ruin decorative trees in cracks.</summary>
-    private const int RuinDecoTreeCount = 2;
+    private const int RuinDecoTreeCount = 5;
 
     /// <summary>Ruin grass in stone cracks.</summary>
-    private const int RuinGrassCount = 22;
+    private const int RuinGrassCount = 50;
 
     /// <summary>Ruin shrubs.</summary>
-    private const int RuinShrubCount = 8;
+    private const int RuinShrubCount = 18;
 
     /// <summary>Ruin rocks — boulder-forward, not a field.</summary>
-    private const int RuinRockCount = 18;
+    private const int RuinRockCount = 41;
 
     /// <summary>Mutant woods harvestable trees.</summary>
-    private const int MutantTreeCount = 26;
+    private const int MutantTreeCount = 59;
 
-    /// <summary>Mutant decorative canopy (true woods, cap ~50 total).</summary>
-    private const int MutantDecoTreeCount = 18;
+    /// <summary>Mutant decorative canopy (true woods, cap ~100 total).</summary>
+    private const int MutantDecoTreeCount = 41;
 
     /// <summary>Mutant beach palms.</summary>
-    private const int MutantPalmCount = 2;
+    private const int MutantPalmCount = 5;
 
     /// <summary>Mutant decorative palms.</summary>
-    private const int MutantDecoPalmCount = 2;
+    private const int MutantDecoPalmCount = 5;
 
     /// <summary>Mutant understory grass.</summary>
-    private const int MutantGrassCount = 80;
+    private const int MutantGrassCount = 180;
 
     /// <summary>Mutant understory shrubs.</summary>
-    private const int MutantShrubCount = 24;
+    private const int MutantShrubCount = 54;
 
     /// <summary>Mutant rocks.</summary>
-    private const int MutantRockCount = 6;
+    private const int MutantRockCount = 14;
 
     /// <summary>Storm wind-stunted trees.</summary>
-    private const int StormTreeCount = 2;
+    private const int StormTreeCount = 3;
 
     /// <summary>Storm sparse grass.</summary>
-    private const int StormGrassCount = 10;
+    private const int StormGrassCount = 14;
 
     /// <summary>Storm shrubs.</summary>
-    private const int StormShrubCount = 4;
+    private const int StormShrubCount = 6;
 
     /// <summary>Storm rocks.</summary>
-    private const int StormRockCount = 10;
+    private const int StormRockCount = 14;
 
     /// <summary>Wild hunting-islet grassland trees.</summary>
-    public const int WildTreeCount = 16;
+    public const int WildTreeCount = 36;
 
     /// <summary>Wild decorative hunting-woods canopy.</summary>
-    private const int WildDecoTreeCount = 12;
+    private const int WildDecoTreeCount = 27;
 
     /// <summary>Wild hunting-islet beach palms.</summary>
-    public const int WildPalmCount = 3;
+    public const int WildPalmCount = 7;
 
     /// <summary>Wild decorative beach palms.</summary>
-    private const int WildDecoPalmCount = 2;
+    private const int WildDecoPalmCount = 5;
 
     /// <summary>Wild Kenney grass clumps.</summary>
-    public const int WildGrassCount = 64;
+    public const int WildGrassCount = 144;
 
     /// <summary>Wild shrubs.</summary>
-    public const int WildShrubCount = 18;
+    public const int WildShrubCount = 41;
 
     /// <summary>Wild rocks (includes large Kenney pieces).</summary>
-    public const int WildRockCount = 12;
+    public const int WildRockCount = 27;
 
     /// <summary>Atoll inland trees (sparse — beach-first).</summary>
-    public const int AtollTreeCount = 2;
+    public const int AtollTreeCount = 5;
 
     /// <summary>Atoll coconut palms.</summary>
-    public const int AtollPalmCount = 12;
+    public const int AtollPalmCount = 27;
 
     /// <summary>Atoll decorative palms along the ring.</summary>
-    private const int AtollDecoPalmCount = 6;
+    private const int AtollDecoPalmCount = 14;
 
     /// <summary>Atoll grass clumps.</summary>
-    public const int AtollGrassCount = 48;
+    public const int AtollGrassCount = 108;
 
     /// <summary>Atoll shrubs.</summary>
-    public const int AtollShrubCount = 10;
+    public const int AtollShrubCount = 23;
 
     /// <summary>Atoll sand-rock props.</summary>
-    public const int AtollRockCount = 5;
+    public const int AtollRockCount = 11;
 
     /// <summary>Wreck islet trees.</summary>
-    public const int WreckTreeCount = 3;
+    public const int WreckTreeCount = 7;
 
     /// <summary>Wreck decorative trees (sparse salvage grove).</summary>
-    private const int WreckDecoTreeCount = 2;
+    private const int WreckDecoTreeCount = 5;
 
     /// <summary>Wreck islet palms.</summary>
-    public const int WreckPalmCount = 4;
+    public const int WreckPalmCount = 9;
 
     /// <summary>Wreck grass clumps.</summary>
-    public const int WreckGrassCount = 20;
+    public const int WreckGrassCount = 45;
 
     /// <summary>Wreck shrubs.</summary>
-    public const int WreckShrubCount = 6;
+    public const int WreckShrubCount = 14;
 
     /// <summary>Wreck rocks.</summary>
-    public const int WreckRockCount = 8;
+    public const int WreckRockCount = 18;
 
     /// <summary>Wreck Kenney crates.</summary>
-    public const int WreckCrateCount = 6;
+    public const int WreckCrateCount = 14;
 
     /// <summary>Wreck Kenney barrels.</summary>
-    public const int WreckBarrelCount = 5;
+    public const int WreckBarrelCount = 11;
 
     /// <summary>Wreck driftwood / logs.</summary>
-    public const int WreckDriftwoodCount = 4;
+    public const int WreckDriftwoodCount = 9;
 
     /// <summary>Volcano scorched trees.</summary>
-    public const int VolcanoTreeCount = 3;
+    public const int VolcanoTreeCount = 7;
 
     /// <summary>Volcano decorative scorched trees.</summary>
-    private const int VolcanoDecoTreeCount = 2;
+    private const int VolcanoDecoTreeCount = 5;
 
     /// <summary>Volcano has no tropical palms.</summary>
     public const int VolcanoPalmCount = 0;
 
     /// <summary>Volcano ash shrubs.</summary>
-    public const int VolcanoShrubCount = 4;
+    public const int VolcanoShrubCount = 9;
 
     /// <summary>Volcano rocks / boulders.</summary>
-    public const int VolcanoRockCount = 20;
+    public const int VolcanoRockCount = 45;
 
     /// <summary>Emissive lava-pool landmarks on the volcano.</summary>
-    public const int VolcanoLavaPoolCount = 4;
+    public const int VolcanoLavaPoolCount = 9;
 
     /// <summary>Polar alpine pines.</summary>
-    public const int PolarTreeCount = 14;
+    public const int PolarTreeCount = 32;
 
     /// <summary>Polar decorative pine clumps (not harvestable).</summary>
-    private const int PolarDecoTreeCount = 10;
+    private const int PolarDecoTreeCount = 23;
 
     /// <summary>Polar has no tropical palms.</summary>
     public const int PolarPalmCount = 0;
 
     /// <summary>Polar alpine grass among snow.</summary>
-    public const int PolarGrassCount = 24;
+    public const int PolarGrassCount = 54;
 
     /// <summary>Polar alpine shrubs.</summary>
-    public const int PolarShrubCount = 12;
+    public const int PolarShrubCount = 27;
 
     /// <summary>Polar ridge rocks.</summary>
-    public const int PolarRockCount = 10;
+    public const int PolarRockCount = 23;
 
     /// <summary>Meters the player stands above the tutorial plateau (Y = 0.5).</summary>
     public const float TutorialSpawnHeight = 2f;
@@ -629,6 +634,13 @@ public partial class IslandBuilder : Node3D
                     maxRadius: spec.Radius * IslandHeightmap.MaskFalloffStart,
                     minHeight01: MinLandHeight01,
                     maxHeight01: 0.64f);
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Main, rng),
+                    minRadius: spec.Radius * 0.62f,
+                    maxRadius: spec.Radius * IslandHeightmap.MaskFalloffStart,
+                    minHeight01: MinLandHeight01,
+                    maxHeight01: 0.64f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -638,6 +650,14 @@ public partial class IslandBuilder : Node3D
                     HarvestTreeCount, HarvestPalmCount,
                     HarvestGrassCount, HarvestShrubCount, HarvestRockCount,
                     HarvestDecoTreeCount);
+                // 田岛：放在田地里带，玩家穿行会经过。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Harvest, rng),
+                    minRadius: spec.Radius * 0.15f,
+                    maxRadius: spec.Radius * 0.55f,
+                    minHeight01: MinLandHeight01,
+                    maxHeight01: 0.78f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -647,12 +667,9 @@ public partial class IslandBuilder : Node3D
                     RuinTreeCount, palmCount: 0,
                     RuinGrassCount, RuinShrubCount, RuinRockCount,
                     RuinDecoTreeCount);
-                PlaceStoryPoint(
-                    spec, body, heightmap, rng, "ruin", reusable: true,
-                    minRadius: spec.Radius * 0.12f,
-                    maxRadius: spec.Radius * 0.48f,
-                    minHeight01: 0.68f,
-                    maxHeight01: 1f);
+                // Chapter 2: three ordered logs. Only the last raises
+                // StoryPointReached("ruin") — no walk-in Area soft-complete.
+                PlaceRuinQuestLogs(spec, body, heightmap, rng);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -662,6 +679,14 @@ public partial class IslandBuilder : Node3D
                     MutantTreeCount, MutantPalmCount,
                     MutantGrassCount, MutantShrubCount, MutantRockCount,
                     MutantDecoTreeCount, MutantDecoPalmCount);
+                // 变异林：跟树冠带同高程，玩家在林中穿行能捡到。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Mutant, rng),
+                    minRadius: spec.Radius * 0.18f,
+                    maxRadius: spec.Radius * 0.60f,
+                    minHeight01: 0.56f,
+                    maxHeight01: 0.82f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -674,6 +699,14 @@ public partial class IslandBuilder : Node3D
                     StormGrassCount, StormShrubCount, StormRockCount);
                 PlaceStoryPoint(spec, body, heightmap, rng, "shark_king", reusable: true);
                 PlaceEnemies(spec, body, heightmap, rng);
+                // 放在敌人之后：不搅动已调好的 Boss/杂兵 rng 落点流。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Storm, rng),
+                    minRadius: spec.Radius * 0.12f,
+                    maxRadius: spec.Radius * 0.55f,
+                    minHeight01: MinLandHeight01,
+                    maxHeight01: 0.85f);
                 break;
 
             case IslandTier.Tutorial:
@@ -692,6 +725,14 @@ public partial class IslandBuilder : Node3D
                     WildTreeCount, WildPalmCount,
                     WildGrassCount, WildShrubCount, WildRockCount,
                     WildDecoTreeCount, WildDecoPalmCount);
+                // 猎岛：林子到山脊之间，打猎路线能碰到。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Wild, rng),
+                    minRadius: spec.Radius * 0.20f,
+                    maxRadius: spec.Radius * 0.65f,
+                    minHeight01: MinLandHeight01,
+                    maxHeight01: 0.82f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -701,6 +742,14 @@ public partial class IslandBuilder : Node3D
                     AtollTreeCount, AtollPalmCount,
                     AtollGrassCount, AtollShrubCount, AtollRockCount,
                     decoPalmCount: AtollDecoPalmCount);
+                // 环礁：跟椰树/沙滩同一条滩带，登岛沿岸走就能读到。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Atoll, rng),
+                    minRadius: spec.Radius * 0.38f,
+                    maxRadius: spec.Radius * IslandHeightmap.MaskFalloffStart,
+                    minHeight01: MinLandHeight01,
+                    maxHeight01: 0.64f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -711,6 +760,14 @@ public partial class IslandBuilder : Node3D
                     WreckGrassCount, WreckShrubCount, WreckRockCount,
                     WreckDecoTreeCount);
                 PlaceSalvageProps(spec, body, samples);
+                // 沉船岛：内陆中带，靠近打捞物一侧。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Wreck, rng),
+                    minRadius: spec.Radius * 0.12f,
+                    maxRadius: spec.Radius * 0.55f,
+                    minHeight01: MinLandHeight01,
+                    maxHeight01: 0.80f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -721,6 +778,14 @@ public partial class IslandBuilder : Node3D
                     grassCount: 0, VolcanoShrubCount, VolcanoRockCount,
                     VolcanoDecoTreeCount);
                 PlaceLavaPools(spec, body, samples);
+                // 彩蛋火山：故意放偏高海拔，要爬上去才读得到。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Volcano, rng),
+                    minRadius: spec.Radius * 0.15f,
+                    maxRadius: spec.Radius * 0.62f,
+                    minHeight01: 0.70f,
+                    maxHeight01: 0.95f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -730,6 +795,14 @@ public partial class IslandBuilder : Node3D
                     PolarTreeCount, PolarPalmCount,
                     PolarGrassCount, PolarShrubCount, PolarRockCount,
                     PolarDecoTreeCount);
+                // 彩蛋雪山：同样放偏高海拔的雪线一带。
+                PlaceStoryInteractable(
+                    spec, body, heightmap, rng,
+                    IslandLore.Pick(IslandTier.Polar, rng),
+                    minRadius: spec.Radius * 0.15f,
+                    maxRadius: spec.Radius * 0.62f,
+                    minHeight01: 0.70f,
+                    maxHeight01: 0.95f);
                 PlaceEnemies(spec, body, heightmap, rng);
                 break;
 
@@ -1270,6 +1343,66 @@ public partial class IslandBuilder : Node3D
         });
     }
 
+    /// <summary>
+    ///   Places the three ordered Ruin quest logs on distinct radial bands.
+    ///   Logs 0–1 are narration-only; log 2 raises <c>StoryPointId = "ruin"</c>.
+    /// </summary>
+    private void PlaceRuinQuestLogs(
+        IslandSpec spec, StaticBody3D body, float[] heightmap, Random rng)
+    {
+        // Three non-overlapping radial bands so tablets stay walkably apart.
+        float[] minR = { 0.12f, 0.28f, 0.40f };
+        float[] maxR = { 0.26f, 0.38f, 0.48f };
+        var logs = IslandLore.RuinQuestLogs;
+        for (var i = 0; i < logs.Length; i++)
+        {
+            PlaceStoryInteractable(
+                spec, body, heightmap, rng,
+                logs[i],
+                storyPointId: i == logs.Length - 1 ? "ruin" : "",
+                nameSuffix: $"_{i}",
+                minRadius: spec.Radius * minR[i],
+                maxRadius: spec.Radius * maxR[i],
+                minHeight01: 0.68f,
+                maxHeight01: 1f);
+        }
+    }
+
+    /// <summary>
+    ///   Places a readable StoryInteractable (book / tablet / log) on the
+    ///   island. Empty <paramref name="storyPointId"/> is pure narration;
+    ///   a non-empty id raises <see cref="GameEvents.StoryPointReached"/> on
+    ///   first read (quest logs). Position uses the deterministic grid picker.
+    /// </summary>
+    private void PlaceStoryInteractable(
+        IslandSpec spec,
+        StaticBody3D body,
+        float[] heightmap,
+        Random rng,
+        string text,
+        string storyPointId = "",
+        string nameSuffix = "",
+        float minRadius = 0f,
+        float maxRadius = float.MaxValue,
+        float minHeight01 = MinLandHeight01,
+        float maxHeight01 = 1f)
+    {
+        var point = PickLandGridPoint(
+            spec, heightmap, rng, minRadius, maxRadius, minHeight01, maxHeight01);
+        var local = GridPointToLocal(spec, point, heightmap);
+        body.AddChild(new StoryInteractable
+        {
+            Name = $"StoryInteractable_{spec.Tier}{nameSuffix}",
+            StoryPointId = storyPointId,
+            Text = text,
+            // Scattered lore logs are re-readable: the player can press E
+            // again after the subtitle fades to re-read the worldbuilding.
+            // StoryPointReached still fires only on the first read.
+            Reusable = true,
+            Position = new Vector3(local.X, local.Y + TriggerHeightOffset, local.Z)
+        });
+    }
+
     /// <summary>T9.x enemy roster per island tier (id, model, count).</summary>
     private static readonly Dictionary<IslandTier, (string EnemyId, string ModelPath, int Count)[]> TierEnemies =
         new()
@@ -1277,27 +1410,31 @@ public partial class IslandBuilder : Node3D
             [IslandTier.Spawn] = new[] { ("crab", "res://assets/models/enemies/crab/Crab.glb", 2) },
             [IslandTier.Main] = new[]
             {
-                ("boar", "res://assets/models/enemies/boar/Pig.glb", 2),
-                ("wolf", "res://assets/models/enemies/wolf/Wolf.gltf", 2),
-                ("crab", "res://assets/models/enemies/crab/Crab.glb", 2)
+                ("boar", "res://assets/models/enemies/boar/Pig.glb", 5),
+                ("wolf", "res://assets/models/enemies/wolf/Wolf.gltf", 5),
+                ("crab", "res://assets/models/enemies/crab/Crab.glb", 5)
             },
             [IslandTier.Harvest] = Array.Empty<(string, string, int)>(),
             [IslandTier.Ruin] = Array.Empty<(string, string, int)>(),
             [IslandTier.Mutant] = new[]
             {
-                ("mutant", "res://assets/models/enemies/mutant/Alien.glb", 2)
+                ("mutant", "res://assets/models/enemies/mutant/Alien.glb", 5)
             },
-            [IslandTier.Storm] = new[] { ("storm_beast", "res://assets/models/enemies/storm_beast/Squidle.glb", 2) },
+            [IslandTier.Storm] = new[]
+            {
+                ("storm_beast", "res://assets/models/enemies/storm_beast/Squidle.glb", 3),
+                ("shark_king", "res://assets/models/enemies/shark_king/Shark.glb", 1)
+            },
             [IslandTier.Tutorial] = new[] { ("crab", "res://assets/models/enemies/crab/Crab.glb", 1) },
             [IslandTier.Wild] = new[]
             {
-                ("boar", "res://assets/models/enemies/boar/Pig.glb", 2),
-                ("wolf", "res://assets/models/enemies/wolf/Wolf.gltf", 2)
+                ("boar", "res://assets/models/enemies/boar/Pig.glb", 5),
+                ("wolf", "res://assets/models/enemies/wolf/Wolf.gltf", 5)
             },
-            [IslandTier.Atoll] = new[] { ("crab", "res://assets/models/enemies/crab/Crab.glb", 3) },
-            [IslandTier.Wreck] = new[] { ("crab", "res://assets/models/enemies/crab/Crab.glb", 1) },
-            [IslandTier.Volcano] = new[] { ("bat", "res://assets/models/enemies/bat/Bat.fbx", 2) },
-            [IslandTier.Polar] = new[] { ("wolf", "res://assets/models/enemies/wolf/Wolf.gltf", 2) }
+            [IslandTier.Atoll] = new[] { ("crab", "res://assets/models/enemies/crab/Crab.glb", 7) },
+            [IslandTier.Wreck] = new[] { ("crab", "res://assets/models/enemies/crab/Crab.glb", 2) },
+            [IslandTier.Volcano] = new[] { ("bat", "res://assets/models/enemies/bat/Bat.fbx", 5) },
+            [IslandTier.Polar] = new[] { ("wolf", "res://assets/models/enemies/wolf/Wolf.gltf", 5) }
         };
 
     /// <summary>
@@ -1353,6 +1490,9 @@ public partial class IslandBuilder : Node3D
                 if (model != null)
                 {
                     model.Name = "EnemyModel";
+                    // Gobkit shark_king rest AABB sits below origin; lift feet to y=0.
+                    if (enemyId is "shark_king" or "shark_pup")
+                        model.Position = new Vector3(0f, BossPhaseController.GobkitSharkFootLiftY, 0f);
                     enemy.AddChild(model);
                     enemy.ModelPath = new NodePath("EnemyModel");
                 }
@@ -1361,9 +1501,47 @@ public partial class IslandBuilder : Node3D
                     spec,
                     PickHabitatGridPoint(spec, heightmap, rng, enemyId),
                     heightmap);
+
+                // Child must exist before EnemyBase._Ready caches BossPhaseController.
+                if (enemyId == "shark_king")
+                    AttachSharkKingBossPhase(enemy, playerPath, dayNightPath);
+
                 body.AddChild(enemy);
             }
         }
+    }
+
+    /// <summary>
+    ///   Product Storm wiring: BossPhaseController with land shark_pup minions
+    ///   (phase-2 summons + phase-3 rage). Fail-closed if scenes/data missing.
+    /// </summary>
+    private static void AttachSharkKingBossPhase(
+        EnemyBase boss, NodePath playerPath, NodePath dayNightPath)
+    {
+        var minionScene = GD.Load<PackedScene>("res://scenes/combat/enemy.tscn");
+        var minionData = GD.Load<EnemyData>("res://assets/enemies/shark_pup.tres");
+        var minionModel = GD.Load<PackedScene>(
+            "res://assets/models/enemies/shark_king/Shark.glb");
+        if (minionScene == null || minionData == null)
+            return;
+
+        var phase = new BossPhaseController
+        {
+            Name = "BossPhaseController",
+            BossId = "shark_king",
+            MinionScene = minionScene,
+            MinionData = minionData,
+            MinionModelScene = minionModel,
+            MinionModelFootLiftY = BossPhaseController.GobkitSharkFootLiftY,
+            PlayerPath = playerPath,
+            DayNightServicePath = dayNightPath,
+            // Controller -> boss -> island body: minions must be boss siblings
+            // so they do not inherit the moving boss transform.
+            MinionSpawnParentPath = new NodePath("../.."),
+            MinionSpawnInterval = 6f,
+            MaxAliveMinions = 5
+        };
+        boss.AddChild(phase);
     }
 
     /// <summary>
@@ -1430,6 +1608,18 @@ public partial class IslandBuilder : Node3D
 
             minH = EnemyHabitat.ForestMinHeight01;
             maxH = EnemyHabitat.ForestMaxHeight01;
+            return;
+        }
+
+        // Boss: storm island central highland — never on the beach or in the
+        // surf. Storm islands are far offshore (255–310m radius) so the inner
+        // plateau is the natural arena.
+        if (enemyId == "shark_king")
+        {
+            minR = spec.Radius * 0.1f;
+            maxR = spec.Radius * 0.4f;
+            minH = 0.7f;
+            maxH = 1.0f;
             return;
         }
 
