@@ -1072,7 +1072,7 @@ public partial class IslandBuilder : Node3D
             pools = new List<VegetationSample> { samples[0] };
         for (int i = 0; i < pools.Count; i++)
         {
-            var sample = picked[i];
+            var sample = pools[i];
             body.AddChild(new MeshInstance3D
             {
                 Name = $"LavaPool_{i}",
