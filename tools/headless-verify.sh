@@ -9,35 +9,29 @@
 # Usage:
 #   bash tools/headless-verify.sh
 #   GODOT="/path/to/godot.exe" bash tools/headless-verify.sh
+#   SMOKE_ONLY=1 bash tools/headless-verify.sh   # skip GoDotTest
 #
 # Exit code is non-zero on the first failure so CI can block the merge.
+# For the Game.tscn 5-frame smoke only, prefer tools/headless-smoke.sh.
 set -euo pipefail
 
-# Resolve the Godot binary: explicit $GODOT, else the machine default.
-if [ -z "${GODOT:-}" ]; then
-  GODOT="D:/Godot/Godot_v4.7.1-stable_mono_win64/godot.exe"
-fi
-if [ ! -x "$GODOT" ] && [ ! -f "$GODOT" ]; then
-  echo "GODOT binary not found: $GODOT" >&2
-  echo "Set the GODOT env var to your Godot 4.7.1 mono executable." >&2
-  exit 2
-fi
-
-# Run from the project root (parent of this script's dir).
 cd "$(dirname "$0")/.."
+# shellcheck source=tools/_resolve_godot.sh
+source "$(dirname "$0")/_resolve_godot.sh"
+resolve_godot
 
-echo "==> [1/3] Rebuild import cache (--headless --import)"
-"$GODOT" --headless --import --path . 2>&1 | tail -1
+echo "==> Godot: $GODOT"
+SMOKE_ONLY="${SMOKE_ONLY:-0}"
 
-echo "==> [2/3] Script parse check (no SCRIPT/Parse errors on first-party code)"
-if "$GODOT" --headless --quit --path . 2>&1 \
-    | grep -iE 'SCRIPT ERROR|Parse Error' ; then
-  echo "first-party script errors detected" >&2
-  exit 1
+echo "==> [1/2] Headless smoke (import + --quit-after 5)"
+bash tools/headless-smoke.sh
+
+if [ "$SMOKE_ONLY" = "1" ]; then
+  echo "SMOKE_ONLY=1: skipping GoDotTest"
+  exit 0
 fi
-echo "clean"
 
-echo "==> [3/3] GoDotTest suite (--run-tests --quit-on-finish)"
+echo "==> [2/2] GoDotTest suite (--run-tests --quit-on-finish)"
 "$GODOT" --headless --path . --run-tests --quit-on-finish 2>&1 \
   | sed -E 's/\x1b\[[0-9;]*m//g' \
   | grep -iE 'Test results:|Passed:|Failed:|Shouldly|NullReference|timed out' \
