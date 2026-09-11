@@ -1049,9 +1049,16 @@ public partial class IslandBuilder : Node3D
         return index % 2 == 0 ? VegetationModels.RockTall : VegetationModels.RockSmall;
     }
 
-    private static void PlaceLavaPools(
-        IslandSpec spec, StaticBody3D body, VegetationSample[] samples)
+    /// <summary>
+    ///   Ridge-filtered lava-pool samples. When the crater band is empty,
+    ///   fall back to the first sample so placement never indexes an empty
+    ///   <see cref="IslandVegetation.Pick"/> list.
+    /// </summary>
+    public static List<VegetationSample> SelectLavaPoolSamples(
+        IslandSpec spec, VegetationSample[] samples)
     {
+        ArgumentNullException.ThrowIfNull(spec);
+        ArgumentNullException.ThrowIfNull(samples);
         var picked = IslandVegetation.Pick(
             samples,
             s => s.Height01 >= 0.60f && s.Slope < 1.1f
@@ -1059,6 +1066,14 @@ public partial class IslandBuilder : Node3D
             s => s.Height01 + s.RidgeScore,
             VolcanoLavaPoolCount,
             minSpacing: 6f);
+        if (picked.Count == 0 && samples.Length > 0)
+            return new List<VegetationSample> { samples[0] };
+        return picked;
+    }
+
+    private static void PlaceLavaPools(
+        IslandSpec spec, StaticBody3D body, VegetationSample[] samples)
+    {
         var lavaMat = new StandardMaterial3D
         {
             AlbedoColor = new Color(1f, 0.28f, 0.06f),
@@ -1067,9 +1082,7 @@ public partial class IslandBuilder : Node3D
             EmissionEnergyMultiplier = 2.6f,
             Roughness = 0.35f
         };
-        var pools = picked;
-        if (pools.Count == 0 && samples.Length > 0)
-            pools = new List<VegetationSample> { samples[0] };
+        var pools = SelectLavaPoolSamples(spec, samples);
         for (int i = 0; i < pools.Count; i++)
         {
             var sample = pools[i];

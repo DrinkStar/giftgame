@@ -80,6 +80,43 @@ public class IslandVegetationTest : TestClass
     }
 
     [Test]
+    public void SelectLavaPoolSamplesFallsBackWhenPickIsEmpty()
+    {
+        var spec = new IslandSpec(1, Vector2.Zero, 40f, 12f, 0.04f, IslandTier.Volcano);
+        var unmatched = new VegetationSample(
+            new Vector2I(0, 0),
+            Vector3.Zero,
+            height01: 0.2f,
+            radialMeters: 50f,
+            slope: 2f,
+            Vector2.Right,
+            ridgeScore: 0f,
+            yaw: 0f);
+
+        IslandVegetation.Pick(
+            new[] { unmatched },
+            s => s.Height01 >= 0.60f && s.Slope < 1.1f
+                && s.RadialMeters <= spec.Radius * 0.42f,
+            s => s.Height01 + s.RidgeScore,
+            IslandBuilder.VolcanoLavaPoolCount,
+            minSpacing: 6f).Count.ShouldBe(0);
+
+        var pools = IslandBuilder.SelectLavaPoolSamples(spec, new[] { unmatched });
+        pools.Count.ShouldBe(1);
+        pools[0].Height01.ShouldBe(0.2f);
+        for (int i = 0; i < pools.Count; i++)
+            _ = pools[i];
+    }
+
+    [Test]
+    public void SelectLavaPoolSamplesEmptyInputStaysEmpty()
+    {
+        var spec = new IslandSpec(1, Vector2.Zero, 40f, 12f, 0.04f, IslandTier.Volcano);
+        IslandBuilder.SelectLavaPoolSamples(spec, Array.Empty<VegetationSample>())
+            .Count.ShouldBe(0);
+    }
+
+    [Test]
     public void KenneyVegetationFilesExist()
     {
         FileAccess.FileExists(VegetationModels.Oak).ShouldBeTrue();
