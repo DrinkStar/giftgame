@@ -82,8 +82,7 @@ public class CombatHurtboxTest : TestClass, IDisposable
 
     node.SetProcess(false);
     node.SetPhysicsProcess(false);
-    if (node is Node3D)
-      node.ProcessMode = Node.ProcessModeEnum.Disabled;
+    node.ProcessMode = Node.ProcessModeEnum.Disabled;
 
     foreach (var child in node.GetChildren())
       HaltNodeTree(child);
@@ -334,9 +333,7 @@ public class CombatHurtboxTest : TestClass, IDisposable
     visual!.RotateY(Mathf.DegToRad(CharacterAnimator.ExtraYawDegreesForEnemy("crab")));
     await TestScene.ProcessFrame(1);
 
-    hurtbox.Transform.Basis.X.ShouldBe(basisBefore.X);
-    hurtbox.Transform.Basis.Y.ShouldBe(basisBefore.Y);
-    hurtbox.Transform.Basis.Z.ShouldBe(basisBefore.Z);
+    hurtbox.Transform.Basis.IsEqualApprox(basisBefore).ShouldBeTrue();
   }
 
   private async Task<(WeaponSystem Weapon, EnemyBase Enemy)> SpawnMeleeRig(

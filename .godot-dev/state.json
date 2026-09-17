@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260818-001",
   "created_at": "2026-08-18T09:10:00+08:00",
-  "updated_at": "2026-08-21T11:35:00+08:00",
+  "updated_at": "2026-09-17T17:30:00+08:00",
   "stage": "phase4-aim-swim-tide",
-  "current_iteration": "enlarge-islands",
-  "git_branch": "(no .git in workspace)",
-  "last_stable_commit": "ae89640",
+  "current_iteration": "opt-batch1-4",
+  "git_branch": "cursor/sea-anomaly-optimization-6787",
+  "last_stable_commit": "7193c60",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
     "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
@@ -26,16 +26,16 @@
   ],
   "project": {
     "name": "SeaAnomaly",
-    "path": "D:/work-auto/giftgame/game",
+    "path": ".",
     "godot_version": "4.7.1.stable.mono.official.a13da4feb",
     "godot_sdk": "Godot.NET.Sdk 4.7.1",
-    "dotnet": ".NET 8.0 target / SDK 10.0.400 installed",
+    "dotnet": ".NET 8.0 target / SDK 8.0.425 installed",
     "test_framework": "GoDotTest",
     "main_scene": "res://src/Main.tscn",
     "renderer": "forward_plus",
-    "scene_count": 36,
-    "script_count": 113,
-    "test_script_count": 53,
+    "scene_count": 39,
+    "script_count": 127,
+    "test_script_count": 65,
     "codegraph": "colbymchenry/codegraph v1.6.0 CLI + Cursor MCP (codegraph_explore); index via tools/ensure-codegraph.sh → .codegraph/",
     "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
   },
@@ -74,16 +74,27 @@
         {"id": "T-M.4", "file": "test/src/MainMenuUITest.cs", "action": "create", "status": "done", "verify": "GoDotTest menu cases"},
         {"id": "T-M.5", "file": "README.md + .godot-dev/state.json + .cursor/rules", "action": "modify", "status": "done", "verify": "dotnet build; smoke; tests"}
       ]
+    },
+    {
+      "name": "opt-batch1-4",
+      "status": "in_progress",
+      "tasks": [
+        {"id": "T-O.1", "file": ".cursor/rules/godot-dev.mdc + .cursor/skills/godot-csharp-3d-game-dev/", "action": "create", "status": "done", "verify": "alwaysApply + disable-model-invocation; dotnet build"},
+        {"id": "T-O.2", "file": "test/src/CombatHurtboxTest.cs + README + state.json", "action": "modify", "status": "done", "verify": "GCHandle guard + ExtraYaw; path docs; counts"},
+        {"id": "T-O.3", "file": "src/world/ocean/WaveGenerator.cs", "action": "modify", "status": "done", "verify": "≤1 cascade/Update; no flush; headless contract untouched"},
+        {"id": "T-O.4", "file": "export_presets.cfg + README", "action": "modify", "status": "done", "verify": "exclude lab scenes; exe+pck+data_* docs"}
+      ]
     }
   ],
   "pending_todos": [],
-  "checkpoint": "phase4_irregular_islands_verified",
+  "checkpoint": "opt_batch1_4_landed",
   "verification": {
-    "build": "dotnet build 0 errors",
-    "smoke": "godot --headless --path . --quit-after 5 exit 0; WaterMesh headless warning is WARN not crash dump",
-    "tests": "2026-08-21 enlarge-islands: IslandGeneratorTest 20/0; IslandVegetationTest 5/0; TutorialIslandTest 4/0; EnemyHabitatTest 9/0; GameTest 4/0. CombatHurtbox suite still aborts on pre-existing disposed-GCHandle. Full suite remains unstable.",
+    "build": "dotnet build 0 errors (2026-09-17)",
+    "smoke": "pending full suite / smoke on this agent",
+    "tests": "pending: godot --headless --path . --run-tests --quit-on-finish (CombatHurtbox GCHandle fix + ExtraYaw assertion landed)",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
-    "export": "re-export 2026-08-18 19:22 after denser vegetation: same command exit 0; pck still 68646116 (65.47 MB, unchanged — vegetation is C# quotas not new assets); SeaAnomaly.dll 573440; file_logging.pc=true"
+    "export": "exclude_filter tightened (ocean_test*/storm_zone*/tools/*/_ai_preview); export templates not present in this Linux agent — filter+README landed; re-export on Windows with templates",
+    "wave_hitch": "WaveGenerator.Update schedules ≤1 cascade/tick (round-robin); _Process drains ≤1/frame; no flush-on-late-Update; headless WaterMesh _gpuEnabled=false unchanged"
   },
-  "notes": "2026-08-21 enlarge-islands: product radii ×1.5 (Main 80→120), Storm ×1.2 (30–38→36–46), tutorial size unchanged (ring pushed 770–830). Vegetation/enemies ×2.25 area (Storm ×1.44); shark_king + tutorial crab stay 1. HeightScale/NoiseScale unchanged. DefaultResolution 129→193. SpawnSafeRadius 40 and BuildingPlateauRadius 24 unchanged. Prior aim-swim-tide still in tree."
+  "notes": "2026-09-17 opt-batch1-4: rules+skill mirror; CombatHurtbox GCHandle cleanup; WaveGenerator catch-up cap; export lab exclude + data_* README. Prior enlarge-islands still in tree."
 }
