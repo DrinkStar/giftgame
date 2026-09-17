@@ -1,0 +1,62 @@
+---
+description: Godot C# 3D orchestration hard rules (from godot-csharp-3d-game-dev skill)
+alwaysApply: true
+---
+
+# Godot C# 3D 开发硬规则
+
+**Source of truth:** Context / skill `godot-csharp-3d-game-dev`（`SKILL.md` + 大任务时的 `reference.md`）。本文件只镜像编排硬规则，**不要**把 Phase 0–6 全文抄进来。大任务或逐步工作流：Read 该 skill 的 `reference.md`。
+
+**契约解锁：** 批准的决策写入 `.godot-dev/state.json` 的 `contracts[]`，并镜像到 `.cursor/rules/`。解锁或改写契约 **必须用户确认**；未确认不当契约执行。
+
+## Godot 4.7 CLI
+
+- **禁止** `--` 分隔符；**没有** `--scene`。
+- 先定位 `project.godot`，在该目录跑 `godot` / `dotnet`。
+- 常用：`dotnet build`；`godot --headless --path . --quit-after 5`；`godot --headless --path . --run-tests --quit-on-finish`。
+
+## 任务分流
+
+| 档 | 做 | 不做 |
+|---|---|---|
+| **小** | 改代码 + 编译 + 相关测试 | Phase 0、审批、新分支 |
+| **中** | 实现 + 测试；可写 `state.json` 备注 | `strategy.md`、Phase 1–2 弹窗 |
+| **大** | Read skill `reference.md` Phase 0→4 | — |
+| **发包** | 只走 Phase 5（见 reference） | 当新功能迭代 |
+
+不要默认 Phase 0 + `strategy.md`。仅大任务两处审批：Phase 1 路线图、Phase 2 任务清单。
+
+## Git / 提交
+
+- **无 `.git`**：不 commit、不 `git init`。
+- **有 git**：仅用户要求或本任务明确要提交时 commit。禁止提交 `build/`。
+- 禁止 `git reset --hard`、`push --force`（除非用户显式要求）。
+
+## 自动修复与回滚
+
+- 编译/测试/导出失败自动修 **≤3** 次；超限按 skill `reference.md` 回滚（无 git 只报告现场）。
+- 回滚指针：有 git 时 WIP commit + `failed-dev-<timestamp>` 分支；或从 `state.json.last_stable_commit` 新建分支。禁止 `git reset --hard`。
+
+## 并行 / 文件锁
+
+- 只读可并行。写同一模块必须串行。
+- 世界生成族（`WorldLayout` / `IslandBuilder` / `IslandHeightmap` / 植被）**同一时刻一个写入者**。已有子代理在改：必须 `resume`/`interrupt` **同一 id**，禁止再开写入者。
+- 子代理 prompt 须含：`contracts[]` 全文 + 禁止回滚的近期落地 + 关键数值。
+
+## 资产获取顺序
+
+1. 仓库已有 `res://assets/models/`（或同等目录）
+2. Kenney / Poly Haven / Quaternius 等 CC0/CC BY，记 `sources.md`
+3. 没有合适的开源网格 → Read `gltf-2-generate` → validate → 分类目录 → import → `sources.md`
+4. **禁止**付费图生 3D；**禁止** PNG 当模型
+
+## 检查清单（摘要）
+
+- **Hurtbox**：按物种休息姿态拟合，禁止全员同一胶囊；走路胶囊与受击盒分离；ExtraYaw 不转盒；脚底原点则中心在 `height/2`。
+- **资源**：先分 404 / 未导入 / 刻意占位 / 产品未用；主线闭环必须在产品场景，不要只放实验室。
+- **生成**：轮廓不要默认正圆；草密灌中乔木留空；可砍配额与装饰分开；测试断言不变量，勿锁死 `草==16`。
+- **发包**：读 `export_presets.cfg` 真实预设名与路径；分发 exe + pck + `data_*`；报告 pck vs dll；勿 `git add build/`。细节见 skill `reference.md` Phase 5。
+
+## Grilling
+
+被换题打断：结论写入 `pending_todos`，换题时复述一条。未确认不当契约执行。

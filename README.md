@@ -2,7 +2,7 @@
 
 Godot 4.7.1 .NET (C#, net8.0) 单机生存建造游戏。介于《木筏求生》与《森林》之间的生存建造核心循环：探索收集 → 建造基地 → 种植补给 → 战斗防守 → 剧情推进。
 
-设计文档：`游戏设计-定稿.md`（仓库根）· 开发路线图/状态：`game/.godot-dev/` · 数值初稿：`game/.godot-dev/balance.md`
+设计文档：`游戏设计-定稿.md`（仓库根）· 开发路线图/状态：`.godot-dev/` · 数值初稿：`.godot-dev/balance.md`
 
 ## 环境要求
 
@@ -12,7 +12,7 @@ Godot 4.7.1 .NET (C#, net8.0) 单机生存建造游戏。介于《木筏求生�
 
 ## 构建与运行
 
-在 `game/` 目录执行：
+在仓库根目录（含 `project.godot`）执行：
 
 ```powershell
 dotnet build                                   # C# 编译
@@ -63,7 +63,27 @@ dotnet build -c Release
 godot --headless --path . --export-release "Windows Desktop" build/SeaAnomaly.exe
 ```
 
-产物：`game/build/SeaAnomaly.exe` + `SeaAnomaly.pck`（两件套同目录）。默认非 self-contained——目标机需 .NET 8 Desktop Runtime；如需免安装，将 `export_presets.cfg` 的 `dotnet/self_contained` 改为 `true` 后重新导出。
+### 分发三件套（非 Portable / `.NET-dependent`）
+
+预设 `Windows Desktop`（`binary_format/embed_pck=false`，`dotnet/self_contained=false`）产物在 `build/`：
+
+| 文件 | 作用 |
+|---|---|
+| `SeaAnomaly.exe` | 启动器 |
+| `SeaAnomaly.pck` | 游戏资源包 |
+| `data_SeaAnomaly_*` | .NET 程序集与运行时依赖目录（名称随 Godot/.NET 导出略有差异） |
+
+**三件必须同目录分发**；缺 `data_*` 在未安装 .NET 8 Desktop Runtime 的机器上会启动失败。目标机仍需 .NET 8 Desktop Runtime（除非改用 Portable）。
+
+### Portable（可选）
+
+```powershell
+./build-release.ps1 -Portable
+```
+
+产物：`build/portable/SeaAnomaly.exe`（`embed_pck=true` + `self_contained=true`，单文件，无独立 `.pck` / `data_*`）。
+
+`build/` 已 gitignore，**不要** `git add build/`。
 
 ## 操作
 
@@ -74,7 +94,7 @@ godot --headless --path . --export-release "Windows Desktop" build/SeaAnomaly.ex
 ## 项目结构
 
 ```
-game/
+.（仓库根，含 project.godot）
 ├── src/                 # C# 代码（core/player/world/building/inventory/combat/
 │                        #   farming/quest/progression/ui/save）
 ├── scenes/              # 场景（Game.tscn 产品场景；ocean_test/storm_zone 实验室）
@@ -85,4 +105,4 @@ game/
 
 ## 许可与署名
 
-第三方资产台账与来源见 `game/assets/sources.md`。游戏内暂停界面已含署名：Eric Matyas（BGM）、game-icons.net（CC BY）、Poly Haven sand_01（CC0）。SurvivalIsland 架构移植为自用非商业（详见 `游戏设计-定稿.md` §13）。教程岛植被为 Kenney Nature Kit / Pirate Kit（CC0）沿山脊摆放。
+第三方资产台账与来源见 `assets/sources.md`。游戏内暂停界面已含署名：Eric Matyas（BGM）、game-icons.net（CC BY）、Poly Haven sand_01（CC0）。SurvivalIsland 架构移植为自用非商业（详见 `游戏设计-定稿.md` §13）。教程岛植被为 Kenney Nature Kit / Pirate Kit（CC0）沿山脊摆放。

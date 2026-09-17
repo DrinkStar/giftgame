@@ -32,6 +32,10 @@ public partial class WaveGenerator : Node
   // Generator state per invocation of `Update()`.
   private WaveCascadeParameters[] _passParameters = Array.Empty<WaveCascadeParameters>();
   private int _passNumCascadesRemaining;
+  /// <summary>Cascade index scheduled for the next single-cascade drain.</summary>
+  private int _scheduledCascadeIndex;
+  /// <summary>Round-robin cursor so each Update advances a different cascade.</summary>
+  private int _nextCascadeIndex;
 
   /// <summary>
   ///   FFT workgroups require a power-of-two map at least 128 (butterfly
@@ -154,7 +158,7 @@ public partial class WaveGenerator : Node
 
   public override void _Process(double delta)
   {
-    // Update one cascade each frame for load balancing.
+    // Hard cap: at most one cascade FFT per frame (no catch-up burst).
     if (_passNumCascadesRemaining == 0 || Context == null)
     {
       return;
@@ -163,7 +167,7 @@ public partial class WaveGenerator : Node
 
     var context = Context!;
     long computeList = context.ComputeListBegin();
-    UpdateOne(computeList, _passNumCascadesRemaining, _passParameters);
+    UpdateOne(computeList, _scheduledCascadeIndex, _passParameters);
     context.ComputeListEnd();
   }
 
@@ -244,11 +248,14 @@ public partial class WaveGenerator : Node
   }
 
   /// <summary>
-  ///   Begins updating wave cascades based on the provided parameters. To
-  ///   balance stutter, the generator schedules one cascade update per frame
-  ///   via <see cref="_Process"/>. If a pass is still draining, time still
-  ///   advances but leftover work is NOT flushed in this call (flushing every
-  ///   remaining cascade on a late Update hitch'd the GPU).
+  ///   Begins updating wave cascades based on the provided parameters.
+  ///   Schedules <b>at most one</b> cascade per <c>Update</c> tick; that
+  ///   cascade is drained on the next <see cref="_Process"/> frame. Time still
+  ///   advances for every cascade even while a prior slot is draining.
+  ///   Never flushes leftover cascades in this call (a prior flush-on-late-
+  ///   Update path hitch'd the GPU). Capping to ≤1 cascade/frame also stops
+  ///   the low-FPS feedback loop where <c>UpdatesPerSecond × cascadeCount</c>
+  ///   oversubscribed the frame budget (e.g. 30 Hz × 3 &gt; 60 FPS slots).
   /// </summary>
   public void Update(double delta, WaveCascadeParameters[] parameters)
   {
@@ -277,7 +284,11 @@ public partial class WaveGenerator : Node
       return;
     }
 
-    _passNumCascadesRemaining = parameters.Length;
+    // Round-robin one cascade per Update — never schedule a full multi-cascade
+    // pass that would need catch-up bursts under low FPS.
+    _scheduledCascadeIndex = _nextCascadeIndex % parameters.Length;
+    _nextCascadeIndex = (_scheduledCascadeIndex + 1) % parameters.Length;
+    _passNumCascadesRemaining = 1;
   }
 
   /// <summary>
