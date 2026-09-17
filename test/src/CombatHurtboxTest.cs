@@ -21,16 +21,72 @@ public class CombatHurtboxTest : TestClass, IDisposable
   public CombatHurtboxTest(Node testScene) : base(testScene) { }
 
   [Setup]
-  public void Setup() => _fixture = new Fixture(TestScene.GetTree());
+  public void Setup()
+  {
+    // Drain finalizers from earlier suites before allocating GodotObjects;
+    // otherwise Godot can fatal on already-released GCHandles (GameTest /
+    // IslandGeneratorTest guard).
+    GC.Collect();
+    GC.WaitForPendingFinalizers();
+
+    _fixture = new Fixture(TestScene.GetTree());
+    SweepLeakedNodes(TestScene.GetTree().Root);
+  }
 
   [Cleanup]
   public void Cleanup()
   {
+    // Stop physics/process on anything still under the test root before
+    // Fixture frees it — enemies caching a PlayerController otherwise keep
+    // ticking a disposed body (disposed-GCHandle abort).
+    HaltTreeProcessing(TestScene.GetTree().Root);
     _fixture.Cleanup();
     Dispose();
+
+    GC.Collect();
+    GC.WaitForPendingFinalizers();
   }
 
   public void Dispose() => GC.SuppressFinalize(this);
+
+  private void SweepLeakedNodes(Node root)
+  {
+    var current = TestScene.GetTree().CurrentScene;
+    foreach (var child in root.GetChildren())
+    {
+      if (ReferenceEquals(child, TestScene) || ReferenceEquals(child, current))
+        continue;
+      if (child.Name == "Main")
+        continue;
+
+      HaltNodeTree(child);
+      root.RemoveChild(child);
+      child.Free();
+    }
+  }
+
+  private static void HaltTreeProcessing(Node root)
+  {
+    foreach (var child in root.GetChildren())
+    {
+      if (child.Name == "Main")
+        continue;
+      HaltNodeTree(child);
+    }
+  }
+
+  private static void HaltNodeTree(Node node)
+  {
+    if (!GodotObject.IsInstanceValid(node))
+      return;
+
+    node.SetProcess(false);
+    node.SetPhysicsProcess(false);
+    node.ProcessMode = Node.ProcessModeEnum.Disabled;
+
+    foreach (var child in node.GetChildren())
+      HaltNodeTree(child);
+  }
 
   private static EnemyData CreateCrabData(float damage = 5f) =>
     new()
@@ -70,6 +126,11 @@ public class CombatHurtboxTest : TestClass, IDisposable
     Hurtbox.ResolveEnemy(hurtbox).ShouldBe(enemy);
     Hurtbox.ResolveEnemy(enemy).ShouldBe(enemy);
     Hurtbox.ResolveEnemy(new Node()).ShouldBeNull();
+
+    // Detach before Free so Cleanup's sweep does not double-free.
+    enemy.RemoveChild(hurtbox);
+    hurtbox.Free();
+    enemy.Free();
   }
 
   [Test]
@@ -119,6 +180,7 @@ public class CombatHurtboxTest : TestClass, IDisposable
       .Instantiate<EnemyBase>();
     boar.Name = "Boar";
     boar.EnemyData = boarData;
+    boar.ProcessMode = Node.ProcessModeEnum.Disabled;
     crab.GetParent().AddChild(boar);
     await TestScene.ProcessFrame(1);
     var boarBox = boar.GetNode<Hurtbox>("Hurtbox")
@@ -154,7 +216,7 @@ public class CombatHurtboxTest : TestClass, IDisposable
 
     var hurtbox = enemy.GetNode<Hurtbox>("Hurtbox");
     enemy.RemoveChild(hurtbox);
-    hurtbox.Free();
+    hurtbox.QueueFree();
     await TestScene.ProcessFrame(2);
 
     weapon.FireMelee(10f);
@@ -247,6 +309,33 @@ public class CombatHurtboxTest : TestClass, IDisposable
     gameOver.ShouldBe(0);
   }
 
+  /// <summary>
+  ///   ExtraYaw is a CharacterAnimator visual-only mesh hack; Hurtbox stays
+  ///   axis-aligned to the owning body (skill Hurtbox checklist / audit G9).
+  /// </summary>
+  [Test]
+  public async Task ExtraYaw_DoesNotRotateHurtbox()
+  {
+    CharacterAnimator.ExtraYawDegreesForEnemy("crab").ShouldBe(90f);
+    CharacterAnimator.ExtraYawDegreesForEnemy("boar").ShouldBe(0f);
+
+    var (_, enemy) = await SpawnMeleeRig(new Vector3(0f, 0f, -2f));
+    var hurtbox = enemy.GetNode<Hurtbox>("Hurtbox");
+    hurtbox.GetParent().ShouldBe(enemy);
+
+    var basisBefore = hurtbox.Transform.Basis;
+    var visual = enemy.GetNodeOrNull<Node3D>("Visual")
+      ?? enemy.GetNodeOrNull<Node3D>("EnemyModel");
+    visual.ShouldNotBeNull();
+
+    // Simulate what CharacterAnimator.FaceHorizontal does with ExtraYaw —
+    // yaw the visual mesh only; the Hurtbox sibling must stay put.
+    visual!.RotateY(Mathf.DegToRad(CharacterAnimator.ExtraYawDegreesForEnemy("crab")));
+    await TestScene.ProcessFrame(1);
+
+    hurtbox.Transform.Basis.IsEqualApprox(basisBefore).ShouldBeTrue();
+  }
+
   private async Task<(WeaponSystem Weapon, EnemyBase Enemy)> SpawnMeleeRig(
     Vector3 enemyPosition
   )
@@ -273,6 +362,8 @@ public class CombatHurtboxTest : TestClass, IDisposable
 
     await _fixture.AddToRoot(root, autoRemoveFromRoot: true);
     enemy.SetPhysicsProcess(false);
+    // Keep ProcessMode inherited so Hurtbox Area3D stays queryable for melee /
+    // projectile raycasts; only stop AI physics ticks.
     return (weapon, enemy);
   }
 
@@ -300,7 +391,9 @@ public class CombatHurtboxTest : TestClass, IDisposable
 
     await _fixture.AddToRoot(root, autoRemoveFromRoot: true);
     enemy.ProcessMode = Node.ProcessModeEnum.Disabled;
+    enemy.SetPhysicsProcess(false);
     player.SetPhysicsProcess(false);
+    player.SetProcess(false);
     return (player, stats, enemy);
   }
 }

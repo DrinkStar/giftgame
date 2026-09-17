@@ -4,4 +4,4 @@ Files in this folder are **AI-generated drafts** from the free three.ws 3D Studi
 
 - Gitignored except this README.
 - Do not copy over Kenney / Quaternius / `Woman.glb`.
-- Promote to `game/assets/models/<category>/<name>/` only after a human checks license + topology, then ledger in `game/assets/sources.md`.
+- Promote to `assets/models/<category>/<name>/` only after a human checks license + topology, then ledger in `assets/sources.md`.
