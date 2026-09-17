@@ -362,7 +362,8 @@ public class CombatHurtboxTest : TestClass, IDisposable
 
     await _fixture.AddToRoot(root, autoRemoveFromRoot: true);
     enemy.SetPhysicsProcess(false);
-    enemy.ProcessMode = Node.ProcessModeEnum.Disabled;
+    // Keep ProcessMode inherited so Hurtbox Area3D stays queryable for melee /
+    // projectile raycasts; only stop AI physics ticks.
     return (weapon, enemy);
   }
 

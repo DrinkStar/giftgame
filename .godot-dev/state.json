@@ -1,7 +1,7 @@
 {
   "task_id": "godot-dev-20260818-001",
   "created_at": "2026-08-18T09:10:00+08:00",
-  "updated_at": "2026-09-17T17:30:00+08:00",
+  "updated_at": "2026-09-17T17:45:00+08:00",
   "stage": "phase4-aim-swim-tide",
   "current_iteration": "opt-batch1-4",
   "git_branch": "cursor/sea-anomaly-optimization-6787",
@@ -44,45 +44,171 @@
       "name": "crash-logging",
       "status": "verified",
       "tasks": [
-        {"id": "T-L.1", "file": "src/core/logging/CrashLogWriter.cs", "action": "create", "status": "done", "verify": "CrashLogTest session/ring/dump/prune"},
-        {"id": "T-L.2", "file": "src/core/logging/CrashLog.cs + EngineLogSink.cs + CrashLogService.cs/.tscn", "action": "create", "status": "done", "verify": "dotnet build; _EnterTree init"},
-        {"id": "T-L.3", "file": "project.godot", "action": "modify", "status": "done", "verify": "autoload + file_logging.pc"},
-        {"id": "T-L.4", "file": "src/Main.cs + src/core/GameManager.cs", "action": "modify", "status": "done", "verify": "PlayerDied Info is not a crash dump"},
-        {"id": "T-L.5", "file": "test/src/CrashLogTest.cs", "action": "create", "status": "done", "verify": "GoDotTest 322/0"},
-        {"id": "T-L.6", "file": "README.md", "action": "modify", "status": "done", "verify": "docs match paths"}
+        {
+          "id": "T-L.1",
+          "file": "src/core/logging/CrashLogWriter.cs",
+          "action": "create",
+          "status": "done",
+          "verify": "CrashLogTest session/ring/dump/prune"
+        },
+        {
+          "id": "T-L.2",
+          "file": "src/core/logging/CrashLog.cs + EngineLogSink.cs + CrashLogService.cs/.tscn",
+          "action": "create",
+          "status": "done",
+          "verify": "dotnet build; _EnterTree init"
+        },
+        {
+          "id": "T-L.3",
+          "file": "project.godot",
+          "action": "modify",
+          "status": "done",
+          "verify": "autoload + file_logging.pc"
+        },
+        {
+          "id": "T-L.4",
+          "file": "src/Main.cs + src/core/GameManager.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "PlayerDied Info is not a crash dump"
+        },
+        {
+          "id": "T-L.5",
+          "file": "test/src/CrashLogTest.cs",
+          "action": "create",
+          "status": "done",
+          "verify": "GoDotTest 322/0"
+        },
+        {
+          "id": "T-L.6",
+          "file": "README.md",
+          "action": "modify",
+          "status": "done",
+          "verify": "docs match paths"
+        }
       ]
     },
     {
       "name": "perf-p0-p1",
       "status": "verified",
       "tasks": [
-        {"id": "T-P.1", "file": "src/world/ocean/WaveGenerator.cs", "action": "modify", "status": "done", "verify": "no catch-up flush; NormalizeMapSize tests"},
-        {"id": "T-P.2", "file": "src/world/ocean/WaterMesh.cs", "action": "modify", "status": "done", "verify": "async readback; headless GetWaveHeight 0"},
-        {"id": "T-P.3", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "SleepDistance early-out; AI switch untouched"},
-        {"id": "T-P.4", "file": "src/player/PlayerInteraction.cs + PlayerController.cs + Projectile.cs", "action": "modify", "status": "done", "verify": "cached Array<Rid>"},
-        {"id": "T-P.5", "file": "src/ui/HUD.cs + src/core/WeatherService.cs", "action": "modify", "status": "done", "verify": "clock/fog dirty writes"},
-        {"id": "T-P.6", "file": "src/building/BuildableInstance.cs + MouseObject.cs", "action": "modify", "status": "done", "verify": "null Object3DModel no NRE"}
+        {
+          "id": "T-P.1",
+          "file": "src/world/ocean/WaveGenerator.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "no catch-up flush; NormalizeMapSize tests"
+        },
+        {
+          "id": "T-P.2",
+          "file": "src/world/ocean/WaterMesh.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "async readback; headless GetWaveHeight 0"
+        },
+        {
+          "id": "T-P.3",
+          "file": "src/combat/EnemyBase.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "SleepDistance early-out; AI switch untouched"
+        },
+        {
+          "id": "T-P.4",
+          "file": "src/player/PlayerInteraction.cs + PlayerController.cs + Projectile.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "cached Array<Rid>"
+        },
+        {
+          "id": "T-P.5",
+          "file": "src/ui/HUD.cs + src/core/WeatherService.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "clock/fog dirty writes"
+        },
+        {
+          "id": "T-P.6",
+          "file": "src/building/BuildableInstance.cs + MouseObject.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "null Object3DModel no NRE"
+        }
       ]
     },
     {
       "name": "main-menu",
       "status": "verified",
       "tasks": [
-        {"id": "T-M.1", "file": "src/ui/TutorialUI.cs", "action": "modify", "status": "done", "verify": "AutoStart=false; CompleteChapter1WithoutPlaying"},
-        {"id": "T-M.2", "file": "src/core/save/SaveService.cs", "action": "modify", "status": "done", "verify": "TryLoadPath; AutoLoadOnReady false"},
-        {"id": "T-M.3", "file": "src/ui/MainMenuUI.cs + scenes/ui/main_menu.tscn + src/Game.tscn", "action": "create", "status": "done", "verify": "four buttons + save list"},
-        {"id": "T-M.4", "file": "test/src/MainMenuUITest.cs", "action": "create", "status": "done", "verify": "GoDotTest menu cases"},
-        {"id": "T-M.5", "file": "README.md + .godot-dev/state.json + .cursor/rules", "action": "modify", "status": "done", "verify": "dotnet build; smoke; tests"}
+        {
+          "id": "T-M.1",
+          "file": "src/ui/TutorialUI.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "AutoStart=false; CompleteChapter1WithoutPlaying"
+        },
+        {
+          "id": "T-M.2",
+          "file": "src/core/save/SaveService.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "TryLoadPath; AutoLoadOnReady false"
+        },
+        {
+          "id": "T-M.3",
+          "file": "src/ui/MainMenuUI.cs + scenes/ui/main_menu.tscn + src/Game.tscn",
+          "action": "create",
+          "status": "done",
+          "verify": "four buttons + save list"
+        },
+        {
+          "id": "T-M.4",
+          "file": "test/src/MainMenuUITest.cs",
+          "action": "create",
+          "status": "done",
+          "verify": "GoDotTest menu cases"
+        },
+        {
+          "id": "T-M.5",
+          "file": "README.md + .godot-dev/state.json + .cursor/rules",
+          "action": "modify",
+          "status": "done",
+          "verify": "dotnet build; smoke; tests"
+        }
       ]
     },
     {
       "name": "opt-batch1-4",
-      "status": "in_progress",
+      "status": "verified",
       "tasks": [
-        {"id": "T-O.1", "file": ".cursor/rules/godot-dev.mdc + .cursor/skills/godot-csharp-3d-game-dev/", "action": "create", "status": "done", "verify": "alwaysApply + disable-model-invocation; dotnet build"},
-        {"id": "T-O.2", "file": "test/src/CombatHurtboxTest.cs + README + state.json", "action": "modify", "status": "done", "verify": "GCHandle guard + ExtraYaw; path docs; counts"},
-        {"id": "T-O.3", "file": "src/world/ocean/WaveGenerator.cs", "action": "modify", "status": "done", "verify": "≤1 cascade/Update; no flush; headless contract untouched"},
-        {"id": "T-O.4", "file": "export_presets.cfg + README", "action": "modify", "status": "done", "verify": "exclude lab scenes; exe+pck+data_* docs"}
+        {
+          "id": "T-O.1",
+          "file": ".cursor/rules/godot-dev.mdc + .cursor/skills/godot-csharp-3d-game-dev/",
+          "action": "create",
+          "status": "done",
+          "verify": "alwaysApply + disable-model-invocation; dotnet build"
+        },
+        {
+          "id": "T-O.2",
+          "file": "test/src/CombatHurtboxTest.cs + README + state.json",
+          "action": "modify",
+          "status": "done",
+          "verify": "GCHandle guard + ExtraYaw; path docs; counts"
+        },
+        {
+          "id": "T-O.3",
+          "file": "src/world/ocean/WaveGenerator.cs",
+          "action": "modify",
+          "status": "done",
+          "verify": "≤1 cascade/Update; no flush; headless contract untouched"
+        },
+        {
+          "id": "T-O.4",
+          "file": "export_presets.cfg + README",
+          "action": "modify",
+          "status": "done",
+          "verify": "exclude lab scenes; exe+pck+data_* docs"
+        }
       ]
     }
   ],
@@ -90,11 +216,11 @@
   "checkpoint": "opt_batch1_4_landed",
   "verification": {
     "build": "dotnet build 0 errors (2026-09-17)",
-    "smoke": "pending full suite / smoke on this agent",
-    "tests": "pending: godot --headless --path . --run-tests --quit-on-finish (CombatHurtbox GCHandle fix + ExtraYaw assertion landed)",
+    "smoke": "import ok after git lfs pull; WaterMesh headless WARN contract unchanged",
+    "tests": "2026-09-17: godot --headless --path . --run-tests --quit-on-finish → exit 0; 458 passed / 0 failed. CombatHurtboxTest suite finished (incl ExtraYaw_DoesNotRotateHurtbox). No disposed-GCHandle abort.",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
-    "export": "exclude_filter tightened (ocean_test*/storm_zone*/tools/*/_ai_preview); export templates not present in this Linux agent — filter+README landed; re-export on Windows with templates",
+    "export": "2026-09-17 Linux agent: Windows Desktop export produced build/SeaAnomaly.exe (104.4 MB) + SeaAnomaly.pck (65.6 MB) + data_SeaAnomaly_windows_x86_64/ (93 MB). Lab scenes ocean_test/storm_zone absent from pck. Godot process exit 139 after savepack (artifacts complete).",
     "wave_hitch": "WaveGenerator.Update schedules ≤1 cascade/tick (round-robin); _Process drains ≤1/frame; no flush-on-late-Update; headless WaterMesh _gpuEnabled=false unchanged"
   },
-  "notes": "2026-09-17 opt-batch1-4: rules+skill mirror; CombatHurtbox GCHandle cleanup; WaveGenerator catch-up cap; export lab exclude + data_* README. Prior enlarge-islands still in tree."
+  "notes": "2026-09-17 opt-batch1-4 verified: rules+skill; CombatHurtbox GCHandle+ExtraYaw; WaveGenerator catch-up cap; export exclude+data_* trio. PR #3."
 }
