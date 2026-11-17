@@ -3,9 +3,9 @@
   "created_at": "2026-08-18T09:10:00+08:00",
   "updated_at": "2026-09-16T17:05:00+08:00",
   "stage": "project-audit-r3",
-  "current_iteration": "project-audit-r3",
-  "git_branch": "(no .git in workspace)",
-  "last_stable_commit": "ae89640",
+  "current_iteration": "review-closeout-2026-11-17",
+  "git_branch": "dev/perf-p0-p1-20260817",
+  "last_stable_commit": "d3dd314",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
     "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
@@ -66,6 +66,16 @@
         "not_in_tree_globalposition": 4,
         "why": "CombatHurtboxTest manually calls enemy._PhysicsProcess with ProcessMode.Disabled body (no physics space); TutorialIslandTest sets GlobalPosition pre-tree. Harness-only, not engine-dispatched."
       }
+    },
+    {
+      "name": "review-closeout-2026-11-17",
+      "status": "verified",
+      "tasks": [
+        {"id": "C-1.1", "file": ".gitignore + probe_chest.gd", "action": "modify/delete", "status": "done", "verify": "ignore *.log + .godot-dev/*.log; 30.8MB root logs and 5.3MB dev logs no longer reachable by git add; one-off probe removed"},
+        {"id": "C-1.2", "file": "test/src/PlayerCameraTest.cs.uid", "action": "create", "status": "done", "verify": "godot --headless --import generated uid://cw71vv84iufxs; test/src uid count == cs count (66/66)"},
+        {"id": "C-1.3", "file": "commit d3dd314", "action": "commit", "status": "done", "verify": "lands the 2026-09-11..16 working set (53 files, +1532/-177)"},
+        {"id": "C-1.4", "file": ".godot-dev/state.json", "action": "modify", "status": "done", "verify": "last_stable_commit d3dd314; git_branch no longer claims 'no .git in workspace'"}
+      ]
     }
   ],
   "pending_todos": [
