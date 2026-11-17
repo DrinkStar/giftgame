@@ -120,47 +120,17 @@ public partial class WeatherService : Node
     if (_fogApplied && _appliedFogWeather == _currentWeather && _appliedFogNight == night)
       return;
 
-    // Exponential fog: density tuned for the enlarged archipelago so storm
-    // haze still reaches the story ring without blacking out the Main beach.
+    // Exponential fog: table lives in the pure WeatherFog resolver (tested
+    // against the 4 weather x day/night combinations).
+    var fog = WeatherFog.Resolve(_currentWeather, night);
     env.FogMode = Godot.Environment.FogModeEnum.Exponential;
-    env.FogDensity = _currentWeather switch
-    {
-      WeatherType.Clear => 0.00022f,
-      WeatherType.Cloudy => 0.0009f,
-      WeatherType.Rain => 0.0024f,
-      WeatherType.Storm => 0.004f,
-      _ => 0.00022f
-    };
-
-    env.FogLightColor = _currentWeather switch
-    {
-      WeatherType.Cloudy => new Color(0.7f, 0.7f, 0.75f),
-      WeatherType.Rain => new Color(0.5f, 0.5f, 0.55f),
-      WeatherType.Storm => new Color(0.3f, 0.3f, 0.35f),
-      _ => new Color(0.72f, 0.78f, 0.85f)
-    };
-
-    env.FogSunScatter = _currentWeather switch
-    {
-      WeatherType.Clear => 0.12f,
-      WeatherType.Cloudy => 0.08f,
-      WeatherType.Rain => 0.04f,
-      WeatherType.Storm => 0.02f,
-      _ => 0.08f
-    };
-
-    env.FogAerialPerspective = _currentWeather switch
-    {
-      WeatherType.Clear => 0.55f,
-      WeatherType.Cloudy => 0.45f,
-      WeatherType.Rain => 0.3f,
-      WeatherType.Storm => 0.15f,
-      _ => 0.4f
-    };
-
+    env.FogDensity = fog.Density;
+    env.FogLightColor = fog.LightColor;
+    env.FogSunScatter = fog.SunScatter;
+    env.FogAerialPerspective = fog.AerialPerspective;
     // Daytime always keeps a thin haze so far islands (Explore / Easter)
     // read as distance rather than hard cutouts against the sky.
-    env.FogEnabled = !night;
+    env.FogEnabled = fog.Enabled;
     _appliedFogWeather = _currentWeather;
     _appliedFogNight = night;
     _fogApplied = true;
