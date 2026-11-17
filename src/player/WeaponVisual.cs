@@ -32,6 +32,8 @@ public partial class WeaponVisual : Node3D
   private MeshInstance3D? _mesh;
   private string? _currentModelPath;
   private Vector3 _restOffset;
+  private Node3D? _model;
+  private float _lastYaw;
 
   public override void _Ready()
   {
@@ -51,16 +53,24 @@ public partial class WeaponVisual : Node3D
   /// <summary>
   ///   Orbit the hand offset and mesh yaw with PlayerModel so the held
   ///   weapon faces the same way as the character (crosshair-aligned).
+  ///   The model reference is cached (node names are resolved once) and the
+  ///   transform is only written when the yaw actually changed, so the idle
+  ///   path costs one float compare per frame.
   /// </summary>
   public void SyncYawToPlayerModel()
   {
     if (GetParent() is not PlayerController player)
       return;
-    var model = player.GetNodeOrNull<Node3D>("PlayerModel");
-    if (model == null)
+    if (_model == null || !GodotObject.IsInstanceValid(_model))
+      _model = player.GetNodeOrNull<Node3D>("PlayerModel");
+    if (_model == null)
       return;
 
-    var yaw = model.Rotation.Y;
+    var yaw = _model.Rotation.Y;
+    if (Mathf.IsEqualApprox(yaw, _lastYaw))
+      return;
+    _lastYaw = yaw;
+
     Position = _restOffset.Rotated(Vector3.Up, yaw);
     var rot = Rotation;
     rot.Y = yaw;

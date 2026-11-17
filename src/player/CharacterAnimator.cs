@@ -47,6 +47,7 @@ public partial class CharacterAnimator : Node
   private AnimationPlayer? _player;
   private AnimationTree? _tree;
   private Node3D? _visual;
+  private Camera3D? _lookCamera;
   private bool _oneShot;
   private bool _dying;
   private string? _attackStyle;
@@ -577,14 +578,27 @@ public partial class CharacterAnimator : Node
     if (_visual == null)
       BindFromTree();
 
-    var camera = player.GetNodeOrNull<Camera3D>("CameraPivot/Camera3D")
-      ?? player.GetViewport()?.GetCamera3D();
+    var camera = ResolveLookCamera(player);
     var basis = camera is null ? Basis.Identity : camera.GlobalBasis;
     var look = -basis.Z;
     look.Y = 0f;
     if (look.LengthSquared() < 0.0001f)
       return;
     FaceHorizontal(look.Normalized(), dt, snap: snap);
+  }
+
+  /// <summary>
+  ///   Cached camera lookup — this runs every frame, so the NodePath string is
+  ///   resolved once and re-resolved only when the cached camera dies (scene
+  ///   reload / test teardown).
+  /// </summary>
+  private Camera3D? ResolveLookCamera(PlayerController player)
+  {
+    if (_lookCamera != null && GodotObject.IsInstanceValid(_lookCamera))
+      return _lookCamera;
+
+    return _lookCamera = player.GetNodeOrNull<Camera3D>("CameraPivot/Camera3D")
+      ?? player.GetViewport()?.GetCamera3D();
   }
 
   /// <summary>Current visual yaw in radians (test seam; 0 when unbound).</summary>
