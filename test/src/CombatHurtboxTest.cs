@@ -2,6 +2,7 @@
 namespace SeaAnomaly;
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
@@ -190,6 +191,30 @@ public class CombatHurtboxTest : TestClass, IDisposable
     GodotObject.IsInstanceValid(enemy).ShouldBeTrue();
     enemy.HealthTracker.ShouldNotBeNull();
     enemy.HealthTracker!.Health.ShouldBe(20f);
+  }
+
+  [Test]
+  public async Task ProjectileHit_RaisesProjectileHitNotMeleeHit()
+  {
+    var (_, enemy) = await SpawnMeleeRig(new Vector3(0f, 0f, -2f));
+    var packed = ResourceLoader.Load<PackedScene>("res://scenes/combat/projectile.tscn");
+    var projectile = packed!.Instantiate<Projectile>();
+    projectile.Damage = 10f; projectile.Gravity = 0f; projectile.ItemId = "wooden_spear";
+    projectile.SetVelocity(new Vector3(0f, 0f, -12f));
+    enemy.GetParent().AddChild(projectile);
+    projectile.GlobalPosition = new Vector3(0f, 0.75f, -1.1f);
+    projectile.SetPhysicsProcess(false);
+    await TestScene.ProcessFrame(3);
+
+    var hits = new List<string>(); var melee = 0;
+    Action<string> onHit = id => hits.Add(id);
+    Action<string> onMelee = _ => melee++;
+    GameEvents.ProjectileHit += onHit; GameEvents.MeleeHit += onMelee;
+    try { for (var i = 0; i < 8; i++) projectile._PhysicsProcess(0.02); }
+    finally { GameEvents.ProjectileHit -= onHit; GameEvents.MeleeHit -= onMelee; }
+
+    hits.ShouldBe(new[] { "wooden_spear" });
+    melee.ShouldBe(0);
   }
 
   [Test]

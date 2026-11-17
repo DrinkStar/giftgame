@@ -226,6 +226,14 @@ public class AudioManagerTest : TestClass, IDisposable
     Should.NotThrow(() => _audio.PlaySfx(""));
   }
 
+  [Test]
+  public void RangedSfxId_BowShootsBow_ThrowKeepsSwing()
+  {
+    SfxHook.RangedSfxId("wooden_bow").ShouldBe("bow_shoot");
+    SfxHook.RangedSfxId("iron_bow").ShouldBe("bow_shoot");
+    SfxHook.RangedSfxId("wooden_spear").ShouldBe("melee_swing");
+  }
+
   private string FirstLandedSfxId()
   {
     if (FileAccess.FileExists(SfxPaths[0]))

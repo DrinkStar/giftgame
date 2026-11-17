@@ -196,11 +196,25 @@ public static class GameEvents
   public static event Action<string>? MeleeHit;
 
   /// <summary>
-  ///   Player started an attack swing / throw / shot (feel feedback). Carries
-  ///   the effective weapon item id, or empty for unarmed. Raise-only — SfxHook
-  ///   plays melee_swing; does not imply a hit.
+  ///   A player projectile (thrown spear / arrow) hit an enemy. Distinct from
+  ///   <see cref="MeleeHit"/>: the tutorial's "chop with a tool" step must not
+  ///   advance on a throw. Raise-only, consumed by SfxHook (enemy_hit).
+  /// </summary>
+  public static event Action<string>? ProjectileHit;
+
+  /// <summary>
+  ///   Player started a melee attack swing (feel feedback). Carries the
+  ///   effective weapon item id, or empty for unarmed. Raise-only — SfxHook
+  ///   plays melee_swing; does not imply a hit. Ranged attacks raise
+  ///   <see cref="RangedAttack"/> instead.
   /// </summary>
   public static event Action<string>? AttackSwing;
+
+  /// <summary>
+  ///   A ranged attack was launched (Throw or Shoot). Sibling of
+  ///   <see cref="AttackSwing"/>, which is now melee-only.
+  /// </summary>
+  public static event Action<string>? RangedAttack;
 
   /// <summary>
   ///   T9.3: an armor item was equipped, carrying its item id
@@ -417,8 +431,12 @@ public static class GameEvents
 
   public static void RaiseMeleeHit(string weaponId) => MeleeHit?.Invoke(weaponId);
 
+  public static void RaiseProjectileHit(string itemId) => ProjectileHit?.Invoke(itemId);
+
   public static void RaiseAttackSwing(string weaponId) =>
     AttackSwing?.Invoke(weaponId);
+
+  public static void RaiseRangedAttack(string itemId) => RangedAttack?.Invoke(itemId);
 
   public static void RaiseArmorEquipped(string itemId) =>
     ArmorEquipped?.Invoke(itemId);

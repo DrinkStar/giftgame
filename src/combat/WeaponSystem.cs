@@ -401,19 +401,20 @@ public partial class WeaponSystem : Node
     var damage = ResolveMeleeDamage();
 
     _attackElapsed = 0f;
-    PulseAttackVisual();
+    PulseAttackVisual(AttackType.Melee);
     PerformMelee(damage);
   }
 
   /// <summary>
-  ///   Visual + swing sfx seam — animator one-shot and AttackSwing for audio.
-  ///   Missing animator (tests, unwired scenes) is a silent visual no-op.
+  ///   Visual + swing sfx seam — animator one-shot and the melee/ranged
+  ///   feedback dispatch. Missing animator (tests, unwired scenes) is a silent
+  ///   visual no-op.
   /// </summary>
-  private void PulseAttackVisual()
+  private void PulseAttackVisual(AttackType attack)
   {
     GetParent()?.GetNodeOrNull<CharacterAnimator>("CharacterAnimator")
       ?.NotifyAttack(AttackStyleFromCurrentItem());
-    GameEvents.RaiseAttackSwing(ResolveEffectiveItem()?.Id ?? "");
+    CombatFeedback.RaiseAttack(attack, ResolveEffectiveItem()?.Id ?? "");
   }
 
   private string AttackStyleFromCurrentItem() =>
@@ -438,7 +439,7 @@ public partial class WeaponSystem : Node
         if (CombatLogic.IsReady(_attackElapsed, MeleeCooldown))
         {
           _attackElapsed = 0f;
-          PulseAttackVisual();
+          PulseAttackVisual(AttackType.Throw);
           // R1 (Iter8p): through the resolution seam (throw_damage multiplier).
           SpawnProjectile(ResolveThrowDamage(), SpearSpeed, SpearGravity);
         }
@@ -451,7 +452,7 @@ public partial class WeaponSystem : Node
         )
         {
           _attackElapsed = 0f;
-          PulseAttackVisual();
+          PulseAttackVisual(AttackType.Shoot);
           // R1 (Iter8p): through the resolution seam (ranged_damage multiplier).
           SpawnProjectile(ResolveRangedDamage(), ArrowSpeed, ArrowGravity);
         }
@@ -522,6 +523,7 @@ public partial class WeaponSystem : Node
     var body = GetParentOrNull<Node3D>()?.GlobalPosition ?? _camera.GlobalPosition;
     var origin = AimQuery.OriginAtBody(_camera.GlobalPosition, body, forward);
 
+    projectile.ItemId = ResolveEffectiveItem()?.Id ?? "";
     projectile.Damage = damage;
     projectile.Speed = speed;
     projectile.Gravity = gravity;
