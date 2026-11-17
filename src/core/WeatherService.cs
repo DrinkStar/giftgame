@@ -10,9 +10,10 @@ using Godot;
 ///   - transitions computed via the pure <see cref="WeatherLogic"/> tables;
 ///   - signals published through the static <see cref="GameEvents"/> bus;
 ///   - fog fully owned by this service (plan Decision 5): FogDensity,
-///     FogLightColor and FogEnabled are applied on weather/night changes, with
-///     FogEnabled forced off at night (DayNightService only ever disables
-///     fog, so the night-off rule must also hold here);
+///     FogLightColor, FogSunScatter, FogAerialPerspective and FogEnabled
+///     are applied on weather/night changes. Daytime keeps a thin Clear
+///     haze so far islands read as distance; FogEnabled is forced off at
+///     night (DayNightService only ever disables fog);
 ///   - no rain particles or audio (explicitly out of scope);
 ///   - the current hour is cached from GameEvents.TimeChanged, so
 ///     EffectiveTemperature needs no scene wiring to DayNightService.
@@ -119,13 +120,16 @@ public partial class WeatherService : Node
     if (_fogApplied && _appliedFogWeather == _currentWeather && _appliedFogNight == night)
       return;
 
+    // Exponential fog: density tuned for the enlarged archipelago so storm
+    // haze still reaches the story ring without blacking out the Main beach.
+    env.FogMode = Godot.Environment.FogModeEnum.Exponential;
     env.FogDensity = _currentWeather switch
     {
-      WeatherType.Clear => 0f,
-      WeatherType.Cloudy => 0.001f,
-      WeatherType.Rain => 0.003f,
-      WeatherType.Storm => 0.005f,
-      _ => 0f
+      WeatherType.Clear => 0.00022f,
+      WeatherType.Cloudy => 0.0009f,
+      WeatherType.Rain => 0.0024f,
+      WeatherType.Storm => 0.004f,
+      _ => 0.00022f
     };
 
     env.FogLightColor = _currentWeather switch
@@ -133,10 +137,30 @@ public partial class WeatherService : Node
       WeatherType.Cloudy => new Color(0.7f, 0.7f, 0.75f),
       WeatherType.Rain => new Color(0.5f, 0.5f, 0.55f),
       WeatherType.Storm => new Color(0.3f, 0.3f, 0.35f),
-      _ => new Color(0.7f, 0.7f, 0.75f)
+      _ => new Color(0.72f, 0.78f, 0.85f)
     };
 
-    env.FogEnabled = _currentWeather != WeatherType.Clear && !night;
+    env.FogSunScatter = _currentWeather switch
+    {
+      WeatherType.Clear => 0.12f,
+      WeatherType.Cloudy => 0.08f,
+      WeatherType.Rain => 0.04f,
+      WeatherType.Storm => 0.02f,
+      _ => 0.08f
+    };
+
+    env.FogAerialPerspective = _currentWeather switch
+    {
+      WeatherType.Clear => 0.55f,
+      WeatherType.Cloudy => 0.45f,
+      WeatherType.Rain => 0.3f,
+      WeatherType.Storm => 0.15f,
+      _ => 0.4f
+    };
+
+    // Daytime always keeps a thin haze so far islands (Explore / Easter)
+    // read as distance rather than hard cutouts against the sky.
+    env.FogEnabled = !night;
     _appliedFogWeather = _currentWeather;
     _appliedFogNight = night;
     _fogApplied = true;

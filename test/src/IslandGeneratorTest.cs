@@ -372,6 +372,38 @@ public class IslandGeneratorTest : TestClass, IDisposable
     }
 
     /// <summary>
+    ///   Ring distances clear worst-case radii + shore gap after island enlarge.
+    /// </summary>
+    [Test]
+    public void LayoutRingClearancesAreConsistent()
+    {
+        WorldLayout.StormMinDistance.ShouldBeGreaterThanOrEqualTo(
+            WorldLayout.StoryMaxDistance
+            + WorldLayout.MutantMaxRadius
+            + WorldLayout.StormMaxRadius
+            + WorldLayout.IslandShoreGap
+            - 0.01f);
+        WorldLayout.ExploreMinDistance.ShouldBeGreaterThanOrEqualTo(
+            WorldLayout.StormMaxDistance
+            + WorldLayout.StormMaxRadius
+            + WorldLayout.WildMaxRadius
+            + WorldLayout.IslandShoreGap
+            - 0.01f);
+        (WorldLayout.TutorialMinDistance
+            - WorldLayout.TutorialMaxRadius
+            - WorldLayout.WildMaxRadius
+            - WorldLayout.IslandShoreGap)
+            .ShouldBeGreaterThanOrEqualTo(WorldLayout.ExploreMaxDistance - 0.01f);
+        WorldLayout.EasterMinDistance.ShouldBeGreaterThanOrEqualTo(
+            WorldLayout.TutorialMaxDistance
+            + WorldLayout.TutorialMaxRadius
+            + WorldLayout.PolarMaxRadius
+            + WorldLayout.IslandShoreGap
+            - 0.01f);
+        EnemyBase.SleepDistance.ShouldBeGreaterThan(WorldLayout.MainRadius);
+    }
+
+    /// <summary>
     ///   ⑤ IslandBuilder places island bodies and per-tier story hooks;
     ///   radio Area on Main, shark_king Area on Storm, ruin via the third
     ///   StoryInteractable on the Ruin island (no walk-in Area).

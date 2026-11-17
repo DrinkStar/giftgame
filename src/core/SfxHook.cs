@@ -10,6 +10,7 @@ using Godot;
 ///   - ItemAdded  (itemId ∈ {wood, coconut, stone, berries}) → "wood_chop"   (gathering)
 ///   - BuildingPlaced                                            → "place_building"
 ///   - MeleeHit                                                  → "melee_hit"
+///   - AttackSwing                                               → "melee_swing"
 ///   - PlayerDied                                                → "death_respawn"
 ///   - EnemyDied                                                 → "enemy_die"   (T9.6)
 ///   - CraftingCompleted                                         → "ui_click"   (T9.6)
@@ -44,6 +45,7 @@ public partial class SfxHook : Node
     GameEvents.ItemAdded += OnItemAdded;
     GameEvents.BuildingPlaced += OnBuildingPlaced;
     GameEvents.MeleeHit += OnMeleeHit;
+    GameEvents.AttackSwing += OnAttackSwing;
     GameEvents.PlayerDied += OnPlayerDied;
     GameEvents.EnemyDied += OnEnemyDied;
     GameEvents.CraftingCompleted += OnCraftingCompleted;
@@ -57,6 +59,7 @@ public partial class SfxHook : Node
     GameEvents.ItemAdded -= OnItemAdded;
     GameEvents.BuildingPlaced -= OnBuildingPlaced;
     GameEvents.MeleeHit -= OnMeleeHit;
+    GameEvents.AttackSwing -= OnAttackSwing;
     GameEvents.PlayerDied -= OnPlayerDied;
     GameEvents.EnemyDied -= OnEnemyDied;
     GameEvents.CraftingCompleted -= OnCraftingCompleted;
@@ -83,6 +86,9 @@ public partial class SfxHook : Node
 
   private void OnMeleeHit(string weaponId) =>
     ResolveAudioManager()?.PlaySfx("melee_hit");
+
+  private void OnAttackSwing(string weaponId) =>
+    ResolveAudioManager()?.PlaySfx("melee_swing");
 
   private void OnPlayerDied() =>
     ResolveAudioManager()?.PlaySfx("death_respawn");

@@ -33,10 +33,10 @@ public partial class CharacterAnimator : Node
 
   [Export] public NodePath ModelPath = new();
   [Export] public float VisualYawOffsetDegrees = 180f;
-  [Export] public float TurnSpeed = 10f;
+  [Export] public float TurnSpeed = 14f;
   [Export] public float IdleSpeedThreshold = 0.45f;
   [Export] public float RunSpeedThreshold = 6f;
-  [Export] public float BlendSpeed = 6f;
+  [Export] public float BlendSpeed = 8f;
 
   /// <summary>The clip currently targeted, or empty when nothing is bound.</summary>
   public string CurrentClip { get; private set; } = "";
@@ -94,6 +94,10 @@ public partial class CharacterAnimator : Node
   {
     if (_dying)
       return;
+    // Snap mesh to camera look so the swing matches third-person aim
+    // (melee / projectiles already cast along the camera).
+    if (GetParent() is PlayerController player)
+      FacePlayerCameraLook(player, snap: true);
     _attackStyle = style;
     FireShot(CharacterAnimKind.Attack, style, restart: true);
   }
@@ -152,7 +156,8 @@ public partial class CharacterAnimator : Node
 
     if (!UsesAnimationTree && _oneShot && _player != null && _player.IsPlaying())
     {
-      FaceFromPlayerInput(player, dt);
+      // Keep face on the crosshair during attack one-shots too.
+      FacePlayerCameraLook(player, snap: false, dt);
       return;
     }
 
@@ -172,7 +177,9 @@ public partial class CharacterAnimator : Node
       snap: false,
       dt: dt
     );
-    FaceFromPlayerInput(player, dt);
+    // Always face the camera look (crosshair). Strafe/backpedal keep the
+    // mesh aimed with melee/projectile rays — never face travel instead.
+    FacePlayerCameraLook(player, snap: false, dt);
   }
 
   private void TickEnemy(EnemyBase enemy, float dt)
@@ -556,24 +563,36 @@ public partial class CharacterAnimator : Node
       _lastHealth = hp;
   }
 
-  private void FaceFromPlayerInput(PlayerController player, float dt)
+  /// <summary>
+  ///   Align the visual mesh with the active camera's horizontal look
+  ///   (crosshair). Public so combat / tests can snap without synthesizing
+  ///   WASD. Prefers the player's <c>CameraPivot/Camera3D</c> over the
+  ///   viewport current camera so headless / multi-camera setups stay
+  ///   consistent.
+  /// </summary>
+  public void FacePlayerCameraLook(
+    PlayerController player, bool snap, float dt = 0.016f
+  )
   {
-    var input = Input.GetVector(
-      PlayerController.MoveLeftAction,
-      PlayerController.MoveRightAction,
-      PlayerController.MoveForwardAction,
-      PlayerController.MoveBackAction
-    );
-    if (input.LengthSquared() <= 0.0001f)
-      return;
+    if (_visual == null)
+      BindFromTree();
 
-    var camera = player.GetViewport()?.GetCamera3D();
+    var camera = player.GetNodeOrNull<Camera3D>("CameraPivot/Camera3D")
+      ?? player.GetViewport()?.GetCamera3D();
     var basis = camera is null ? Basis.Identity : camera.GlobalBasis;
-    var world = new PlayerMotion().GetMoveDirection(input, basis);
-    FaceHorizontal(world, dt);
+    var look = -basis.Z;
+    look.Y = 0f;
+    if (look.LengthSquared() < 0.0001f)
+      return;
+    FaceHorizontal(look.Normalized(), dt, snap: snap);
   }
 
-  private void FaceHorizontal(Vector3 worldDir, float dt, float extraYawDegrees = 0f)
+  /// <summary>Current visual yaw in radians (test seam; 0 when unbound).</summary>
+  public float VisualYawRadians => _visual?.Rotation.Y ?? 0f;
+
+  private void FaceHorizontal(
+    Vector3 worldDir, float dt, float extraYawDegrees = 0f, bool snap = false
+  )
   {
     if (_visual == null)
       return;
@@ -585,8 +604,22 @@ public partial class CharacterAnimator : Node
     flat = flat.Normalized();
     var target = Mathf.Atan2(flat.X, flat.Z)
       + Mathf.DegToRad(VisualYawOffsetDegrees + extraYawDegrees);
-    var yaw = Mathf.LerpAngle(_visual.Rotation.Y, target, Mathf.Clamp(TurnSpeed * dt, 0f, 1f));
-    _visual.Rotation = _visual.Rotation with { Y = yaw };
+    var yaw = snap
+      ? target
+      : Mathf.LerpAngle(
+        _visual.Rotation.Y, target, Mathf.Clamp(TurnSpeed * dt, 0f, 1f)
+      );
+    var rot = _visual.Rotation;
+    rot.Y = yaw;
+    _visual.Rotation = rot;
+  }
+
+  /// <summary>Test seam: snap/lerp visual yaw to a world-space look vector.</summary>
+  public void AlignVisualToWorldLook(Vector3 worldLook, bool snap = true, float dt = 0.016f)
+  {
+    if (_visual == null)
+      BindFromTree();
+    FaceHorizontal(worldLook, dt, snap: snap);
   }
 
   private Node3D? ResolveVisual(Node? root)

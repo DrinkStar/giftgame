@@ -176,14 +176,18 @@ public class CombatHurtboxTest : TestClass, IDisposable
     projectile.Damage = 10f;
     projectile.Gravity = 0f;
     projectile.Lifetime = 5f;
-    projectile.SetVelocity(new Vector3(0f, 0f, -20f));
+    // Start just in front of the crab hurtbox (Z extent ≈ ±0.65 around -2)
+    // and sweep through its center over several short steps.
+    projectile.SetVelocity(new Vector3(0f, 0f, -12f));
     enemy.GetParent().AddChild(projectile);
-    projectile.GlobalPosition = new Vector3(0f, 0f, -0.5f);
+    projectile.GlobalPosition = new Vector3(0f, 0.75f, -1.1f);
     projectile.SetPhysicsProcess(false);
-    await TestScene.ProcessFrame(2);
+    await TestScene.ProcessFrame(3);
 
-    projectile._PhysicsProcess(0.1);
+    for (var i = 0; i < 8; i++)
+      projectile._PhysicsProcess(0.02);
 
+    GodotObject.IsInstanceValid(enemy).ShouldBeTrue();
     enemy.HealthTracker.ShouldNotBeNull();
     enemy.HealthTracker!.Health.ShouldBe(20f);
   }
@@ -247,13 +251,40 @@ public class CombatHurtboxTest : TestClass, IDisposable
     gameOver.ShouldBe(0);
   }
 
+  [Test]
+  public async Task PhysicsProcess_AfterPlayerFreed_DoesNotThrow()
+  {
+    var root = new Node3D { Name = "DisposedPlayerRoot" };
+    var player = new PlayerController { Name = "Player", Gravity = 0f };
+    var packed = ResourceLoader.Load<PackedScene>("res://scenes/combat/enemy.tscn");
+    packed.ShouldNotBeNull();
+    var enemy = packed!.Instantiate<EnemyBase>();
+    enemy.Name = "Enemy";
+    enemy.EnemyData = CreateCrabData();
+    enemy.Player = new NodePath("../Player");
+    root.AddChild(player);
+    root.AddChild(enemy);
+    await _fixture.AddToRoot(root, autoRemoveFromRoot: true);
+
+    player.Free();
+    Should.NotThrow(() => enemy._PhysicsProcess(0.016));
+    Should.NotThrow(() => enemy._PhysicsProcess(0.016));
+    enemy.Velocity.ShouldBe(Vector3.Zero);
+  }
+
   private async Task<(WeaponSystem Weapon, EnemyBase Enemy)> SpawnMeleeRig(
     Vector3 enemyPosition
   )
   {
     var root = new Node3D { Name = "HurtboxRig" };
     var holder = new Node3D { Name = "Player" };
-    var camera = new Camera3D { Name = "Camera3D" };
+    // Aim through crab hurtbox center (box @ y=0.75, height 1.5) — Y=0 only
+    // grazes the underside and flakes on headless physics.
+    var camera = new Camera3D
+    {
+      Name = "Camera3D",
+      Position = new Vector3(0f, 0.75f, 0f)
+    };
     var weapon = new WeaponSystem
     {
       Name = "WeaponSystem",

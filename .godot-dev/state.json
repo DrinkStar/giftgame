@@ -1,9 +1,9 @@
 {
   "task_id": "godot-dev-20260818-001",
   "created_at": "2026-08-18T09:10:00+08:00",
-  "updated_at": "2026-08-21T11:35:00+08:00",
-  "stage": "phase4-aim-swim-tide",
-  "current_iteration": "enlarge-islands",
+  "updated_at": "2026-09-16T17:05:00+08:00",
+  "stage": "project-audit-r3",
+  "current_iteration": "project-audit-r3",
   "git_branch": "(no .git in workspace)",
   "last_stable_commit": "ae89640",
   "contracts": [
@@ -32,58 +32,55 @@
     "dotnet": ".NET 8.0 target / SDK 10.0.400 installed",
     "test_framework": "GoDotTest",
     "main_scene": "res://src/Main.tscn",
-    "renderer": "forward_plus",
-    "scene_count": 36,
-    "script_count": 113,
-    "test_script_count": 53,
-    "codegraph": "indexed at repo root .codegraph/",
-    "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
+    "renderer": "forward_plus"
   },
   "iterations": [
     {
-      "name": "crash-logging",
+      "name": "project-polish-r1-disposed",
       "status": "verified",
       "tasks": [
-        {"id": "T-L.1", "file": "src/core/logging/CrashLogWriter.cs", "action": "create", "status": "done", "verify": "CrashLogTest session/ring/dump/prune"},
-        {"id": "T-L.2", "file": "src/core/logging/CrashLog.cs + EngineLogSink.cs + CrashLogService.cs/.tscn", "action": "create", "status": "done", "verify": "dotnet build; _EnterTree init"},
-        {"id": "T-L.3", "file": "project.godot", "action": "modify", "status": "done", "verify": "autoload + file_logging.pc"},
-        {"id": "T-L.4", "file": "src/Main.cs + src/core/GameManager.cs", "action": "modify", "status": "done", "verify": "PlayerDied Info is not a crash dump"},
-        {"id": "T-L.5", "file": "test/src/CrashLogTest.cs", "action": "create", "status": "done", "verify": "GoDotTest 322/0"},
-        {"id": "T-L.6", "file": "README.md", "action": "modify", "status": "done", "verify": "docs match paths"}
+        {"id": "T-R1.1", "file": "src/combat/BossPhaseController.cs", "action": "modify", "status": "done", "verify": "IsInstanceValid boss; latch bad MinionScene"},
+        {"id": "T-R1.2", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "IsInstanceValid player before GlobalPosition; AI switch untouched"},
+        {"id": "T-R1.3", "file": "test/src/BossPhaseTest.cs + CombatHurtboxTest.cs", "action": "modify", "status": "done", "verify": "disposed boss/player guards"},
+        {"id": "T-R1.4", "file": ".godot-dev/state.json", "action": "modify", "status": "done", "verify": "fixed missing comma between iterations"}
       ]
     },
     {
-      "name": "perf-p0-p1",
+      "name": "project-polish-r2-weapon-yaw",
       "status": "verified",
       "tasks": [
-        {"id": "T-P.1", "file": "src/world/ocean/WaveGenerator.cs", "action": "modify", "status": "done", "verify": "no catch-up flush; NormalizeMapSize tests"},
-        {"id": "T-P.2", "file": "src/world/ocean/WaterMesh.cs", "action": "modify", "status": "done", "verify": "async readback; headless GetWaveHeight 0"},
-        {"id": "T-P.3", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "SleepDistance early-out; AI switch untouched"},
-        {"id": "T-P.4", "file": "src/player/PlayerInteraction.cs + PlayerController.cs + Projectile.cs", "action": "modify", "status": "done", "verify": "cached Array<Rid>"},
-        {"id": "T-P.5", "file": "src/ui/HUD.cs + src/core/WeatherService.cs", "action": "modify", "status": "done", "verify": "clock/fog dirty writes"},
-        {"id": "T-P.6", "file": "src/building/BuildableInstance.cs + MouseObject.cs", "action": "modify", "status": "done", "verify": "null Object3DModel no NRE"}
+        {"id": "T-R2.1", "file": "src/player/WeaponVisual.cs", "action": "modify", "status": "done", "verify": "hand offset orbits with PlayerModel yaw"},
+        {"id": "T-R2.2", "file": "test/src/WeaponVisualTest.cs", "action": "modify", "status": "done", "verify": "SyncYawToPlayerModel_OrbitsHandOffsetWithMeshYaw"}
       ]
     },
     {
-      "name": "main-menu",
+      "name": "project-audit-r3",
       "status": "verified",
       "tasks": [
-        {"id": "T-M.1", "file": "src/ui/TutorialUI.cs", "action": "modify", "status": "done", "verify": "AutoStart=false; CompleteChapter1WithoutPlaying"},
-        {"id": "T-M.2", "file": "src/core/save/SaveService.cs", "action": "modify", "status": "done", "verify": "TryLoadPath; AutoLoadOnReady false"},
-        {"id": "T-M.3", "file": "src/ui/MainMenuUI.cs + scenes/ui/main_menu.tscn + src/Game.tscn", "action": "create", "status": "done", "verify": "four buttons + save list"},
-        {"id": "T-M.4", "file": "test/src/MainMenuUITest.cs", "action": "create", "status": "done", "verify": "GoDotTest menu cases"},
-        {"id": "T-M.5", "file": "README.md + .godot-dev/state.json + .cursor/rules", "action": "modify", "status": "done", "verify": "dotnet build; smoke; tests"}
-      ]
+        {"id": "T-R3.1", "file": "src/world/WoodTree.cs + src/world/CoconutPalm.cs", "action": "modify", "status": "done", "verify": "shrink tween targets near-zero 0.001 not Vector3.Zero; eliminates native 'det == 0' basis error on harvest exhaustion (product path)"},
+        {"id": "T-R3.2", "file": "src/core/save/SaveService.cs", "action": "modify", "status": "done", "verify": "Snapshot/RestoreFarms/RestoreLivestock/RestoreStorageBoxes guard IsInsideTree before GetTree(); kills 9 native data.tree errors"},
+        {"id": "T-R3.3", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "_PhysicsProcess bails when !IsInsideTree (real free-race guard); AI behavior switch untouched"}
+      ],
+      "residual_test_only_errors": {
+        "body_get_space_null": 4,
+        "not_in_tree_globalposition": 4,
+        "why": "CombatHurtboxTest manually calls enemy._PhysicsProcess with ProcessMode.Disabled body (no physics space); TutorialIslandTest sets GlobalPosition pre-tree. Harness-only, not engine-dispatched."
+      }
     }
   ],
-  "pending_todos": [],
-  "checkpoint": "phase4_irregular_islands_verified",
+  "pending_todos": [
+    "BuildingSystem upstream TODO (complete demolish/save edge cases) — large feature, not this polish pass",
+    "WaterMesh cascade sample TODO — blocked by headless GPU contract; product path separate",
+    "WaveGenerator barrier FIXME — needs profiling before change",
+    "BuildingInput load-from-configuration TODO — low priority"
+  ],
+  "checkpoint": "project_audit_r3_verified",
   "verification": {
-    "build": "dotnet build 0 errors",
-    "smoke": "godot --headless --path . --quit-after 5 exit 0; WaterMesh headless warning is WARN not crash dump",
-    "tests": "2026-08-21 enlarge-islands: IslandGeneratorTest 20/0; IslandVegetationTest 5/0; TutorialIslandTest 4/0; EnemyHabitatTest 9/0; GameTest 4/0. CombatHurtbox suite still aborts on pre-existing disposed-GCHandle. Full suite remains unstable.",
+    "build": "dotnet build 0 errors; src warnings 10 (CA1805 x4, CA1859 x4, CA1869 x2), test warnings 144 (mostly CA1310 locale StartsWith)",
+    "smoke": "2026-09-16 godot --headless --path . --quit-after 5 exit 0 (WaterMesh headless WARN only)",
+    "tests": "2026-09-16: GoDotTest Passed: 475 | Failed: 0 | Skipped: 0; ObjectDisposedException 0; det==0 0 (fixed); data.tree null 0 (fixed); residual 8 ERROR harness-only (manual _PhysicsProcess w/o space x4, pre-tree GlobalPosition x4); exit RID leaks = dummy-renderer teardown noise",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
-    "export": "re-export 2026-08-18 19:22 after denser vegetation: same command exit 0; pck still 68646116 (65.47 MB, unchanged — vegetation is C# quotas not new assets); SeaAnomaly.dll 573440; file_logging.pc=true"
+    "export": "not re-exported this pass"
   },
-  "notes": "2026-08-21 enlarge-islands: product radii ×1.5 (Main 80→120), Storm ×1.2 (30–38→36–46), tutorial size unchanged (ring pushed 770–830). Vegetation/enemies ×2.25 area (Storm ×1.44); shark_king + tutorial crab stay 1. HeightScale/NoiseScale unchanged. DefaultResolution 129→193. SpawnSafeRadius 40 and BuildingPlateauRadius 24 unchanged. Prior aim-swim-tide still in tree."
+  "notes": "2026-09-16 audit R3: fixed product-path native error — harvest shrink tweens tweened scale to exact Vector3.Zero (WoodTree/CoconutPalm), basis det 0 on every inversion, fired in shipped game when trees exhausted; now near-zero 0.001. SaveService off-tree GetTree() printed 9 native data.tree errors despite null check (native errors inside GetTree) — IsInsideTree guards in Snapshot + 3 Restore methods. EnemyBase _PhysicsProcess bails when !IsInsideTree (real free-race guard, AI switch untouched). PlayerMotion untouched. Remaining pending_todos upstream/large/contract-deferred."
 }

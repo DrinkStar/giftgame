@@ -8,9 +8,11 @@ using Godot;
 ///   T9.2 — shows the currently selected weapon/tool's model in the player's
 ///   hand position (a fixed offset node under the Player, not bone-anchored).
 ///   Locomotion/attack clips live on <see cref="CharacterAnimator"/>; this
-///   node only swaps the held mesh. Refreshes on hotbar selection and
-///   inventory changes; a non-weapon selection hides the mesh. Unknown item
-///   ids and unwired parents are silent no-ops (fail-closed).
+///   node swaps the held mesh and yaws with <c>PlayerModel</c> so the spear
+///   tip tracks the crosshair-facing mesh (PlayerMotion / body capsule stay
+///   unrotated). Follows the same effective item as
+///   <see cref="WeaponSystem"/> (hotbar vs Q secondary). Unknown item ids and
+///   unwired parents are silent no-ops (fail-closed).
 /// </summary>
 public partial class WeaponVisual : Node3D
 {
@@ -29,20 +31,48 @@ public partial class WeaponVisual : Node3D
 
   private MeshInstance3D? _mesh;
   private string? _currentModelPath;
+  private Vector3 _restOffset;
 
   public override void _Ready()
   {
+    _restOffset = Position;
     _mesh = new MeshInstance3D { Name = "WeaponMesh", Visible = false };
     AddChild(_mesh);
     GameEvents.HotbarSelectionChanged += OnSelectionChanged;
     GameEvents.InventoryChanged += OnInventoryChanged;
+    GameEvents.WeaponSlotChanged += OnWeaponSlotChanged;
+    GameEvents.SecondarySlotChanged += OnSecondarySlotChanged;
+    SetProcess(true);
     Refresh();
+  }
+
+  public override void _Process(double delta) => SyncYawToPlayerModel();
+
+  /// <summary>
+  ///   Orbit the hand offset and mesh yaw with PlayerModel so the held
+  ///   weapon faces the same way as the character (crosshair-aligned).
+  /// </summary>
+  public void SyncYawToPlayerModel()
+  {
+    if (GetParent() is not PlayerController player)
+      return;
+    var model = player.GetNodeOrNull<Node3D>("PlayerModel");
+    if (model == null)
+      return;
+
+    var yaw = model.Rotation.Y;
+    Position = _restOffset.Rotated(Vector3.Up, yaw);
+    var rot = Rotation;
+    rot.Y = yaw;
+    Rotation = rot;
   }
 
   public override void _ExitTree()
   {
     GameEvents.HotbarSelectionChanged -= OnSelectionChanged;
     GameEvents.InventoryChanged -= OnInventoryChanged;
+    GameEvents.WeaponSlotChanged -= OnWeaponSlotChanged;
+    GameEvents.SecondarySlotChanged -= OnSecondarySlotChanged;
   }
 
   /// <summary>Public seam for tests — the displayed item id, or "" when hidden.</summary>
@@ -52,10 +82,13 @@ public partial class WeaponVisual : Node3D
 
   private void OnInventoryChanged() => Refresh();
 
+  private void OnWeaponSlotChanged(ItemData? primary, ItemData? secondary) => Refresh();
+
+  private void OnSecondarySlotChanged(ItemData? item) => Refresh();
+
   private void Refresh()
   {
-    var player = GetParentOrNull<PlayerController>();
-    var selectedId = player?.GetNodeOrNull<InventorySystem>("InventorySystem")?.SelectedItem?.Id ?? "";
+    var selectedId = ResolveDisplayedItemId();
 
     if (string.IsNullOrEmpty(selectedId) || !ModelPaths.TryGetValue(selectedId, out var path))
     {
@@ -103,6 +136,20 @@ public partial class WeaponVisual : Node3D
 
     DisplayedItemId = selectedId;
     _mesh!.Visible = true;
+  }
+
+  /// <summary>
+  ///   Same resolution as combat: secondary when Q-active, else hotbar.
+  /// </summary>
+  private string ResolveDisplayedItemId()
+  {
+    var player = GetParentOrNull<PlayerController>();
+    var weapon = player?.GetNodeOrNull<WeaponSystem>("WeaponSystem");
+    if (weapon != null)
+      return weapon.ResolveEffectiveItem()?.Id ?? "";
+
+    return player?.GetNodeOrNull<InventorySystem>("InventorySystem")?.SelectedItem?.Id
+      ?? "";
   }
 
   /// <summary>Depth-first search for the first MeshInstance3D in a scene.</summary>

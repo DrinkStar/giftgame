@@ -23,10 +23,11 @@ public static class PlayerSwim
   /// <summary>In water when the capsule center is this far below the surface.</summary>
   public const float EnterOffset = 0.85f;
 
-  public const float HorizontalScale = 0.55f;
-  public const float VerticalSpeed = 4.5f;
+  public const float HorizontalScale = 0.68f;
+  public const float VerticalSpeed = 5f;
   public const float MaxDiveDepth = 12f;
   public const float FloatDepth = 0.45f;
+  public const float BuoyancyGain = 3.2f;
 
   public static bool IsInWater(float bodyY, float surfaceY) =>
     bodyY < surfaceY + EnterOffset;
@@ -51,7 +52,7 @@ public static class PlayerSwim
     else
     {
       var targetY = surfaceY - FloatDepth;
-      vy = Mathf.Clamp((targetY - bodyY) * 2.5f, -VerticalSpeed, VerticalSpeed);
+      vy = Mathf.Clamp((targetY - bodyY) * BuoyancyGain, -VerticalSpeed, VerticalSpeed);
     }
 
     var minY = surfaceY - MaxDiveDepth;

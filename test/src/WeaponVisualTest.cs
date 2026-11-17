@@ -4,6 +4,7 @@ namespace SeaAnomaly;
 using System.Threading.Tasks;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
+using Chickensoft.GodotTestDriver.Util;
 using Godot;
 using Shouldly;
 
@@ -92,5 +93,60 @@ public class WeaponVisualTest : TestClass
     // No items: the selected slot is empty.
     _visual.DisplayedItemId.ShouldBe("");
     _visual.GetNodeOrNull<MeshInstance3D>("WeaponMesh")!.Visible.ShouldBeFalse();
+  }
+
+  [Test]
+  public async Task SecondarySlotActiveShowsSecondaryWeaponMesh()
+  {
+    var weapon = new WeaponSystem
+    {
+      Name = "WeaponSystem",
+      InventoryPath = "../InventorySystem"
+    };
+    _player.AddChild(weapon);
+    await TestScene.ProcessFrame(1);
+
+    var axe = LoadItem("stone_axe");
+    var spear = LoadItem("wooden_spear");
+    _inventory.AddItem(axe, 1);
+    _inventory.SecondaryItem = spear;
+    _inventory.SelectedHotbarSlot = 0;
+    GameEvents.RaiseHotbarSelectionChanged(0);
+    _visual.DisplayedItemId.ShouldBe("stone_axe");
+
+    weapon.SecondarySlotActive = true;
+    _visual.DisplayedItemId.ShouldBe("wooden_spear");
+    _visual.GetNodeOrNull<MeshInstance3D>("WeaponMesh")!.Visible.ShouldBeTrue();
+
+    weapon.SecondarySlotActive = false;
+    _visual.DisplayedItemId.ShouldBe("stone_axe");
+  }
+
+  [Test]
+  public async Task SyncYawToPlayerModel_OrbitsHandOffsetWithMeshYaw()
+  {
+    var model = new Node3D { Name = "PlayerModel" };
+    _player.AddChild(model);
+
+    _player.RemoveChild(_visual);
+    _visual.Free();
+    _visual = new WeaponVisual
+    {
+      Name = "WeaponVisual",
+      Position = new Vector3(0.35f, 1.15f, -0.55f)
+    };
+    _player.AddChild(_visual);
+    await TestScene.ProcessFrame(1);
+
+    var rot = model.Rotation;
+    rot.Y = Mathf.Pi * 0.5f;
+    model.Rotation = rot;
+    _visual.SyncYawToPlayerModel();
+
+    var expectedPos = new Vector3(0.35f, 1.15f, -0.55f)
+      .Rotated(Vector3.Up, Mathf.Pi * 0.5f);
+    _visual.Position.DistanceTo(expectedPos).ShouldBeLessThan(0.001f);
+    Mathf.Abs(Mathf.AngleDifference(_visual.Rotation.Y, Mathf.Pi * 0.5f))
+      .ShouldBeLessThan(0.001f);
   }
 }

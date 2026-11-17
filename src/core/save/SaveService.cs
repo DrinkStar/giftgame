@@ -153,9 +153,12 @@ public partial class SaveService : Node
     }
 
     // Farm plots are group-registered in FarmPlot._Ready; livestock likewise;
-    // storage boxes (T8.5.8) in StorageBox._Ready. GetTree() can be null when
-    // the service is exercised off-tree (unit tests) — the groups are simply
-    // empty then.
+    // storage boxes (T8.5.8) in StorageBox._Ready. When the service runs
+    // off-tree (unit tests) the groups are simply empty. Guard with
+    // IsInsideTree(): calling GetTree() itself prints a native error
+    // ("Parameter "data.tree" is null") even though it returns null.
+    if (!IsInsideTree())
+      return data;
     var tree = GetTree();
     if (tree != null)
     {
@@ -476,6 +479,8 @@ public partial class SaveService : Node
 
   private void RestoreFarms(List<FarmSaveData> farms)
   {
+    if (!IsInsideTree())
+      return;
     var tree = GetTree();
     if (tree == null)
     {
@@ -494,6 +499,8 @@ public partial class SaveService : Node
 
   private void RestoreLivestock(List<LivestockSaveData> livestock)
   {
+    if (!IsInsideTree())
+      return;
     var tree = GetTree();
     if (tree == null)
     {
@@ -519,6 +526,8 @@ public partial class SaveService : Node
   /// </summary>
   private void RestoreStorageBoxes(List<StorageBoxSaveData> boxes)
   {
+    if (!IsInsideTree())
+      return;
     var tree = GetTree();
     if (tree == null)
     {

@@ -22,3 +22,7 @@ addons/agent_tools/
 # Neural 3D drafts (not CC0; see assets/models/_ai_preview/README.md)
 assets/models/_ai_preview/**
 !assets/models/_ai_preview/README.md
+
+# Local run logs (build / test / diagnostic dumps are not source)
+*.log
+.godot-dev/*.log

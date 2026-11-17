@@ -102,6 +102,16 @@ public partial class PlayerController : CharacterBody3D
     // (GameManager.RespawnPlayer → PlayerStats.Revive) re-enables movement.
     if (Stats is { IsAlive: false })
     {
+      Running = false;
+      Velocity = Vector3.Zero;
+      return;
+    }
+
+    // Menus / inventory lock gameplay: freeze locomotion without touching
+    // PlayerMotion (zero input + zero velocity, no MoveAndSlide).
+    if (GameEvents.GameplayInputLocked)
+    {
+      Running = false;
       Velocity = Vector3.Zero;
       return;
     }

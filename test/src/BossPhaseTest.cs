@@ -238,6 +238,33 @@ public class BossPhaseTest : TestClass, IDisposable
     Should.NotThrow(() => _controller._PhysicsProcess(1.0));
 
     _controller.CurrentPhase.ShouldBe(2);
+
+    // Rejected scene latches: a second tick must not warn/throw again.
+    Should.NotThrow(() => _controller._PhysicsProcess(1.0));
+  }
+
+  [Test]
+  public void PhysicsProcess_AfterBossFreed_DoesNotThrow()
+  {
+    _enemy.EnemyData = CreateSharkKingData();
+    _enemy.TakeDamage(120f); // phase 2
+    _controller.MinionScene =
+      GD.Load<PackedScene>("res://scenes/combat/enemy.tscn");
+    _controller.MinionData =
+      GD.Load<EnemyData>("res://assets/enemies/shark_pup.tres");
+    _controller.MinionSpawnInterval = 0f;
+
+    // Keep the controller alive while the boss node is Free()'d (mirrors
+    // teardown races where the child still receives a physics tick).
+    _enemy.RemoveChild(_controller);
+    _enemy.GetParent()!.AddChild(_controller);
+
+    var boss = _enemy;
+    _enemy = null!;
+    boss.Free();
+
+    Should.NotThrow(() => _controller._PhysicsProcess(1.0));
+    Should.NotThrow(() => _controller._PhysicsProcess(1.0));
   }
 
   [Test]

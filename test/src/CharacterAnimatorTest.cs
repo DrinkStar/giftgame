@@ -4,6 +4,7 @@ namespace SeaAnomaly;
 using System.Threading.Tasks;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
+using Chickensoft.GodotTestDriver.Util;
 using Godot;
 using Shouldly;
 
@@ -238,5 +239,65 @@ public class CharacterAnimatorTest : TestClass
     animator.ApplyLocomotion(4f, running: true);
     animator.NotifyAttack();
     animator.CurrentClip.ShouldBe("");
+  }
+
+  [Test]
+  public async Task IdleAndAttackSnapAlignVisualYawWithCameraLook()
+  {
+    var player = new PlayerController { Name = "Player", Gravity = 0f };
+    player.SetPhysicsProcess(false);
+    var model = new Node3D { Name = "PlayerModel" };
+    player.AddChild(model);
+
+    var pivot = new Node3D { Name = "CameraPivot" };
+    var camera = new Camera3D { Name = "Camera3D", Current = true };
+    pivot.AddChild(camera);
+    player.AddChild(pivot);
+
+    var animator = new CharacterAnimator
+    {
+      Name = "CharacterAnimator",
+      VisualYawOffsetDegrees = 180f
+    };
+    player.AddChild(animator);
+    await _fixture.AddToRoot(player, autoRemoveFromRoot: true);
+    animator.SetProcess(false);
+    animator.BindFromTree();
+
+    // Pure seam: +X look with 180° mesh offset → yaw 3π/2 on PlayerModel.
+    animator.AlignVisualToWorldLook(Vector3.Right, snap: true);
+    var expectedRight = Mathf.Pi * 1.5f;
+    Mathf.Abs(Mathf.AngleDifference(model.Rotation.Y, expectedRight))
+      .ShouldBeLessThan(0.001f);
+    Mathf.Abs(Mathf.AngleDifference(animator.VisualYawRadians, expectedRight))
+      .ShouldBeLessThan(0.001f);
+
+    // Yaw the pivot after the tree is live so GlobalTransform is authoritative.
+    pivot.Rotation = new Vector3(0f, Mathf.Pi * 0.5f, 0f);
+    await TestScene.ProcessFrame(1);
+
+    // Point mesh at world -Z (legacy "face travel" pose), then prove the
+    // crosshair path wins — face must match camera, not the old travel yaw.
+    var rot = model.Rotation;
+    rot.Y = 0f;
+    model.Rotation = rot;
+    animator.AlignVisualToWorldLook(Vector3.Forward, snap: true);
+
+    animator.FacePlayerCameraLook(player, snap: true);
+    var lookFlat = -camera.GlobalTransform.Basis.Z;
+    lookFlat.Y = 0f;
+    lookFlat = lookFlat.Normalized();
+    var expected = Mathf.Atan2(lookFlat.X, lookFlat.Z) + Mathf.Pi;
+    Mathf.Abs(Mathf.AngleDifference(model.Rotation.Y, expected))
+      .ShouldBeLessThan(0.001f);
+    // Must leave the travel-forward pose (0 with 180° offset on -Z ≈ π).
+    Mathf.Abs(Mathf.AngleDifference(model.Rotation.Y, Mathf.Pi))
+      .ShouldBeGreaterThan(0.5f);
+
+    rot.Y = 0f;
+    model.Rotation = rot;
+    animator.NotifyAttack();
+    Mathf.Abs(Mathf.AngleDifference(model.Rotation.Y, expected))
+      .ShouldBeLessThan(0.001f);
   }
 }

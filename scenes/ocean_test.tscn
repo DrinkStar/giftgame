@@ -21,6 +21,13 @@ sky_material = SubResource("ProceduralSkyMaterial_sky")
 background_mode = 2
 sky = SubResource("Sky_sky")
 ambient_light_source = 3
+tonemap_mode = 2
+tonemap_white = 6.0
+fog_enabled = true
+fog_light_color = Color(0.65, 0.72, 0.8, 1)
+fog_density = 0.0004
+fog_aerial_perspective = 0.5
+fog_sun_scatter = 0.1
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_island"]
 albedo_color = Color(0.760784, 0.698039, 0.501961, 1)
@@ -56,11 +63,12 @@ transform = Transform3D(1, 0, 0, 0, 0.707107, -0.707107, 0, 0.707107, 0.707107, 
 shadow_enabled = true
 
 [node name="Water" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.75, 0)
 cast_shadow = 0
 material_override = ExtResource("5_watermat")
 mesh = ExtResource("4_clipmap")
 script = ExtResource("2_watermesh")
+RestLevel = -0.75
 
 [node name="Island" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, -15)
@@ -85,6 +93,7 @@ shape = SubResource("BoxShape3D_box")
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.3420201, 0, 0.3420201, 0.9396926, 0, 8, 20)
 current = true
+far = 2500.0
 
 [node name="Shark" parent="." instance=ExtResource("6_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 14)

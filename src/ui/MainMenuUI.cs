@@ -239,7 +239,7 @@ public partial class MainMenuUI : CanvasLayer
     var dim = new ColorRect
     {
       Name = "Dim",
-      Color = new Color(0f, 0f, 0f, 0.55f),
+      Color = new Color(0.02f, 0.05f, 0.08f, 0.62f),
       MouseFilter = Control.MouseFilterEnum.Stop
     };
     dim.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -285,8 +285,19 @@ public partial class MainMenuUI : CanvasLayer
       Text = "海域异变",
       HorizontalAlignment = HorizontalAlignment.Center
     };
-    title.AddThemeFontSizeOverride("font_size", 32);
+    title.AddThemeFontSizeOverride("font_size", 40);
+    title.AddThemeColorOverride("font_color", new Color(0.85f, 0.93f, 1f));
     vbox.AddChild(title);
+
+    var subtitle = new Label
+    {
+      Name = "Subtitle",
+      Text = "SeaAnomaly",
+      HorizontalAlignment = HorizontalAlignment.Center
+    };
+    subtitle.AddThemeFontSizeOverride("font_size", 14);
+    subtitle.AddThemeColorOverride("font_color", new Color(0.55f, 0.7f, 0.82f));
+    vbox.AddChild(subtitle);
 
     vbox.AddChild(MakeMenuButton("TutorialButton", "新手教程", OnTutorialPressed));
     vbox.AddChild(MakeMenuButton("StartButton", "开始游戏", OnStartPressed));
@@ -364,12 +375,12 @@ public partial class MainMenuUI : CanvasLayer
   {
     var style = new StyleBoxFlat
     {
-      BgColor = new Color(0.1f, 0.1f, 0.1f, 0.95f),
-      BorderColor = new Color(0.4f, 0.4f, 0.4f)
+      BgColor = new Color(0.04f, 0.08f, 0.12f, 0.94f),
+      BorderColor = new Color(0.28f, 0.48f, 0.62f)
     };
     style.SetBorderWidthAll(2);
-    style.SetCornerRadiusAll(8);
-    style.SetContentMarginAll(24);
+    style.SetCornerRadiusAll(10);
+    style.SetContentMarginAll(28);
     return style;
   }
 }

@@ -51,4 +51,22 @@ public class PlayerSwimTest : TestClass
     velocity.Y.ShouldBeGreaterThan(0f);
     velocity.Y.ShouldBeLessThanOrEqualTo(PlayerSwim.VerticalSpeed);
   }
+
+  [Test]
+  public void Apply_BuoyancyUsesExportedGainTowardFloatDepth()
+  {
+    var bodyY = -2f;
+    var surfaceY = 0f;
+    var targetY = surfaceY - PlayerSwim.FloatDepth;
+    var expected = Mathf.Clamp(
+      (targetY - bodyY) * PlayerSwim.BuoyancyGain,
+      -PlayerSwim.VerticalSpeed,
+      PlayerSwim.VerticalSpeed
+    );
+
+    var velocity = PlayerSwim.Apply(
+      Vector3.Zero, swimUp: false, swimDown: false, bodyY, surfaceY
+    );
+    velocity.Y.ShouldBe(expected, Tolerance);
+  }
 }

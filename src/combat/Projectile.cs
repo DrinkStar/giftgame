@@ -102,6 +102,8 @@ public partial class Projectile : Area3D
     if (Hurtbox.ResolveEnemy(collider) is { } enemy)
     {
       enemy.TakeDamage(Damage);
+      // Same hit-feel bus as melee so SfxHook plays melee_hit on spear/arrow.
+      GameEvents.RaiseMeleeHit("");
       QueueFree();
       return;
     }

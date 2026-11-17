@@ -22,6 +22,13 @@ sky_material = SubResource("ProceduralSkyMaterial_storm")
 background_mode = 2
 sky = SubResource("Sky_storm")
 ambient_light_source = 3
+tonemap_mode = 2
+tonemap_white = 5.0
+fog_enabled = true
+fog_light_color = Color(0.25, 0.28, 0.32, 1)
+fog_density = 0.004
+fog_aerial_perspective = 0.2
+fog_sun_scatter = 0.02
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ground"]
 albedo_color = Color(0.22, 0.28, 0.18, 1)
@@ -29,10 +36,10 @@ roughness = 0.9
 
 [sub_resource type="BoxMesh" id="BoxMesh_ground"]
 material = SubResource("StandardMaterial3D_ground")
-size = Vector3(40, 1, 40)
+size = Vector3(60, 1, 60)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
-size = Vector3(40, 1, 40)
+size = Vector3(60, 1, 60)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.5
@@ -97,6 +104,7 @@ script = ExtResource("6_stats")
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.9396926, -0.3420201, 0, 0.3420201, 0.9396926, 0, 8, 20)
 current = true
+far = 2500.0
 
 [node name="SharkKing" parent="." instance=ExtResource("1_enemy")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 12)

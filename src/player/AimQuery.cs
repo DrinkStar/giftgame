@@ -10,10 +10,15 @@ using Godot;
 ///   crab in front of the player.
 ///   The camera-to-body gap is skipped in one jump (no RID exclude — the
 ///   island is a single StaticBody3D; excluding it would also punch through
-///   hills in front of the player). Past the body, the first hit wins.
+///   hills in front of the player). Past the body, soft Area misses are
+///   skipped so a decorative volume does not block a tree/crab behind it;
+///   a World/body miss still stops the ray (no through-mountain picks).
 /// </summary>
 public static class AimQuery
 {
+  /// <summary>Max soft Area skips before giving up (prevents infinite loops).</summary>
+  public const int MaxPierceSteps = 8;
+
   /// <summary>
   ///   Ray length from the camera: the follow gap plus
   ///   <paramref name="range"/> meters past the body.
@@ -37,8 +42,9 @@ public static class AimQuery
   /// <summary>
   ///   Skips <paramref name="pierceUntilDistance"/> meters from
   ///   <paramref name="from"/> without excluding colliders, then returns the
-  ///   first hit that <paramref name="accept"/> allows. A world hit past the
-  ///   body stops the ray (no through-mountain picks).
+  ///   first hit that <paramref name="accept"/> allows. Non-accepted
+  ///   <see cref="Area3D"/> hits are skipped (soft); any other collider stops
+  ///   the ray (hard — terrain / bodies).
   /// </summary>
   public static Godot.Collections.Dictionary IntersectPiercing(
     PhysicsDirectSpaceState3D space,
@@ -47,7 +53,8 @@ public static class AimQuery
     uint mask,
     Godot.Collections.Array<Rid> exclude,
     Func<GodotObject, bool> accept,
-    float pierceUntilDistance)
+    float pierceUntilDistance
+  )
   {
     if (space == null)
       return new Godot.Collections.Dictionary();
@@ -63,20 +70,46 @@ public static class AimQuery
     if ((to - origin).LengthSquared() < 0.0001f)
       return new Godot.Collections.Dictionary();
 
-    var query = PhysicsRayQueryParameters3D.Create(origin, to);
-    query.CollisionMask = mask;
-    query.CollideWithAreas = true;
-    query.CollideWithBodies = true;
-    if (exclude != null && exclude.Count > 0)
-      query.Exclude = exclude;
+    var excludeList = new Godot.Collections.Array<Rid>();
+    if (exclude != null)
+    {
+      foreach (var rid in exclude)
+        excludeList.Add(rid);
+    }
 
-    var hit = space.IntersectRay(query);
-    if (hit.Count == 0)
+    for (var step = 0; step < MaxPierceSteps; step++)
+    {
+      if ((to - origin).LengthSquared() < 0.0001f)
+        return new Godot.Collections.Dictionary();
+
+      var query = PhysicsRayQueryParameters3D.Create(origin, to);
+      query.CollisionMask = mask;
+      query.CollideWithAreas = true;
+      query.CollideWithBodies = true;
+      if (excludeList.Count > 0)
+        query.Exclude = excludeList;
+
+      var hit = space.IntersectRay(query);
+      if (hit.Count == 0)
+        return new Godot.Collections.Dictionary();
+
+      var collider = hit["collider"].AsGodotObject();
+      if (collider != null && accept(collider))
+        return hit;
+
+      // Soft miss: skip Areas that failed accept so a dormant interactable
+      // volume does not block the target behind it.
+      if (collider is Area3D area)
+      {
+        excludeList.Add(area.GetRid());
+        var hitPos = hit["position"].AsVector3();
+        origin = hitPos + unit * 0.05f;
+        continue;
+      }
+
+      // Hard miss: terrain / character body — stop (no mountain punch-through).
       return new Godot.Collections.Dictionary();
-
-    var collider = hit["collider"].AsGodotObject();
-    if (collider != null && accept(collider))
-      return hit;
+    }
 
     return new Godot.Collections.Dictionary();
   }

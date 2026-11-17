@@ -196,6 +196,13 @@ public static class GameEvents
   public static event Action<string>? MeleeHit;
 
   /// <summary>
+  ///   Player started an attack swing / throw / shot (feel feedback). Carries
+  ///   the effective weapon item id, or empty for unarmed. Raise-only — SfxHook
+  ///   plays melee_swing; does not imply a hit.
+  /// </summary>
+  public static event Action<string>? AttackSwing;
+
+  /// <summary>
   ///   T9.3: an armor item was equipped, carrying its item id
   ///   (cloth_armor/leather_armor/iron_armor). Raised by WeaponSystem's armor
   ///   equip branch; consumed by the player outfit visuals. Raise-only.
@@ -409,6 +416,9 @@ public static class GameEvents
     WeaponSlotChanged?.Invoke(primary, secondary);
 
   public static void RaiseMeleeHit(string weaponId) => MeleeHit?.Invoke(weaponId);
+
+  public static void RaiseAttackSwing(string weaponId) =>
+    AttackSwing?.Invoke(weaponId);
 
   public static void RaiseArmorEquipped(string itemId) =>
     ArmorEquipped?.Invoke(itemId);
