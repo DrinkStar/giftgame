@@ -5,7 +5,7 @@
   "stage": "project-audit-r3",
   "current_iteration": "review-closeout-2026-11-17",
   "git_branch": "dev/perf-p0-p1-20260817",
-  "last_stable_commit": "d3dd314",
+  "last_stable_commit": "b67a258",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
     "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
@@ -74,7 +74,14 @@
         {"id": "C-1.1", "file": ".gitignore + probe_chest.gd", "action": "modify/delete", "status": "done", "verify": "ignore *.log + .godot-dev/*.log; 30.8MB root logs and 5.3MB dev logs no longer reachable by git add; one-off probe removed"},
         {"id": "C-1.2", "file": "test/src/PlayerCameraTest.cs.uid", "action": "create", "status": "done", "verify": "godot --headless --import generated uid://cw71vv84iufxs; test/src uid count == cs count (66/66)"},
         {"id": "C-1.3", "file": "commit d3dd314", "action": "commit", "status": "done", "verify": "lands the 2026-09-11..16 working set (53 files, +1532/-177)"},
-        {"id": "C-1.4", "file": ".godot-dev/state.json", "action": "modify", "status": "done", "verify": "last_stable_commit d3dd314; git_branch no longer claims 'no .git in workspace'"}
+        {"id": "C-1.4", "file": ".godot-dev/state.json", "action": "modify", "status": "done", "verify": "last_stable_commit d3dd314; git_branch no longer claims 'no .git in workspace'"},
+        {"id": "C-2.1", "file": "src/core/WeatherFog.cs + src/core/WeatherService.cs + test/src/WeatherFogTest.cs", "action": "create/modify", "status": "done", "verify": "fog table extracted to pure WeatherFog.Resolve(weather, night); 4 tests pin 4 weather x day/night (density/scatter/aerial/Enabled == !night); red (CS0103) then green"},
+        {"id": "C-2.2", "file": "test/src/AimQueryTest.cs", "action": "modify", "status": "done", "verify": "3 physics-rig cases: rejected Area soft-skipped and target behind hit, World body hard-stops, MaxPierceSteps bounds the loop (rig parked at Y=200)"},
+        {"id": "C-2.3", "file": "test/src/PlayerCameraTest.cs", "action": "modify", "status": "done", "verify": "boom pulls in before a World hit (2.8 - 0.25 margin) and rests at the authored offset in open sky; Fov == WalkFov"},
+        {"id": "C-2.4", "file": "test/src/PlayerInputSimulationTest.cs", "action": "modify", "status": "done", "verify": "Setup closes MainMenuUI (title overlay holds gameplay input; a stale release from an older Game instance could land after this scene's Hold and zero the first tick) — removes the 0-velocity flake"},
+        {"id": "C-3.1", "file": "src/player/AimQuery.cs", "action": "modify", "status": "done", "verify": "IntersectPiercing reuses the caller's exclude array and pops appended RIDs in finally: no per-frame new Array<Rid> (perf-review P1-4 / T-P.4)"},
+        {"id": "C-3.2", "file": "src/player/WeaponVisual.cs + src/player/CharacterAnimator.cs", "action": "modify", "status": "done", "verify": "PlayerModel cached + yaw-unchanged early out; look camera cached with IsInstanceValid re-resolve; no per-frame NodePath lookup"},
+        {"id": "C-3.3", "file": "commits a3b1923 / b67a258", "action": "commit", "status": "done", "verify": "test + perf landed separately; --run-tests 484 passed / 0 failed (parallel and --sequential)"}
       ]
     }
   ],
@@ -88,7 +95,7 @@
   "verification": {
     "build": "dotnet build 0 errors; src warnings 10 (CA1805 x4, CA1859 x4, CA1869 x2), test warnings 144 (mostly CA1310 locale StartsWith)",
     "smoke": "2026-09-16 godot --headless --path . --quit-after 5 exit 0 (WaterMesh headless WARN only)",
-    "tests": "2026-09-16: GoDotTest Passed: 475 | Failed: 0 | Skipped: 0; ObjectDisposedException 0; det==0 0 (fixed); data.tree null 0 (fixed); residual 8 ERROR harness-only (manual _PhysicsProcess w/o space x4, pre-tree GlobalPosition x4); exit RID leaks = dummy-renderer teardown noise",
+    "tests": "2026-11-17: GoDotTest Passed: 484 | Failed: 0 | Skipped: 0 (parallel and --sequential), 9 cases added over the 475 baseline (4 WeatherFog, 3 IntersectPiercing, 2 PlayerCamera boom); ObjectDisposedException 0; det==0 0; data.tree null 0; residual 8 ERROR harness-only (manual _PhysicsProcess w/o space x4, pre-tree GlobalPosition x4); exit RID leaks = dummy-renderer teardown noise. Flake notes: IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists times out under load; PlayerInputSimulationTest needed MainMenuUI.Dismiss() (input lock leaked across Game loads).",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
     "export": "not re-exported this pass"
   },
