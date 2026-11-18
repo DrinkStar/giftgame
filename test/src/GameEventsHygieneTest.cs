@@ -18,9 +18,10 @@ using Shouldly;
 ///   exists yet by design).
 ///
 ///   Scans res://src recursively. Comment stripping is line-based: a line
-///   whose TrimStart() starts with "//" or "*" is skipped. Known limitation:
+///   whose TrimStart() starts with "//" or "*" is skipped. Known limitations:
 ///   inline trailing comments and block-comment-embedded += / -= are not
-///   recognized — keep such markup out of src/.
+///   recognized, and a `GameEvents.X +=` inside a string literal is counted
+///   as a real subscription — keep such markup out of src/.
 /// </summary>
 public partial class GameEventsHygieneTest : TestClass
 {
