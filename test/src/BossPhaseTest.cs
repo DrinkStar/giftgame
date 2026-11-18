@@ -11,9 +11,9 @@ using Shouldly;
 /// <summary>
 ///   Tests for the shark king 3-phase boss fight (Iter6.1 todo 4): pure
 ///   phase thresholds and minion-spawn gating in <see cref="CombatLogic"/>,
-///   the phase-3 rage multipliers, the <see cref="BossPhaseController"/>
-///   transition event (raised exactly once per transition), and the
-///   shark_king.tres boss asset.
+///   the phase-3 rage multipliers, <see cref="BossPhaseController"/>
+///   phase transitions observed through <see cref="BossPhaseController.CurrentPhase"/>,
+///   and the shark_king.tres boss asset.
 /// </summary>
 public class BossPhaseTest : TestClass, IDisposable
 {
@@ -143,59 +143,42 @@ public class BossPhaseTest : TestClass, IDisposable
   }
 
   [Test]
-  public void BossPhaseChanged_RaisedExactlyOncePerTransition()
+  public void PhaseTransitions_MoveCurrentPhase2Then3AndStay()
   {
     _enemy.EnemyData = CreateSharkKingData();
 
-    var events = new List<(string BossId, int Phase)>();
-    Action<string, int> handler = (id, phase) => events.Add((id, phase));
-    GameEvents.BossPhaseChanged += handler;
-    try
-    {
-      // 400 hp: 120 damage → 0.7 (phase 2), 120 more → 0.4 (phase 3).
-      _enemy.TakeDamage(120f);
-      _controller._PhysicsProcess(0.016);
+    // Sample CurrentPhase after each physics tick (no event bus involved).
+    var samples = new List<int>();
 
-      _enemy.TakeDamage(120f);
-      _controller._PhysicsProcess(0.016);
+    // 400 hp: 120 damage → 0.7 (phase 2), 120 more → 0.4 (phase 3).
+    _enemy.TakeDamage(120f);
+    _controller._PhysicsProcess(0.016);
+    samples.Add(_controller.CurrentPhase);
 
-      // Same phase again: no further transition event.
-      _controller._PhysicsProcess(0.016);
-    }
-    finally
-    {
-      GameEvents.BossPhaseChanged -= handler;
-    }
+    _enemy.TakeDamage(120f);
+    _controller._PhysicsProcess(0.016);
+    samples.Add(_controller.CurrentPhase);
 
-    events.Count.ShouldBe(2);
-    events[0].BossId.ShouldBe("shark_king");
-    events[0].Phase.ShouldBe(2);
-    events[1].BossId.ShouldBe("shark_king");
-    events[1].Phase.ShouldBe(3);
-    _controller.CurrentPhase.ShouldBe(3);
+    // Same phase again: does not regress.
+    _controller._PhysicsProcess(0.016);
+    samples.Add(_controller.CurrentPhase);
+
+    samples.Count.ShouldBe(3);
+    samples[0].ShouldBe(2);
+    samples[1].ShouldBe(3);
+    samples[2].ShouldBe(3);
   }
 
   [Test]
-  public void BossPhaseChanged_NoEventWhileStayingInPhaseOne()
+  public void PhaseOne_StaysOneAboveSeventyPercent()
   {
     _enemy.EnemyData = CreateSharkKingData();
 
-    var count = 0;
-    Action<string, int> handler = (_, _) => count++;
-    GameEvents.BossPhaseChanged += handler;
-    try
-    {
-      // 50 damage on 400 hp stays above 70%: phase 1, no event.
-      _enemy.TakeDamage(50f);
-      _controller._PhysicsProcess(0.016);
-      _controller._PhysicsProcess(0.016);
-    }
-    finally
-    {
-      GameEvents.BossPhaseChanged -= handler;
-    }
+    // 50 damage on 400 hp stays above 70%: phase 1, no transition.
+    _enemy.TakeDamage(50f);
+    _controller._PhysicsProcess(0.016);
+    _controller._PhysicsProcess(0.016);
 
-    count.ShouldBe(0);
     _controller.CurrentPhase.ShouldBe(1);
   }
 

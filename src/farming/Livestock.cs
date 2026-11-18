@@ -66,7 +66,7 @@ public partial class Livestock : StaticBody3D, IInteractable
 
   /// <summary>
   ///   FIX(iter8-plan): T8.2 — restores the animal state after a load. Writes
-  ///   the fields directly (no LivestockTamed/Produced events).
+  ///   the state fields directly, without any event notification.
   /// </summary>
   public void ApplySaveState(LivestockSaveData state)
   {
@@ -150,7 +150,6 @@ public partial class Livestock : StaticBody3D, IInteractable
       return;
 
     _state = LivestockLogic.State.Tamed;
-    GameEvents.RaiseLivestockTamed(LivestockType);
   }
 
   /// <summary>
@@ -188,7 +187,6 @@ public partial class Livestock : StaticBody3D, IInteractable
     }
 
     _state = LivestockLogic.Collect(_state);
-    GameEvents.RaiseLivestockProduced(LivestockType);
   }
 
   /// <summary>True when the inventory holds at least one accepted feed item.</summary>

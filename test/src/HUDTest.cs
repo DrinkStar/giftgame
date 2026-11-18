@@ -221,6 +221,27 @@ public class HUDTest : TestClass, IDisposable
     title!.Text.ShouldBe("背包（Tab 关闭）");
   }
 
+  /// <summary>
+  ///   GameSaved / GameLoaded show the bottom-center toast (1.5 s), which
+  ///   expires via _Process and is re-shown by the next event.
+  /// </summary>
+  [Test]
+  public void GameSavedAndLoaded_ShowToastThatExpires()
+  {
+    GameEvents.RaiseGameSaved(true);
+    var toast = _hud.FindChild("ToastLabel", true, false) as Label;
+    toast.ShouldNotBeNull();
+    toast!.Visible.ShouldBeTrue();
+    toast.Text.ShouldContain("保存");
+
+    _hud._Process(2.0);
+    toast.Visible.ShouldBeFalse();
+
+    GameEvents.RaiseGameLoaded("user://saves/savegame_1.json");
+    toast.Text.ShouldContain("读取");
+    toast.Visible.ShouldBeTrue();
+  }
+
   private static Label? FindInventoryTitle(HUD hud)
   {
     var panel = hud.GetNodeOrNull<Panel>("InventoryPanel");

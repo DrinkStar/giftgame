@@ -32,7 +32,7 @@ using Godot;
 ///     CraftingStarted / CraftingCompleted / CraftingFailed fire.
 ///
 ///   Fail-closed: a null or unwired <see cref="Crafting"/> never crashes —
-///   the panel opens with the empty-list hint. SUBSCRIBES five GameEvents;
+///   the panel opens with the empty-list hint. SUBSCRIBES six GameEvents;
 ///   unsubscribes all of them in _ExitTree (Decision 13).
 /// </summary>
 public partial class CraftUI : CanvasLayer
@@ -52,6 +52,7 @@ public partial class CraftUI : CanvasLayer
 
   private VBoxContainer? _recipeList;
   private Label? _hintLabel;
+  private ProgressBar? _progressBar;
   private bool _tutorialDone;
   private bool _gateHintShown;
 
@@ -220,8 +221,9 @@ public partial class CraftUI : CanvasLayer
   {
     GameEvents.InventoryChanged += OnInventoryChanged;
     GameEvents.CraftingStarted += OnCraftingStateChanged;
-    GameEvents.CraftingCompleted += OnCraftingStateChanged;
-    GameEvents.CraftingFailed += OnCraftingStateChanged;
+    GameEvents.CraftingProgress += OnCraftingProgress;
+    GameEvents.CraftingCompleted += OnCraftingFinished;
+    GameEvents.CraftingFailed += OnCraftingFinished;
     GameEvents.TutorialCompleted += OnTutorialCompleted;
   }
 
@@ -229,8 +231,9 @@ public partial class CraftUI : CanvasLayer
   {
     GameEvents.InventoryChanged -= OnInventoryChanged;
     GameEvents.CraftingStarted -= OnCraftingStateChanged;
-    GameEvents.CraftingCompleted -= OnCraftingStateChanged;
-    GameEvents.CraftingFailed -= OnCraftingStateChanged;
+    GameEvents.CraftingProgress -= OnCraftingProgress;
+    GameEvents.CraftingCompleted -= OnCraftingFinished;
+    GameEvents.CraftingFailed -= OnCraftingFinished;
     GameEvents.TutorialCompleted -= OnTutorialCompleted;
   }
 
@@ -242,6 +245,25 @@ public partial class CraftUI : CanvasLayer
 
   private void OnCraftingStateChanged(string recipeId)
   {
+    if (IsOpen)
+      Refresh();
+  }
+
+  private void OnCraftingProgress(float progress)
+  {
+    if (_progressBar == null || !IsInstanceValid(_progressBar))
+      return;
+    // 0 is the cancel terminal state (CancelCrafting raises progress 0, not a
+    // Failed event) — treat it as "hide", same as Completed/Failed.
+    _progressBar.Visible = progress > 0f;
+    if (progress > 0f)
+      _progressBar.Value = progress;
+  }
+
+  private void OnCraftingFinished(string recipeId)
+  {
+    if (_progressBar != null && IsInstanceValid(_progressBar))
+      _progressBar.Visible = false;
     if (IsOpen)
       Refresh();
   }
@@ -335,6 +357,16 @@ public partial class CraftUI : CanvasLayer
       SizeFlagsHorizontal = Control.SizeFlags.ExpandFill
     };
     scroll.AddChild(recipeList);
+
+    var progress = new ProgressBar
+    {
+      Name = "CraftProgress",
+      MinValue = 0, MaxValue = 1, Step = 0.001,
+      Visible = false,
+      CustomMinimumSize = new Vector2(0, 10)
+    };
+    vbox.AddChild(progress);
+    _progressBar = progress;
 
     var hint = new Label
     {

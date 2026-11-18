@@ -18,13 +18,13 @@ using Godot;
 ///     interval, applied by <see cref="EnemyBase"/> reading
 ///     <see cref="CurrentPhase"/>, plus a dark-red visual tint applied here.
 ///
-///   <see cref="GameEvents.RaiseBossPhaseChanged(string, int)"/> fires exactly
-///   once per transition. This node is pure wiring — all thresholds and
-///   decisions live in <see cref="CombatLogic"/>.
+///   Phase transitions are exposed to consumers through
+///   <see cref="CurrentPhase"/>. This node is pure wiring — all thresholds
+///   and decisions live in <see cref="CombatLogic"/>.
 /// </summary>
 public partial class BossPhaseController : Node
 {
-  /// <summary>Id reported with BossPhaseChanged events (defaults to the boss EnemyData id).</summary>
+  /// <summary>Identifier of this boss (defaults to the boss EnemyData id).</summary>
   [Export] public string BossId = "";
 
   /// <summary>Path to the boss EnemyBase; empty = this node's parent.</summary>
@@ -129,7 +129,6 @@ public partial class BossPhaseController : Node
     if (phase != _phase)
     {
       _phase = phase;
-      GameEvents.RaiseBossPhaseChanged(BossId, phase);
 
       if (phase == 3)
         _boss.OverrideTint(RageTint);

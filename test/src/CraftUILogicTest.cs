@@ -373,4 +373,29 @@ public class CraftUILogicTest : TestClass, IDisposable
     await TestScene.ProcessFrame(2);
     GameEvents.GameplayInputLocked.ShouldBeFalse();
   }
+
+  /// <summary>
+  ///   CraftingProgress drives the hidden CraftProgress bar: >0 shows it with
+  ///   the value, and 0 (the CancelCrafting terminal state) or a
+  ///   Completed/Finished event hides it again.
+  /// </summary>
+  [Test]
+  public void CraftingProgress_DrivesBarAndZeroHidesIt()
+  {
+    var bar = _craftUI.FindChild("CraftProgress", true, false) as ProgressBar;
+    bar.ShouldNotBeNull();
+    bar!.Visible.ShouldBeFalse();
+
+    GameEvents.RaiseCraftingProgress(0.5f);
+    bar.Visible.ShouldBeTrue();
+    bar.Value.ShouldBe(0.5, 0.001);
+
+    GameEvents.RaiseCraftingCompleted("wooden_spear");
+    bar.Visible.ShouldBeFalse();
+
+    GameEvents.RaiseCraftingProgress(0.7f);
+    bar.Visible.ShouldBeTrue();
+    GameEvents.RaiseCraftingProgress(0f);   // CancelCrafting's terminal state
+    bar.Visible.ShouldBeFalse();
+  }
 }

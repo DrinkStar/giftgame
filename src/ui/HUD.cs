@@ -19,9 +19,10 @@ using Godot;
 ///   - top-left survival chrome uses Chinese labels (生命/饥饿/口渴/体力)
 ///     plus current/max numbers, and a Chinese clock (时间/第N天/时段).
 ///
-///   SUBSCRIBES fourteen GameEvents (nine survival/HUD, three quest tracker
-///   events, plus TutorialStepChanged / TutorialCompleted so 当前目标 hides
-///   only during the chapter-1 overlay); unsubscribes all of them in
+///   SUBSCRIBES sixteen GameEvents (nine survival/HUD, three quest tracker
+///   events, TutorialStepChanged / TutorialCompleted so 当前目标 hides
+///   only during the chapter-1 overlay, plus GameSaved / GameLoaded toast
+///   feedback); unsubscribes all of them in
 ///   _ExitTree (Decision 13). The tracker is fail-closed when QuestService
 ///   is missing, never pauses the tree, and is distinct from the right-side
 ///   keybind caption. Craft/inventory lock does not hide 当前目标.
@@ -68,6 +69,10 @@ public partial class HUD : CanvasLayer
   private Tween? _guideTween;
   private int _displayedClockMinutes = int.MinValue;
 
+  private const float ToastSeconds = 1.5f;
+  private Label? _toastLabel;
+  private float _toastRemaining;
+
   private PlayerStats? _stats;
   private PlayerInteraction? _interaction;
   private InventorySystem? _inventory;
@@ -88,6 +93,12 @@ public partial class HUD : CanvasLayer
     CreateInventoryPanel();
     EnsureQuestObjectiveLabel();
     RefreshQuestObjective();
+    EnsureToastLabel();
+    // Toast subscriptions live in _Ready, not Initialize: in tests and some
+    // scenes the HUD Player export is null so Initialize never runs, and the
+    // save/load toast needs no player wiring at all.
+    GameEvents.GameSaved += OnGameSaved;
+    GameEvents.GameLoaded += OnGameLoaded;
 
     // Self-wire when the scene exports are set. GameManager may have called
     // Initialize already (it precedes HUD in Game.tscn _Ready order); the
@@ -186,6 +197,8 @@ public partial class HUD : CanvasLayer
     GameEvents.QuestCompleted -= OnQuestTrackerEvent;
     GameEvents.TutorialStepChanged -= OnChapter1OverlayStep;
     GameEvents.TutorialCompleted -= OnChapter1OverlayDone;
+    GameEvents.GameSaved -= OnGameSaved;
+    GameEvents.GameLoaded -= OnGameLoaded;
     _questTrackerSubscribed = false;
     _chapter1OverlayActive = false;
     // A panel torn down mid-game must not leave the static lock held
@@ -198,6 +211,18 @@ public partial class HUD : CanvasLayer
 
   public override void _Process(double delta)
   {
+    // Toast countdown runs before every other gate so it ticks even when the
+    // clock nodes are unresolved (tests / fail-closed HUDs).
+    if (_toastRemaining > 0f)
+    {
+      _toastRemaining -= (float)delta;
+      if (_toastRemaining <= 0f && _toastLabel != null && IsInstanceValid(_toastLabel))
+      {
+        _toastRemaining = 0f;
+        _toastLabel.Visible = false;
+      }
+    }
+
     // One-shot deferred lock release: Esc in the same input pass must not
     // let GameManager toggle pause (CraftUI / StorageUI contract).
     if (_releaseLockAtFrame != ulong.MaxValue && Engine.GetProcessFrames() >= _releaseLockAtFrame)
@@ -433,6 +458,44 @@ public partial class HUD : CanvasLayer
     GameEvents.TutorialStepChanged += OnChapter1OverlayStep;
     GameEvents.TutorialCompleted += OnChapter1OverlayDone;
   }
+
+  /// <summary>Shows a 1.5 s bottom-center toast; a second call resets the timer.</summary>
+  public void ShowToast(string text)
+  {
+    EnsureToastLabel();
+    if (_toastLabel == null || !IsInstanceValid(_toastLabel))
+      return;
+    _toastLabel.Text = text;
+    _toastLabel.Visible = true;
+    _toastRemaining = ToastSeconds;
+  }
+
+  private void EnsureToastLabel()
+  {
+    if (_toastLabel != null && IsInstanceValid(_toastLabel))
+      return;
+
+    var label = new Label
+    {
+      Name = "ToastLabel",
+      Visible = false,
+      MouseFilter = Control.MouseFilterEnum.Ignore,
+      HorizontalAlignment = HorizontalAlignment.Center,
+      Text = ""
+    };
+    label.SetAnchorsPreset(Control.LayoutPreset.CenterBottom);
+    label.OffsetLeft = -240f; label.OffsetRight = 240f;
+    label.OffsetTop = -140f; label.OffsetBottom = -100f;
+    label.AddThemeFontSizeOverride("font_size", 20);
+    label.AddThemeColorOverride("font_color", new Color(0.85f, 1f, 0.85f));
+    label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
+    label.AddThemeConstantOverride("outline_size", 5);
+    AddChild(label);
+    _toastLabel = label;
+  }
+
+  private void OnGameSaved(bool overwrite) => ShowToast("已保存");
+  private void OnGameLoaded(string fileName) => ShowToast("已读取");
 
   private void OnChapter1OverlayStep(int _currentStep, int totalSteps)
   {
