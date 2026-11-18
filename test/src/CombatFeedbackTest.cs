@@ -36,7 +36,7 @@ public class CombatFeedbackTest : TestClass
       GameEvents.RangedAttack -= shoot;
     }
 
-    swings.ShouldBe(new[] { "wooden_axe" });
+    swings.ShouldBe(new List<string> { "wooden_axe" });
     ranged.ShouldBeEmpty();
   }
 
@@ -61,6 +61,6 @@ public class CombatFeedbackTest : TestClass
     }
 
     swings.ShouldBe(0);
-    ranged.ShouldBe(new[] { "wooden_spear", "wooden_bow" });
+    ranged.ShouldBe(new List<string> { "wooden_spear", "wooden_bow" });
   }
 }

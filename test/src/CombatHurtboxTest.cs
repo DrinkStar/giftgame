@@ -213,7 +213,7 @@ public class CombatHurtboxTest : TestClass, IDisposable
     try { for (var i = 0; i < 8; i++) projectile._PhysicsProcess(0.02); }
     finally { GameEvents.ProjectileHit -= onHit; GameEvents.MeleeHit -= onMelee; }
 
-    hits.ShouldBe(new[] { "wooden_spear" });
+    hits.ShouldBe(new List<string> { "wooden_spear" });
     melee.ShouldBe(0);
   }
 

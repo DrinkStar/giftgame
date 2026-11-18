@@ -96,10 +96,13 @@ public partial class SfxHook : Node
   /// <summary>
   ///   Ranged sfx router: bows shoot arrows (bow_shoot); everything else in the
   ///   ranged path is a thrown spear, which keeps the pre-existing swing whoosh.
-  ///   Same id convention as CombatLogic.ResolveAttack (Contains("bow")).
+  ///   Same id convention as CombatLogic.ResolveAttack (ordinal Contains("bow")).
   /// </summary>
-  public static string RangedSfxId(string itemId) =>
-    itemId.Contains("bow") ? "bow_shoot" : "melee_swing";
+  /// <param name="itemId">
+  ///   Optional item id; a null or non-bow id routes to "melee_swing".
+  /// </param>
+  public static string RangedSfxId(string? itemId) =>
+    itemId?.Contains("bow") == true ? "bow_shoot" : "melee_swing";
 
   private void OnProjectileHit(string itemId) =>
     ResolveAudioManager()?.PlaySfx("enemy_hit");
