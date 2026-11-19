@@ -33,7 +33,10 @@ public partial class GameEventsHygieneTest : TestClass
   [GeneratedRegex(@"GameEvents\.(\w+)\s*\-=")]
   private static partial Regex UnsubscribeRegex();
 
-  [GeneratedRegex(@"Raise(\w+)\s*\(")]
+  // Producers must go through the bus: a bare Raise* method (e.g.
+  // CombatFeedback.RaiseAttack) is not a producer and must not mask a
+  // deleted GameEvents.Raise<Event> call.
+  [GeneratedRegex(@"GameEvents\.Raise(\w+)\s*\(")]
   private static partial Regex RaiseCallRegex();
 
   [GeneratedRegex(@"public static event Action(?:<[^>]+>)?\??\s+(\w+);")]

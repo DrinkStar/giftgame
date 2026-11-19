@@ -180,9 +180,11 @@ public static class GameEvents
   public static event Action<string>? MeleeHit;
 
   /// <summary>
-  ///   A player projectile (thrown spear / arrow) hit an enemy. Distinct from
-  ///   <see cref="MeleeHit"/>: the tutorial's "chop with a tool" step must not
-  ///   advance on a throw. Raise-only, consumed by SfxHook (enemy_hit).
+  ///   A player projectile (thrown spear / arrow) hit an enemy. Raised by
+  ///   Projectile.ApplyHit when it hits an enemy (reached via OnBodyEntered
+  ///   and the physics sweep). Distinct from <see cref="MeleeHit"/>: the
+  ///   tutorial's "chop with a tool" step must not advance on a throw.
+  ///   Raise-only, consumed by SfxHook (enemy_hit).
   /// </summary>
   public static event Action<string>? ProjectileHit;
 
