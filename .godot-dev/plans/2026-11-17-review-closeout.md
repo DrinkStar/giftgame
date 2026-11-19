@@ -49,8 +49,20 @@
 - 任务 3：commit `b67a258`；`IntersectPiercing` 不再每帧 `new Array<Rid>`，`WeaponVisual` / `CharacterAnimator` 缓存节点引用。
 - 验收：`dotnet build` 0 error；`godot --headless --path . --run-tests --quit-on-finish` **484 passed / 0 failed**（并行与 `--sequential` 各跑一次）。
 - 环境坑：Godot 不会自动重编译 C#，改完测试必须先 `dotnet build` 再跑 `--run-tests`，否则跑的是旧程序集（曾误判一次 flake）。
-- `last_stable_commit = b67a258`；任务 4 未启动。
+- `last_stable_commit = b67a258`；任务 4 见下节。
 
-## 任务 4：结构改造（待确认后另排）
+## 任务 4 结果：GameEvents 收敛（方案 B）
+
+- 设计与计划：`.godot-dev/specs/2026-11-17-gameevents-convergence-design.md`、`.godot-dev/plans/2026-11-17-gameevents-convergence.md`。
+- 语义纠偏：新增 `ProjectileHit` / `RangedAttack`，攻击分派抽成纯静态 `CombatFeedback.RaiseAttack(AttackType)`；`Projectile.ItemId` 携带发射武器 id；`SfxHook` 按 `RangedSfxId` 路由（弓 → `bow_shoot`，投掷 → `melee_swing`，与改动前一致）。commit `ecfd0e8` + `2de3c1a`。
+- 死事件清账：`LivestockTamed` / `LivestockProduced` / `BossPhaseChanged` / `TalentUnlocked` / `SkillActivated` 连同 raise helper 与全部调用点删除，声明数 54 → 51，`src/` 全库 0 命中；`BossPhaseTest` 两例改断 `CurrentPhase`（序列 `[2,3,3]`、>70% 停在 1）。commit `650e744`。
+- UI 接线：`CraftingProgress` → CraftUI `CraftProgress` 进度条（0/终态隐藏）；`GameSaved` / `GameLoaded` → HUD `ToastLabel` + 1.5s toast；订阅均在 `_Ready`、退订在 `_ExitTree`。`GameOver` 保留并标注真结局专用。
+- 卫生守卫：`GameEventsHygieneTest` 三例（每文件 `+=`/`-=` 配对、每个事件有生产者+消费者且 `GameOver` 双侧白名单、声明名唯一），声明数硬断言 51，生产者正则收窄为 `GameEvents\.Raise(\w+)\(`；变异自检留档（`t5-run-mut.log` 报 `HUD.cs:GameSaved +=1 -=0`，`t5-run-green.log` 493/0）。commit `f2f3ed3` + `9050b19`。
+- 终审：整分支评审 **Ready to merge = Yes**，0 Critical / 0 Important；修复波 commit `574cebf`（正则收窄 + `ProjectileHit` 注释对准 `Projectile.ApplyHit`），scoped 复审全 ADDRESSED。
+- 验收：`dotnet build -t:Rebuild` **79 warnings / 0 errors**（与基线一致）；`godot --headless --path . --run-tests --quit-on-finish` **493 passed / 0 failed**（基线 484，+9）。
+- 遗留：7 条 Minor（doc 语义、调用点覆盖、`MouseFilter`、`BossId` write-only、卫生测试键路径/注释过滤/常量名）全部 park，建议合并后开一张小清理票；`IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists` 偶发超时建议单开票。
+- `last_stable_commit = 574cebf`。
+
+## 任务 4 原始范围说明（其余结构改造仍在待排）
 
 `HUD`/`IslandBuilder` 拆分、`GameEvents` 一事件一语义、场景默认值去重、`game/` 与 `pirate-arcade/` 分离 codegraph 索引。

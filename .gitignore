@@ -26,3 +26,6 @@ assets/models/_ai_preview/**
 # Local run logs (build / test / diagnostic dumps are not source)
 *.log
 .godot-dev/*.log
+
+# Superpowers SDD scratch (ledger, briefs, review packages)
+.superpowers/
