@@ -32,7 +32,12 @@
     "dotnet": ".NET 8.0 target / SDK 10.0.400 installed",
     "test_framework": "GoDotTest",
     "main_scene": "res://src/Main.tscn",
-    "renderer": "forward_plus"
+    "renderer": "forward_plus",
+    "scene_count": 40,
+    "script_count": 129,
+    "test_script_count": 69,
+    "codegraph": "colbymchenry/codegraph v1.6.0 CLI + Cursor MCP (codegraph_explore); index via tools/ensure-codegraph.sh → .codegraph/",
+    "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
   },
   "iterations": [
     {
