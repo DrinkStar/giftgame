@@ -61,7 +61,13 @@
 - 终审：整分支评审 **Ready to merge = Yes**，0 Critical / 0 Important；修复波 commit `574cebf`（正则收窄 + `ProjectileHit` 注释对准 `Projectile.ApplyHit`），scoped 复审全 ADDRESSED。
 - 验收：`dotnet build -t:Rebuild` **79 warnings / 0 errors**（与基线一致）；`godot --headless --path . --run-tests --quit-on-finish` **493 passed / 0 failed**（基线 484，+9）。
 - 遗留：7 条 Minor（doc 语义、调用点覆盖、`MouseFilter`、`BossId` write-only、卫生测试键路径/注释过滤/常量名）全部 park，建议合并后开一张小清理票；`IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists` 偶发超时建议单开票。
-- `last_stable_commit = 574cebf`。
+- `last_stable_commit = 306b35d`。
+
+## 集成与交付
+
+- 远端 `dev/perf-p0-p1-20260817` 上存在本地缺失的 PR #1（CodeGraph 工具、无头冒烟、熔岩池兜底、LookGood/DRM 兼容），已 merge 进本分支（`306b35d`）；唯一冲突 `.godot-dev/state.json` 保留双方字段并刷新场景/脚本/测试计数。
+- 合并结果重新验证：Rebuild 79 warnings / 0 errors；全量测试 **495 passed / 0 failed**。
+- 推送评审分支 `review/gameevents-convergence`，PR **#5**：https://github.com/DrinkStar/giftgame/pull/5 （base `dev/perf-p0-p1-20260817`）。
 
 ## 任务 4 原始范围说明（其余结构改造仍在待排）
 

@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260818-001",
   "created_at": "2026-08-18T09:10:00+08:00",
-  "updated_at": "2026-11-19T12:00:00+08:00",
+  "updated_at": "2026-11-19T14:30:00+08:00",
   "stage": "project-audit-r3",
   "current_iteration": "review-closeout-2026-11-17",
   "git_branch": "dev/perf-p0-p1-20260817",
-  "last_stable_commit": "574cebf",
+  "last_stable_commit": "306b35d",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
     "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
@@ -92,7 +92,8 @@
         {"id": "C-4.3", "file": "test/src/BossPhaseTest.cs", "action": "modify", "status": "done", "verify": "2 event-dependent tests rewritten to assert BossPhaseController.CurrentPhase for sequence [2,3,3] and staying at 1 above 70%"},
         {"id": "C-4.4", "file": "src/ui/CraftUI.cs + src/ui/HUD.cs", "action": "modify", "status": "done", "verify": "CraftingProgress -> CraftProgress ProgressBar (0/terminal hides); GameSaved/GameLoaded -> ToastLabel + ShowToast 1.5s in _Process; subscriptions in _Ready, unsubscribed in _ExitTree (CraftUI Unsubscribe); GameOver doc annotated TRUE-ENDING ONLY; 2 new tests"},
         {"id": "C-4.5", "file": "test/src/GameEventsHygieneTest.cs", "action": "create", "status": "done", "verify": "3 static-scan guards: per-file +=/-= pairing, every declared event has producer+consumer (GameOver whitelisted both sides), name uniqueness; declared count hard-asserted 51; producer regex narrowed to GameEvents\\.Raise(\\w+)\\(; mutation self-check archived (t5-run-mut.log shows HUD.cs:GameSaved +=1 -=0, t5-run-green.log 493/0); commits f2f3ed3 + 9050b19"},
-        {"id": "C-4.6", "file": "commits 574cebf", "action": "commit", "status": "done", "verify": "final whole-branch review: Ready to merge = Yes, 0 Critical / 0 Important; fix wave narrows producer regex and aligns ProjectileHit summary to Projectile.ApplyHit; scoped re-review all ADDRESSED; Rebuild 79 warnings / 0 errors, --run-tests 493 passed / 0 failed"}
+        {"id": "C-4.6", "file": "commits 574cebf", "action": "commit", "status": "done", "verify": "final whole-branch review: Ready to merge = Yes, 0 Critical / 0 Important; fix wave narrows producer regex and aligns ProjectileHit summary to Projectile.ApplyHit; scoped re-review all ADDRESSED; Rebuild 79 warnings / 0 errors, --run-tests 493 passed / 0 failed"},
+        {"id": "C-4.7", "file": "commit 306b35d + PR #5", "action": "merge/push", "status": "done", "verify": "merged origin/dev/perf-p0-p1-20260817 (PR #1 devex work, single .godot-dev/state.json conflict resolved by keeping both sides); merged result verified Rebuild 79 warnings / 0 errors and 495 passed / 0 failed; pushed review/gameevents-convergence; PR #5 open against dev/perf-p0-p1-20260817"}
       ]
     }
   ],
@@ -106,9 +107,9 @@
   "verification": {
     "build": "dotnet build 0 errors; src warnings 10 (CA1805 x4, CA1859 x4, CA1869 x2), test warnings 144 (mostly CA1310 locale StartsWith)",
     "smoke": "2026-09-16 godot --headless --path . --quit-after 5 exit 0 (WaterMesh headless WARN only)",
-    "tests": "2026-11-19: GoDotTest Passed: 493 | Failed: 0 | Skipped: 0 (9 over the 484 closeout baseline: 4 GameEvents wiring-adjacent, 3 hygiene guards, 2 UI feedback); ObjectDisposedException 0; det==0 0; data.tree null 0; residual harness-only ERROR noise unchanged; exit RID leaks = dummy-renderer teardown noise. Flake notes: IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists timed out twice across this iteration under load, green on re-run (needs its own ticket); PlayerInputSimulationTest fixed earlier via MainMenuUI.Dismiss().",
+    "tests": "2026-11-19: GoDotTest Passed: 495 | Failed: 0 | Skipped: 0 (493 after GameEvents convergence + 2 from the merged origin/devex commit); ObjectDisposedException 0; det==0 0; data.tree null 0; residual harness-only ERROR noise unchanged; exit RID leaks = dummy-renderer teardown noise. Verified on the merged result (306b35d). Flake notes: IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists timed out three times across this iteration under load, green on re-run (needs its own ticket); PlayerInputSimulationTest fixed earlier via MainMenuUI.Dismiss().",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
     "export": "not re-exported this pass"
   },
-  "notes": "2026-09-16 audit R3: fixed product-path native error — harvest shrink tweens tweened scale to exact Vector3.Zero (WoodTree/CoconutPalm), basis det 0 on every inversion, fired in shipped game when trees exhausted; now near-zero 0.001. SaveService off-tree GetTree() printed 9 native data.tree errors despite null check (native errors inside GetTree) — IsInsideTree guards in Snapshot + 3 Restore methods. EnemyBase _PhysicsProcess bails when !IsInsideTree (real free-race guard, AI switch untouched). PlayerMotion untouched. Remaining pending_todos upstream/large/contract-deferred. 2026-11-19 GameEvents convergence (plan B): semantic split (ProjectileHit/RangedAttack + CombatFeedback seam), 5 dead events retired (51 declared), CraftingProgress/GameSaved/GameLoaded wired to UI, hygiene guard test added; input-lock ownership stack (plan C) deliberately deferred to its own ticket. 7 deferred minors parked for a follow-up cleanup ticket (Projectile.ItemId doc semantics, WeaponSystem call-site coverage, CraftUI ProgressBar MouseFilter, BossPhaseController.BossId write-only, hygiene test filename keying / DeclaredEventNames comment filtering / whitelist constant name)."
+  "notes": "2026-09-16 audit R3: fixed product-path native error — harvest shrink tweens tweened scale to exact Vector3.Zero (WoodTree/CoconutPalm), basis det 0 on every inversion, fired in shipped game when trees exhausted; now near-zero 0.001. SaveService off-tree GetTree() printed 9 native data.tree errors despite null check (native errors inside GetTree) — IsInsideTree guards in Snapshot + 3 Restore methods. EnemyBase _PhysicsProcess bails when !IsInsideTree (real free-race guard, AI switch untouched). PlayerMotion untouched. Remaining pending_todos upstream/large/contract-deferred. 2026-11-19 GameEvents convergence (plan B): semantic split (ProjectileHit/RangedAttack + CombatFeedback seam), 5 dead events retired (51 declared), CraftingProgress/GameSaved/GameLoaded wired to UI, hygiene guard test added; input-lock ownership stack (plan C) deliberately deferred to its own ticket. 7 deferred minors parked for a follow-up cleanup ticket (Projectile.ItemId doc semantics, WeaponSystem call-site coverage, CraftUI ProgressBar MouseFilter, BossPhaseController.BossId write-only, hygiene test filename keying / DeclaredEventNames comment filtering / whitelist constant name). 2026-11-19 integration: merged origin PR #1 (CodeGraph tools, headless smoke, lava-pool fallback, LookGood/DRM guard) with a single state.json conflict resolved by keeping both sides and refreshing scene/script/test counts; merged result verified 495/0; pushed review/gameevents-convergence and opened PR #5 against dev/perf-p0-p1-20260817."
 }
