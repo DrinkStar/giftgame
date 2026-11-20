@@ -60,7 +60,8 @@
 - 卫生守卫：`GameEventsHygieneTest` 三例（每文件 `+=`/`-=` 配对、每个事件有生产者+消费者且 `GameOver` 双侧白名单、声明名唯一），声明数硬断言 51，生产者正则收窄为 `GameEvents\.Raise(\w+)\(`；变异自检留档（`t5-run-mut.log` 报 `HUD.cs:GameSaved +=1 -=0`，`t5-run-green.log` 493/0）。commit `f2f3ed3` + `9050b19`。
 - 终审：整分支评审 **Ready to merge = Yes**，0 Critical / 0 Important；修复波 commit `574cebf`（正则收窄 + `ProjectileHit` 注释对准 `Projectile.ApplyHit`），scoped 复审全 ADDRESSED。
 - 验收：`dotnet build -t:Rebuild` **79 warnings / 0 errors**（与基线一致）；`godot --headless --path . --run-tests --quit-on-finish` **493 passed / 0 failed**（基线 484，+9）。
-- 遗留：7 条 Minor（doc 语义、调用点覆盖、`MouseFilter`、`BossId` write-only、卫生测试键路径/注释过滤/常量名）全部 park，建议合并后开一张小清理票；`IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists` 偶发超时建议单开票。
+- 遗留：7 条 Minor 中 5 条已收（提交 `5180479`：`Projectile.ItemId` / `ProjectileHit` 文档语义、CraftUI ProgressBar `MouseFilter`、卫生测试相对路径键 / 声明扫描滤注释并锚定 / 白名单改名）；2 条仍 park（`WeaponSystem` Throw/Shoot 调用点直测需 rig、`BossPhaseController.BossId` 为 `[Export]` 场景字段需产品决策）。
+- `IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists` 偶发超时已按 harness 层修复（提交 `8959104`，`[Timeout(60000)]`），改动后连续两次全量运行 495/0。
 - `last_stable_commit = 306b35d`。
 
 ## 集成与交付
