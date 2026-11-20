@@ -2,6 +2,7 @@
 namespace SeaAnomaly;
 
 using System;
+using System.Collections.Generic;
 using Chickensoft.GoDotTest;
 using Chickensoft.GodotTestDriver;
 using Godot;
@@ -127,4 +128,117 @@ public class WeaponSystemTest : TestClass, IDisposable
     _weapon.ResolveCurrentAttack().ShouldBe(AttackType.Melee);
     _weapon.ResolveMeleeDamage().ShouldBe(8f);
   }
+
+  /// <summary>
+  ///   Secondary fire with a spear must route through
+  ///   <see cref="CombatFeedback"/> as Throw: one RangedAttack carrying the
+  ///   launching weapon id, and no melee swing (the tutorial's chop step must
+  ///   not advance on a throw).
+  /// </summary>
+  [Test]
+  public void SecondaryWithSpear_RaisesRangedAttackOnly()
+  {
+    var ranged = new List<string>();
+    var swings = new List<string>();
+    void OnRanged(string id) => ranged.Add(id);
+    void OnSwing(string id) => swings.Add(id);
+
+    GameEvents.RangedAttack += OnRanged;
+    GameEvents.AttackSwing += OnSwing;
+    try
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+      _inventory.SelectedHotbarSlot = 0;
+
+      PressSecondary();
+
+      ranged.ShouldBe(new List<string> { "wooden_spear" });
+      swings.ShouldBeEmpty();
+      _inventory.GetItemCount("wooden_spear").ShouldBe(1);
+    }
+    finally
+    {
+      GameEvents.RangedAttack -= OnRanged;
+      GameEvents.AttackSwing -= OnSwing;
+    }
+  }
+
+  /// <summary>
+  ///   Secondary fire with a bow must raise RangedAttack with the bow id and
+  ///   consume exactly one arrow (Throw and Shoot are the same seam but a
+  ///   different resolution path).
+  /// </summary>
+  [Test]
+  public void SecondaryWithBow_RaisesRangedAttackAndConsumesArrow()
+  {
+    var ranged = new List<string>();
+    var swings = new List<string>();
+    void OnRanged(string id) => ranged.Add(id);
+    void OnSwing(string id) => swings.Add(id);
+
+    GameEvents.RangedAttack += OnRanged;
+    GameEvents.AttackSwing += OnSwing;
+    try
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+      _inventory.SelectedHotbarSlot = 1;
+      var arrowsBefore = _inventory.GetItemCount("arrow");
+
+      PressSecondary();
+
+      ranged.ShouldBe(new List<string> { "wooden_bow" });
+      swings.ShouldBeEmpty();
+      _inventory.GetItemCount("arrow").ShouldBe(arrowsBefore - 1);
+    }
+    finally
+    {
+      GameEvents.RangedAttack -= OnRanged;
+      GameEvents.AttackSwing -= OnSwing;
+    }
+  }
+
+  /// <summary>
+  ///   Primary fire with an axe must stay on the melee side of the seam:
+  ///   AttackSwing only, never RangedAttack.
+  /// </summary>
+  [Test]
+  public void PrimaryWithAxe_RaisesMeleeSwingOnly()
+  {
+    var ranged = new List<string>();
+    var swings = new List<string>();
+    void OnRanged(string id) => ranged.Add(id);
+    void OnSwing(string id) => swings.Add(id);
+
+    GameEvents.RangedAttack += OnRanged;
+    GameEvents.AttackSwing += OnSwing;
+    try
+    {
+      GameEvents.RaiseGameplayInputLockChanged(false);
+      _inventory.SelectedHotbarSlot = 3;
+
+      PressPrimary();
+
+      swings.ShouldBe(new List<string> { "stone_axe" });
+      ranged.ShouldBeEmpty();
+    }
+    finally
+    {
+      GameEvents.RangedAttack -= OnRanged;
+      GameEvents.AttackSwing -= OnSwing;
+    }
+  }
+
+  private void PressPrimary() =>
+    _weapon._UnhandledInput(new InputEventAction
+    {
+      Action = WeaponSystem.AttackAction,
+      Pressed = true
+    });
+
+  private void PressSecondary() =>
+    _weapon._UnhandledInput(new InputEventAction
+    {
+      Action = WeaponSystem.SecondaryAttackAction,
+      Pressed = true
+    });
 }
