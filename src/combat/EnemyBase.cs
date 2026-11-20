@@ -76,11 +76,13 @@ public partial class EnemyBase : CharacterBody3D
   private const float FlyerHoverFrequency = 2.5f;
 
   /// <summary>
-  ///   Beyond this distance the AI switch is skipped (idle). Does not change
+  ///   Beyond this distance the AI switch is skipped (idle). Sized above
+  ///   <see cref="WorldLayout.MainRadius"/> so same-island hostiles stay
+  ///   awake while the player explores the starter beach. Does not change
   ///   the state machine — far-island enemies still exist, they just don't
   ///   chase every physics tick.
   /// </summary>
-  public const float SleepDistance = 80f;
+  public const float SleepDistance = 130f;
 
   private CharacterBody3D? _player;
   private PlayerStats? _playerStats;
@@ -160,6 +162,12 @@ public partial class EnemyBase : CharacterBody3D
 
   public override void _PhysicsProcess(double delta)
   {
+    // A queued physics tick can still land after the enemy left the tree
+    // (test cleanup / free races). MoveAndSlide on an out-of-world body logs
+    // a native "body->get_space() is null" error, so bail before anything.
+    if (!IsInsideTree())
+      return;
+
     if (EnemyData == null || _dying)
       return;
 
@@ -167,9 +175,13 @@ public partial class EnemyBase : CharacterBody3D
     UpdateFlash(dt);
 
     // Decision 7 contract: without a player the enemy is idle — zero the
-    // velocity and bail out BEFORE gravity is applied.
-    if (_player == null)
+    // velocity and bail out BEFORE gravity is applied. Also clear a Free()'d
+    // player reference (test teardown / respawn races) so GlobalPosition
+    // access cannot throw ObjectDisposedException.
+    if (!GodotObject.IsInstanceValid(_player))
     {
+      _player = null;
+      _playerStats = null;
       Velocity = Vector3.Zero;
       return;
     }

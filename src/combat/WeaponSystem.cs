@@ -58,14 +58,14 @@ public partial class WeaponSystem : Node
 
   [Export] public float MeleeDamage = 15f;
   [Export] public float UnarmedDamage = 8f;
-  [Export] public float MeleeRange = 3f;
-  [Export] public float MeleeCooldown = 0.5f;
+  [Export] public float MeleeRange = 3.5f;
+  [Export] public float MeleeCooldown = 0.4f;
   [Export] public float BowMeleeDamage = 5f;
   [Export] public float SpearThrowDamage = 25f;
-  [Export] public float SpearSpeed = 20f;
-  [Export] public float SpearGravity = 2f;
+  [Export] public float SpearSpeed = 22f;
+  [Export] public float SpearGravity = 1.8f;
   [Export] public float ArrowDamage = 20f;
-  [Export] public float ArrowSpeed = 25f;
+  [Export] public float ArrowSpeed = 28f;
   [Export] public float ArrowGravity = 9.8f;
   [Export] public float ProjectileLifetime = 5f;
 
@@ -401,17 +401,21 @@ public partial class WeaponSystem : Node
     var damage = ResolveMeleeDamage();
 
     _attackElapsed = 0f;
-    PulseAttackVisual();
+    PulseAttackVisual(AttackType.Melee);
     PerformMelee(damage);
   }
 
   /// <summary>
-  ///   Visual layer only — tells the sibling CharacterAnimator to fire an
-  ///   attack one-shot. Missing animator (tests, unwired scenes) is a no-op.
+  ///   Visual + swing sfx seam — animator one-shot and the melee/ranged
+  ///   feedback dispatch. Missing animator (tests, unwired scenes) is a silent
+  ///   visual no-op.
   /// </summary>
-  private void PulseAttackVisual() =>
+  private void PulseAttackVisual(AttackType attack)
+  {
     GetParent()?.GetNodeOrNull<CharacterAnimator>("CharacterAnimator")
       ?.NotifyAttack(AttackStyleFromCurrentItem());
+    CombatFeedback.RaiseAttack(attack, ResolveEffectiveItem()?.Id ?? "");
+  }
 
   private string AttackStyleFromCurrentItem() =>
     CharacterAnimator.AttackStyleFromItemId(ResolveEffectiveItem()?.Id);
@@ -435,7 +439,7 @@ public partial class WeaponSystem : Node
         if (CombatLogic.IsReady(_attackElapsed, MeleeCooldown))
         {
           _attackElapsed = 0f;
-          PulseAttackVisual();
+          PulseAttackVisual(AttackType.Throw);
           // R1 (Iter8p): through the resolution seam (throw_damage multiplier).
           SpawnProjectile(ResolveThrowDamage(), SpearSpeed, SpearGravity);
         }
@@ -448,7 +452,7 @@ public partial class WeaponSystem : Node
         )
         {
           _attackElapsed = 0f;
-          PulseAttackVisual();
+          PulseAttackVisual(AttackType.Shoot);
           // R1 (Iter8p): through the resolution seam (ranged_damage multiplier).
           SpawnProjectile(ResolveRangedDamage(), ArrowSpeed, ArrowGravity);
         }
@@ -462,20 +466,20 @@ public partial class WeaponSystem : Node
   public void FireMelee(float damage) => PerformMelee(damage);
 
   /// <summary>
-  ///   Camera-forward ray, camera-to-body plus MeleeRange, masked to
-  ///   EnemyHurtbox (layer 9). Same pierce helper as E-interact so the
-  ///   third-person follow camera can still punch a crab in front.
+  ///   Camera-forward melee from the body aim point (not the boom lens), so
+  ///   look direction matches what the player sees and pitched follow cams
+  ///   do not undershoot crabs at the feet. Soft Area pierce retained.
   /// </summary>
   private void PerformMelee(float damage)
   {
     if (_camera == null)
       return;
 
-    var from = _camera.GlobalPosition;
     var forward = -_camera.GlobalTransform.Basis.Z;
-    var body = GetParentOrNull<Node3D>()?.GlobalPosition ?? from;
-    var gap = from.DistanceTo(body);
-    var to = from + forward * AimQuery.MaxDistance(from, body, MeleeRange);
+    var body = GetParentOrNull<Node3D>()?.GlobalPosition
+      ?? _camera.GlobalPosition;
+    var from = AimQuery.OriginAtBody(_camera.GlobalPosition, body, forward);
+    var to = from + forward * MeleeRange;
     var exclude = new Godot.Collections.Array<Rid>();
     if (GetParentOrNull<PlayerController>() is { } player)
       exclude.Add(player.GetRid());
@@ -487,7 +491,7 @@ public partial class WeaponSystem : Node
       CombatLayers.MeleeRayMask,
       exclude,
       collider => Hurtbox.ResolveEnemy(collider) != null,
-      gap
+      pierceUntilDistance: 0f
     );
     if (
       hit.TryGetValue("collider", out var collider)
@@ -501,8 +505,9 @@ public partial class WeaponSystem : Node
   }
 
   /// <summary>
-  ///   Spawns a projectile from scenes/combat/projectile.tscn 1m in front of
-  ///   the camera with an initial velocity along the camera forward vector.
+  ///   Spawns a projectile from scenes/combat/projectile.tscn along the aim
+  ///   ray, starting near the body (not the follow camera) so boom pull-in /
+  ///   wall proximity does not bury the spear inside terrain.
   /// </summary>
   private void SpawnProjectile(float damage, float speed, float gravity)
   {
@@ -515,7 +520,10 @@ public partial class WeaponSystem : Node
       return;
 
     var forward = -_camera.GlobalTransform.Basis.Z;
+    var body = GetParentOrNull<Node3D>()?.GlobalPosition ?? _camera.GlobalPosition;
+    var origin = AimQuery.OriginAtBody(_camera.GlobalPosition, body, forward);
 
+    projectile.ItemId = ResolveEffectiveItem()?.Id ?? "";
     projectile.Damage = damage;
     projectile.Speed = speed;
     projectile.Gravity = gravity;
@@ -527,6 +535,6 @@ public partial class WeaponSystem : Node
     // GlobalPosition first would be overwritten (or produce a misleading
     // position) once the projectile is re-parented under the current scene.
     GetTree().CurrentScene?.AddChild(projectile);
-    projectile.GlobalPosition = _camera.GlobalPosition + forward;
+    projectile.GlobalPosition = origin + forward * 0.35f;
   }
 }

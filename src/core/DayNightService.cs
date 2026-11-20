@@ -185,9 +185,10 @@ public partial class DayNightService : Node
         env.BackgroundEnergyMultiplier = 1.0f;
       }
 
-      // Fog: WeatherService owns FogDensity and daytime FogEnabled (plan
-      // Decision 5). This service only disables fog during true night
-      // (<6 or >=20); it never writes FogDensity and never re-enables fog.
+      // Fog: WeatherService owns density / scatter / aerial and daytime
+      // FogEnabled (incl. Clear haze). This service only disables fog during
+      // true night (<6 or >=20); it never writes FogDensity and never
+      // re-enables fog.
       if (DayNightMath.IsNight(_currentTime))
         env.FogEnabled = false;
     }

@@ -104,11 +104,15 @@ public partial class CoconutPalm : StaticBody3D, IInteractable
       ShrinkAndFree();
   }
 
-  /// <summary>Tweens the palm to zero scale, then frees it.</summary>
+  // Near-zero (not Vector3.Zero): exact zero scale → determinant 0 basis and
+  // engine "det == 0" errors on every inversion during the shrink.
+  private static readonly Vector3 ShrinkScale = new(0.001f, 0.001f, 0.001f);
+
+  /// <summary>Tweens the palm to an invisible scale, then frees it.</summary>
   private void ShrinkAndFree()
   {
     var tween = CreateTween();
-    tween.TweenProperty(this, "scale", Vector3.Zero, 0.25);
+    tween.TweenProperty(this, "scale", ShrinkScale, 0.25);
     tween.TweenCallback(Callable.From(QueueFree));
   }
 }

@@ -51,19 +51,20 @@ public class ControlHintUITest : TestClass, IDisposable
     _hints.GetNode<Label>("VBox/KeybindLabel");
 
   [Test]
-  public void ListsEightCoreChineseKeybinds()
+  public void ListsCoreChineseKeybindsIncludingSwim()
   {
-    ControlHintUI.HintLines.Length.ShouldBe(10);
+    ControlHintUI.HintLines.Length.ShouldBe(11);
     ControlHintUI.HintLines[0].ShouldBe("W 前进");
     ControlHintUI.HintLines[1].ShouldBe("A 左移");
     ControlHintUI.HintLines[2].ShouldBe("S 后退");
     ControlHintUI.HintLines[3].ShouldBe("D 右移");
-    ControlHintUI.HintLines[4].ShouldBe("空格 跳跃");
+    ControlHintUI.HintLines[4].ShouldBe("空格 跳跃·上浮");
     ControlHintUI.HintLines[5].ShouldBe("Shift 冲刺");
-    ControlHintUI.HintLines[6].ShouldBe("E 交互");
-    ControlHintUI.HintLines[7].ShouldBe("左键 近战");
-    ControlHintUI.HintLines[8].ShouldBe("Tab 背包");
-    ControlHintUI.HintLines[9].ShouldBe("Esc 暂停");
+    ControlHintUI.HintLines[6].ShouldBe("Ctrl 潜水");
+    ControlHintUI.HintLines[7].ShouldBe("E 交互");
+    ControlHintUI.HintLines[8].ShouldBe("左键 近战");
+    ControlHintUI.HintLines[9].ShouldBe("Tab 背包");
+    ControlHintUI.HintLines[10].ShouldBe("Esc 暂停");
     KeybindLabel.Text.ShouldBe(ControlHintUI.HintListText);
 
     var joined = ControlHintUI.HintListText;

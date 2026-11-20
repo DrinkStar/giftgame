@@ -10,6 +10,9 @@ using Godot;
 ///   - ItemAdded  (itemId ∈ {wood, coconut, stone, berries}) → "wood_chop"   (gathering)
 ///   - BuildingPlaced                                            → "place_building"
 ///   - MeleeHit                                                  → "melee_hit"
+///   - ProjectileHit                                             → "enemy_hit"
+///   - AttackSwing                                               → "melee_swing"
+///   - RangedAttack                                              → "bow_shoot" / "melee_swing"
 ///   - PlayerDied                                                → "death_respawn"
 ///   - EnemyDied                                                 → "enemy_die"   (T9.6)
 ///   - CraftingCompleted                                         → "ui_click"   (T9.6)
@@ -44,6 +47,9 @@ public partial class SfxHook : Node
     GameEvents.ItemAdded += OnItemAdded;
     GameEvents.BuildingPlaced += OnBuildingPlaced;
     GameEvents.MeleeHit += OnMeleeHit;
+    GameEvents.ProjectileHit += OnProjectileHit;
+    GameEvents.AttackSwing += OnAttackSwing;
+    GameEvents.RangedAttack += OnRangedAttack;
     GameEvents.PlayerDied += OnPlayerDied;
     GameEvents.EnemyDied += OnEnemyDied;
     GameEvents.CraftingCompleted += OnCraftingCompleted;
@@ -57,6 +63,9 @@ public partial class SfxHook : Node
     GameEvents.ItemAdded -= OnItemAdded;
     GameEvents.BuildingPlaced -= OnBuildingPlaced;
     GameEvents.MeleeHit -= OnMeleeHit;
+    GameEvents.ProjectileHit -= OnProjectileHit;
+    GameEvents.AttackSwing -= OnAttackSwing;
+    GameEvents.RangedAttack -= OnRangedAttack;
     GameEvents.PlayerDied -= OnPlayerDied;
     GameEvents.EnemyDied -= OnEnemyDied;
     GameEvents.CraftingCompleted -= OnCraftingCompleted;
@@ -83,6 +92,26 @@ public partial class SfxHook : Node
 
   private void OnMeleeHit(string weaponId) =>
     ResolveAudioManager()?.PlaySfx("melee_hit");
+
+  /// <summary>
+  ///   Ranged sfx router: bows shoot arrows (bow_shoot); everything else in the
+  ///   ranged path is a thrown spear, which keeps the pre-existing swing whoosh.
+  ///   Same id convention as CombatLogic.ResolveAttack (ordinal Contains("bow")).
+  /// </summary>
+  /// <param name="itemId">
+  ///   Optional item id; a null or non-bow id routes to "melee_swing".
+  /// </param>
+  public static string RangedSfxId(string? itemId) =>
+    itemId?.Contains("bow") == true ? "bow_shoot" : "melee_swing";
+
+  private void OnProjectileHit(string itemId) =>
+    ResolveAudioManager()?.PlaySfx("enemy_hit");
+
+  private void OnRangedAttack(string itemId) =>
+    ResolveAudioManager()?.PlaySfx(RangedSfxId(itemId));
+
+  private void OnAttackSwing(string weaponId) =>
+    ResolveAudioManager()?.PlaySfx("melee_swing");
 
   private void OnPlayerDied() =>
     ResolveAudioManager()?.PlaySfx("death_respawn");

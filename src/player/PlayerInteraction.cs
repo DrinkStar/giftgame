@@ -23,10 +23,10 @@ public partial class PlayerInteraction : Node
   public const string InteractAction = "interact";
 
   /// <summary>Maximum raycast reach (meters).</summary>
-  [Export] public float InteractionDistance = 3f;
+  [Export] public float InteractionDistance = 4f;
 
   /// <summary>Hold duration (seconds) required for hold-to-interact targets.</summary>
-  [Export] public float HoldInteractionTime = 1f;
+  [Export] public float HoldInteractionTime = 0.75f;
 
   /// <summary>Path to the camera driving the ray (e.g. "../CameraPivot/Camera3D").</summary>
   [Export] public NodePath? CameraPath { get; set; }
@@ -73,6 +73,13 @@ public partial class PlayerInteraction : Node
       return;
     }
 
+    // Menus lock gameplay: drop prompt/hold so E cannot fire behind the UI.
+    if (GameEvents.GameplayInputLocked)
+    {
+      ClearTarget();
+      return;
+    }
+
     UpdateInteractionTarget();
     HandleInteractionInput(delta);
   }
@@ -83,14 +90,15 @@ public partial class PlayerInteraction : Node
       return;
 
     var spaceState = _player.GetWorld3D().DirectSpaceState;
-    var from = _camera.GlobalPosition;
     var direction = -_camera.GlobalTransform.Basis.Z; // Camera forward.
-    var gap = from.DistanceTo(_player.GlobalPosition);
-    var to = from + direction * AimQuery.MaxDistance(from, _player.GlobalPosition, InteractionDistance);
+    // Start at the body aim point (same seam as melee) so third-person look
+    // matches interactables under the crosshair, not the boom lens.
+    var from = AimQuery.OriginAtBody(
+      _camera.GlobalPosition, _player.GlobalPosition, direction
+    );
+    var to = from + direction * InteractionDistance;
 
     // Layers 1 (World), 3 (Interactables), 4 (Animals) and 5 (Buildings).
-    // Skip the follow-camera gap in one jump; do not exclude the island RID
-    // or a look at a hillside would also select trees behind it.
     var result = AimQuery.IntersectPiercing(
       spaceState,
       from,
@@ -98,7 +106,7 @@ public partial class PlayerInteraction : Node
       0b11101,
       _rayExclude,
       collider => FindInteractable(collider) is { } hit && hit.CanInteract(),
-      gap
+      pierceUntilDistance: 0f
     );
 
     if (result.Count == 0)

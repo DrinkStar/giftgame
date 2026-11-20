@@ -188,4 +188,76 @@ public class HUDTest : TestClass, IDisposable
     _hud.Visible = false;
     hint.IsVisibleInTree().ShouldBeFalse();
   }
+
+  [Test]
+  public async Task SecondaryWeaponSlotHighlightsWhenQActive()
+  {
+    var player = new PlayerController { Name = "FeelPlayer" };
+    var inventory = new InventorySystem { Name = "InventorySystem" };
+    var weapon = new WeaponSystem
+    {
+      Name = "WeaponSystem",
+      InventoryPath = "../InventorySystem"
+    };
+    player.AddChild(inventory);
+    player.AddChild(weapon);
+    await _fixture.AddToRoot(player, autoRemoveFromRoot: true);
+
+    _hud.Initialize(player, null, null);
+
+    var spear = GD.Load<ItemData>("res://assets/items/wooden_spear.tres");
+    spear.ShouldNotBeNull();
+    inventory.SecondaryItem = spear;
+
+    _hud.IsSecondarySlotHighlighted.ShouldBeFalse();
+    weapon.SecondarySlotActive = true;
+    _hud.IsSecondarySlotHighlighted.ShouldBeTrue();
+    weapon.SecondarySlotActive = false;
+    _hud.IsSecondarySlotHighlighted.ShouldBeFalse();
+
+    var title = _hud.GetNodeOrNull<Label>("InventoryPanel/VBoxContainer/Label")
+      ?? FindInventoryTitle(_hud);
+    title.ShouldNotBeNull();
+    title!.Text.ShouldBe("背包（Tab 关闭）");
+  }
+
+  /// <summary>
+  ///   GameSaved / GameLoaded show the bottom-center toast (1.5 s), which
+  ///   expires via _Process and is re-shown by the next event.
+  /// </summary>
+  [Test]
+  public void GameSavedAndLoaded_ShowToastThatExpires()
+  {
+    GameEvents.RaiseGameSaved(true);
+    var toast = _hud.FindChild("ToastLabel", true, false) as Label;
+    toast.ShouldNotBeNull();
+    toast!.Visible.ShouldBeTrue();
+    toast.Text.ShouldContain("保存");
+
+    _hud._Process(2.0);
+    toast.Visible.ShouldBeFalse();
+
+    GameEvents.RaiseGameLoaded("user://saves/savegame_1.json");
+    toast.Text.ShouldContain("读取");
+    toast.Visible.ShouldBeTrue();
+  }
+
+  private static Label? FindInventoryTitle(HUD hud)
+  {
+    var panel = hud.GetNodeOrNull<Panel>("InventoryPanel");
+    if (panel == null)
+      return null;
+    foreach (var child in panel.GetChildren())
+    {
+      if (child is VBoxContainer vbox)
+      {
+        foreach (var nested in vbox.GetChildren())
+        {
+          if (nested is Label label)
+            return label;
+        }
+      }
+    }
+    return null;
+  }
 }

@@ -103,6 +103,11 @@ sky_material = SubResource("ProceduralSkyMaterial_sky")
 background_mode = 2
 sky = SubResource("Sky_sky")
 ambient_light_source = 3
+tonemap_mode = 2
+tonemap_white = 6.0
+fog_light_color = Color(0.7, 0.75, 0.8, 1)
+fog_sun_scatter = 0.08
+fog_aerial_perspective = 0.4
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ground"]
 size = Vector3(40, 1, 40)
@@ -139,7 +144,7 @@ environment = SubResource("Environment_env")
 [node name="Sun" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0)
 shadow_enabled = true
-directional_shadow_max_distance = 160.0
+directional_shadow_max_distance = 280.0
 
 [node name="Ground" type="StaticBody3D" parent="."]
 
@@ -182,10 +187,17 @@ shape = SubResource("CapsuleShape3D_player_hurtbox")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Player/CameraPivot"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 2, 5)
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 1.85, 5.6)
 current = true
-far = 1000.0
+far = 2500.0
 script = ExtResource("3_camera")
+MouseSensitivity = 0.12
+VerticalMin = -55.0
+VerticalMax = 55.0
+BoomSmoothSpeed = 18.0
+WalkFov = 75.0
+SprintFov = 82.0
+FovSmoothSpeed = 12.0
 
 [node name="PlayerStats" type="Node" parent="Player"]
 script = ExtResource("4_stats")
@@ -193,6 +205,8 @@ script = ExtResource("4_stats")
 [node name="PlayerInteraction" type="Node" parent="Player"]
 script = ExtResource("5_interaction")
 CameraPath = NodePath("../CameraPivot/Camera3D")
+InteractionDistance = 4.0
+HoldInteractionTime = 0.75
 
 [node name="InventorySystem" type="Node" parent="Player"]
 script = ExtResource("6_inventory")
@@ -234,6 +248,11 @@ script = ExtResource("29_weapon")
 CameraPath = NodePath("../CameraPivot/Camera3D")
 InventoryPath = NodePath("../InventorySystem")
 TorchLightPath = NodePath("../TorchLight")
+MeleeRange = 3.5
+MeleeCooldown = 0.4
+SpearSpeed = 22.0
+SpearGravity = 1.8
+ArrowSpeed = 28.0
 
 [node name="EquipmentVisual" type="Node" parent="Player"]
 script = ExtResource("91_equipment_visual")
@@ -369,13 +388,14 @@ cast_shadow = 0
 material_override = ExtResource("70_watermat")
 mesh = ExtResource("69_clipmap")
 script = ExtResource("67_watermesh")
+RestLevel = -0.75
 
 [node name="WaterFollow" type="Node" parent="Water" node_paths=PackedStringArray("Target")]
 script = ExtResource("68_waterfollow")
 Target = NodePath("../../Player")
 
 [node name="Raft" parent="." instance=ExtResource("88_raft")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 82)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 128)
 WaterMeshPath = NodePath("../Water")
 
 [node name="IslandBuilder" type="Node3D" parent="."]

@@ -19,9 +19,10 @@ using Godot;
 ///   - top-left survival chrome uses Chinese labels (生命/饥饿/口渴/体力)
 ///     plus current/max numbers, and a Chinese clock (时间/第N天/时段).
 ///
-///   SUBSCRIBES fourteen GameEvents (nine survival/HUD, three quest tracker
-///   events, plus TutorialStepChanged / TutorialCompleted so 当前目标 hides
-///   only during the chapter-1 overlay); unsubscribes all of them in
+///   SUBSCRIBES sixteen GameEvents (nine survival/HUD, three quest tracker
+///   events, TutorialStepChanged / TutorialCompleted so 当前目标 hides
+///   only during the chapter-1 overlay, plus GameSaved / GameLoaded toast
+///   feedback); unsubscribes all of them in
 ///   _ExitTree (Decision 13). The tracker is fail-closed when QuestService
 ///   is missing, never pauses the tree, and is distinct from the right-side
 ///   keybind caption. Craft/inventory lock does not hide 当前目标.
@@ -68,9 +69,14 @@ public partial class HUD : CanvasLayer
   private Tween? _guideTween;
   private int _displayedClockMinutes = int.MinValue;
 
+  private const float ToastSeconds = 1.5f;
+  private Label? _toastLabel;
+  private float _toastRemaining;
+
   private PlayerStats? _stats;
   private PlayerInteraction? _interaction;
   private InventorySystem? _inventory;
+  private WeaponSystem? _weapon;
 
   private Panel? _inventoryPanel;
   private bool _inventoryOpen;
@@ -87,6 +93,12 @@ public partial class HUD : CanvasLayer
     CreateInventoryPanel();
     EnsureQuestObjectiveLabel();
     RefreshQuestObjective();
+    EnsureToastLabel();
+    // Toast subscriptions live in _Ready, not Initialize: in tests and some
+    // scenes the HUD Player export is null so Initialize never runs, and the
+    // save/load toast needs no player wiring at all.
+    GameEvents.GameSaved += OnGameSaved;
+    GameEvents.GameLoaded += OnGameLoaded;
 
     // Self-wire when the scene exports are set. GameManager may have called
     // Initialize already (it precedes HUD in Game.tscn _Ready order); the
@@ -120,6 +132,7 @@ public partial class HUD : CanvasLayer
     _stats = player.GetNodeOrNull<PlayerStats>("PlayerStats");
     _interaction = player.GetNodeOrNull<PlayerInteraction>("PlayerInteraction");
     _inventory = player.GetNodeOrNull<InventorySystem>("InventorySystem");
+    _weapon = player.GetNodeOrNull<WeaponSystem>("WeaponSystem");
 
     // Subscribe + immediately pull current values (initial-value race fix).
 
@@ -152,6 +165,9 @@ public partial class HUD : CanvasLayer
     if (_inventory != null)
       OnHotbarSelectionChanged(_inventory.SelectedHotbarSlot);
 
+    GameEvents.WeaponSlotChanged += OnWeaponSlotChanged;
+    GameEvents.SecondarySlotChanged += OnSecondarySlotChanged;
+
     // Guide narration subtitle (Iter7): no initial value to pull — lines
     // only arrive via GuideLine events after this subscription.
     GameEvents.GuideLine += OnGuideLine;
@@ -160,6 +176,7 @@ public partial class HUD : CanvasLayer
     RefreshQuestObjective();
 
     SetupHotbar();
+    RefreshSecondarySlot();
   }
 
   public override void _ExitTree()
@@ -172,12 +189,16 @@ public partial class HUD : CanvasLayer
     GameEvents.InteractionProgressChanged -= OnInteractionProgressChanged;
     GameEvents.InventoryChanged -= OnInventoryChanged;
     GameEvents.HotbarSelectionChanged -= OnHotbarSelectionChanged;
+    GameEvents.WeaponSlotChanged -= OnWeaponSlotChanged;
+    GameEvents.SecondarySlotChanged -= OnSecondarySlotChanged;
     GameEvents.GuideLine -= OnGuideLine;
     GameEvents.QuestStarted -= OnQuestTrackerEvent;
     GameEvents.QuestProgress -= OnQuestProgress;
     GameEvents.QuestCompleted -= OnQuestTrackerEvent;
     GameEvents.TutorialStepChanged -= OnChapter1OverlayStep;
     GameEvents.TutorialCompleted -= OnChapter1OverlayDone;
+    GameEvents.GameSaved -= OnGameSaved;
+    GameEvents.GameLoaded -= OnGameLoaded;
     _questTrackerSubscribed = false;
     _chapter1OverlayActive = false;
     // A panel torn down mid-game must not leave the static lock held
@@ -190,6 +211,18 @@ public partial class HUD : CanvasLayer
 
   public override void _Process(double delta)
   {
+    // Toast countdown runs before every other gate so it ticks even when the
+    // clock nodes are unresolved (tests / fail-closed HUDs).
+    if (_toastRemaining > 0f)
+    {
+      _toastRemaining -= (float)delta;
+      if (_toastRemaining <= 0f && _toastLabel != null && IsInstanceValid(_toastLabel))
+      {
+        _toastRemaining = 0f;
+        _toastLabel.Visible = false;
+      }
+    }
+
     // One-shot deferred lock release: Esc in the same input pass must not
     // let GameManager toggle pause (CraftUI / StorageUI contract).
     if (_releaseLockAtFrame != ulong.MaxValue && Engine.GetProcessFrames() >= _releaseLockAtFrame)
@@ -426,6 +459,44 @@ public partial class HUD : CanvasLayer
     GameEvents.TutorialCompleted += OnChapter1OverlayDone;
   }
 
+  /// <summary>Shows a 1.5 s bottom-center toast; a second call resets the timer.</summary>
+  public void ShowToast(string text)
+  {
+    EnsureToastLabel();
+    if (_toastLabel == null || !IsInstanceValid(_toastLabel))
+      return;
+    _toastLabel.Text = text;
+    _toastLabel.Visible = true;
+    _toastRemaining = ToastSeconds;
+  }
+
+  private void EnsureToastLabel()
+  {
+    if (_toastLabel != null && IsInstanceValid(_toastLabel))
+      return;
+
+    var label = new Label
+    {
+      Name = "ToastLabel",
+      Visible = false,
+      MouseFilter = Control.MouseFilterEnum.Ignore,
+      HorizontalAlignment = HorizontalAlignment.Center,
+      Text = ""
+    };
+    label.SetAnchorsPreset(Control.LayoutPreset.CenterBottom);
+    label.OffsetLeft = -240f; label.OffsetRight = 240f;
+    label.OffsetTop = -140f; label.OffsetBottom = -100f;
+    label.AddThemeFontSizeOverride("font_size", 20);
+    label.AddThemeColorOverride("font_color", new Color(0.85f, 1f, 0.85f));
+    label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
+    label.AddThemeConstantOverride("outline_size", 5);
+    AddChild(label);
+    _toastLabel = label;
+  }
+
+  private void OnGameSaved(bool overwrite) => ShowToast("已保存");
+  private void OnGameLoaded(string fileName) => ShowToast("已读取");
+
   private void OnChapter1OverlayStep(int _currentStep, int totalSteps)
   {
     _chapter1OverlayActive = totalSteps == 6;
@@ -497,22 +568,38 @@ public partial class HUD : CanvasLayer
   private void OnInventoryChanged()
   {
     UpdateHotbar();
+    RefreshSecondarySlot();
     if (_inventoryOpen)
       UpdateInventoryPanel();
   }
 
   private void OnHotbarSelectionChanged(int slot)
   {
+    RefreshHotbarSelectionChrome(slot);
+  }
+
+  private void OnWeaponSlotChanged(ItemData? primary, ItemData? secondary) =>
+    RefreshSecondarySlot();
+
+  private void OnSecondarySlotChanged(ItemData? item) => RefreshSecondarySlot();
+
+  /// <summary>
+  ///   Hotbar border: gold for the selected primary slot unless Q secondary
+  ///   is active (then primary borders stay dim so the Q panel owns focus).
+  /// </summary>
+  private void RefreshHotbarSelectionChrome(int selectedSlot)
+  {
     if (_hotbarContainer == null)
       return;
 
+    var secondaryActive = _weapon?.SecondarySlotActive == true;
     for (var i = 0; i < 5; i++)
     {
       var slotPanel = _hotbarContainer.GetNodeOrNull<Panel>($"HotbarSlot{i}");
       if (slotPanel?.GetThemeStylebox("panel") is not StyleBoxFlat style)
         continue;
 
-      style.BorderColor = i == slot
+      style.BorderColor = !secondaryActive && i == selectedSlot
         ? new Color(1f, 0.8f, 0.2f)
         : new Color(0.5f, 0.5f, 0.5f);
     }
@@ -585,7 +672,113 @@ public partial class HUD : CanvasLayer
       _hotbarContainer.AddChild(slot);
     }
 
+    // Q secondary weapon — sits after the 1–5 hotbar so players see which
+    // hand is live without opening inventory.
+    var secondary = new Panel();
+    secondary.Name = "SecondarySlot";
+    secondary.CustomMinimumSize = new Vector2(64, 64);
+    var secStyle = new StyleBoxFlat();
+    secStyle.BgColor = new Color(0.08f, 0.1f, 0.14f, 0.85f);
+    secStyle.BorderColor = new Color(0.45f, 0.55f, 0.7f);
+    secStyle.SetBorderWidthAll(2);
+    secondary.AddThemeStyleboxOverride("panel", secStyle);
+
+    var secIcon = new TextureRect
+    {
+      Name = "Icon",
+      ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+      StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered
+    };
+    secIcon.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+    secIcon.OffsetLeft = 4;
+    secIcon.OffsetTop = 4;
+    secIcon.OffsetRight = -4;
+    secIcon.OffsetBottom = -16;
+    secondary.AddChild(secIcon);
+
+    var secName = new Label
+    {
+      Name = "ItemName",
+      HorizontalAlignment = HorizontalAlignment.Center,
+      VerticalAlignment = VerticalAlignment.Center,
+      AutowrapMode = TextServer.AutowrapMode.Word,
+      Visible = false
+    };
+    secName.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+    secName.AddThemeFontSizeOverride("font_size", 9);
+    secondary.AddChild(secName);
+
+    var qLabel = new Label
+    {
+      Name = "Key",
+      Text = "Q",
+      HorizontalAlignment = HorizontalAlignment.Left,
+      VerticalAlignment = VerticalAlignment.Top
+    };
+    qLabel.SetAnchorsPreset(Control.LayoutPreset.TopLeft);
+    qLabel.OffsetLeft = 4;
+    qLabel.OffsetTop = 2;
+    qLabel.AddThemeColorOverride("font_color", new Color(0.75f, 0.85f, 1f));
+    secondary.AddChild(qLabel);
+
+    _hotbarContainer.AddChild(secondary);
+
     UpdateHotbar();
+    if (_inventory != null)
+      RefreshHotbarSelectionChrome(_inventory.SelectedHotbarSlot);
+  }
+
+  /// <summary>
+  ///   Public seam for tests — whether the Q secondary panel is highlighted.
+  /// </summary>
+  public bool IsSecondarySlotHighlighted
+  {
+    get
+    {
+      var panel = _hotbarContainer?.GetNodeOrNull<Panel>("SecondarySlot");
+      return panel?.GetThemeStylebox("panel") is StyleBoxFlat style
+        && style.BorderColor.IsEqualApprox(new Color(1f, 0.8f, 0.2f));
+    }
+  }
+
+  private void RefreshSecondarySlot()
+  {
+    if (_hotbarContainer == null)
+      return;
+
+    var panel = _hotbarContainer.GetNodeOrNull<Panel>("SecondarySlot");
+    if (panel == null)
+      return;
+
+    var item = _inventory?.SecondaryItem;
+    var icon = panel.GetNodeOrNull<TextureRect>("Icon");
+    var nameLabel = panel.GetNodeOrNull<Label>("ItemName");
+    if (icon != null)
+      icon.Texture = item?.Icon;
+    if (nameLabel != null)
+    {
+      if (item != null && item.Icon == null)
+      {
+        nameLabel.Text = item.DisplayName;
+        nameLabel.Visible = true;
+      }
+      else
+      {
+        nameLabel.Visible = false;
+      }
+    }
+
+    var active = _weapon?.SecondarySlotActive == true;
+    if (panel.GetThemeStylebox("panel") is StyleBoxFlat style)
+    {
+      style.BorderColor = active
+        ? new Color(1f, 0.8f, 0.2f)
+        : new Color(0.45f, 0.55f, 0.7f);
+      style.SetBorderWidthAll(active ? 3 : 2);
+    }
+
+    if (_inventory != null)
+      RefreshHotbarSelectionChrome(_inventory.SelectedHotbarSlot);
   }
 
   private void UpdateHotbar()
@@ -676,7 +869,7 @@ public partial class HUD : CanvasLayer
     _inventoryPanel.AddChild(vbox);
 
     var title = new Label();
-    title.Text = "INVENTORY (Tab to close)";
+    title.Text = "背包（Tab 关闭）";
     title.HorizontalAlignment = HorizontalAlignment.Center;
     vbox.AddChild(title);
 

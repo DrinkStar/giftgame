@@ -21,6 +21,9 @@ public partial class Projectile : Area3D
 
   [Export] public float Lifetime = 5f;
 
+  /// <summary>Item id of the launching weapon (bow id for arrows, spear id for throws); feedback + sfx.</summary>
+  [Export] public string ItemId = "";
+
   private Vector3 _velocity;
   private float _elapsed;
   private Godot.Collections.Array<Rid>? _sweepExclude;
@@ -102,6 +105,8 @@ public partial class Projectile : Area3D
     if (Hurtbox.ResolveEnemy(collider) is { } enemy)
     {
       enemy.TakeDamage(Damage);
+      // proj 命中走自己的事件，避免教程/近战音效误触发
+      GameEvents.RaiseProjectileHit(ItemId);
       QueueFree();
       return;
     }

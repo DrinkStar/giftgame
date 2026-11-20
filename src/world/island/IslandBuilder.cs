@@ -1625,8 +1625,8 @@ public partial class IslandBuilder : Node3D
         }
 
         // Boss: storm island central highland — never on the beach or in the
-        // surf. Storm islands are far offshore (255–310m radius) so the inner
-        // plateau is the natural arena.
+        // surf. Storm islands are far offshore (StormMin/MaxDistance) so the
+        // inner plateau is the natural arena.
         if (enemyId == "shark_king")
         {
             minR = spec.Radius * 0.1f;

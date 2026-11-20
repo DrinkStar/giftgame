@@ -92,11 +92,18 @@ public partial class WoodTree : StaticBody3D, IInteractable
       ShrinkAndFree();
   }
 
-  /// <summary>Tweens the tree to zero scale, then frees it.</summary>
+  /// <summary>
+    ///   Tweens the tree to an effectively-invisible scale, then frees it.
+    ///   The target is a near-zero epsilon rather than Vector3.Zero: an exact
+    ///   zero scale makes the basis determinant 0 and the engine logs
+    ///   `Condition "det == 0"` on every inversion during the tween.
+    /// </summary>
+  private static readonly Vector3 ShrinkScale = new(0.001f, 0.001f, 0.001f);
+
   private void ShrinkAndFree()
   {
     var tween = CreateTween();
-    tween.TweenProperty(this, "scale", Vector3.Zero, 0.25);
+    tween.TweenProperty(this, "scale", ShrinkScale, 0.25);
     tween.TweenCallback(Callable.From(QueueFree));
   }
 }

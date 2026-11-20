@@ -10,9 +10,10 @@ using Godot;
 ///   - transitions computed via the pure <see cref="WeatherLogic"/> tables;
 ///   - signals published through the static <see cref="GameEvents"/> bus;
 ///   - fog fully owned by this service (plan Decision 5): FogDensity,
-///     FogLightColor and FogEnabled are applied on weather/night changes, with
-///     FogEnabled forced off at night (DayNightService only ever disables
-///     fog, so the night-off rule must also hold here);
+///     FogLightColor, FogSunScatter, FogAerialPerspective and FogEnabled
+///     are applied on weather/night changes. Daytime keeps a thin Clear
+///     haze so far islands read as distance; FogEnabled is forced off at
+///     night (DayNightService only ever disables fog);
 ///   - no rain particles or audio (explicitly out of scope);
 ///   - the current hour is cached from GameEvents.TimeChanged, so
 ///     EffectiveTemperature needs no scene wiring to DayNightService.
@@ -119,24 +120,17 @@ public partial class WeatherService : Node
     if (_fogApplied && _appliedFogWeather == _currentWeather && _appliedFogNight == night)
       return;
 
-    env.FogDensity = _currentWeather switch
-    {
-      WeatherType.Clear => 0f,
-      WeatherType.Cloudy => 0.001f,
-      WeatherType.Rain => 0.003f,
-      WeatherType.Storm => 0.005f,
-      _ => 0f
-    };
-
-    env.FogLightColor = _currentWeather switch
-    {
-      WeatherType.Cloudy => new Color(0.7f, 0.7f, 0.75f),
-      WeatherType.Rain => new Color(0.5f, 0.5f, 0.55f),
-      WeatherType.Storm => new Color(0.3f, 0.3f, 0.35f),
-      _ => new Color(0.7f, 0.7f, 0.75f)
-    };
-
-    env.FogEnabled = _currentWeather != WeatherType.Clear && !night;
+    // Exponential fog: table lives in the pure WeatherFog resolver (tested
+    // against the 4 weather x day/night combinations).
+    var fog = WeatherFog.Resolve(_currentWeather, night);
+    env.FogMode = Godot.Environment.FogModeEnum.Exponential;
+    env.FogDensity = fog.Density;
+    env.FogLightColor = fog.LightColor;
+    env.FogSunScatter = fog.SunScatter;
+    env.FogAerialPerspective = fog.AerialPerspective;
+    // Daytime always keeps a thin haze so far islands (Explore / Easter)
+    // read as distance rather than hard cutouts against the sky.
+    env.FogEnabled = fog.Enabled;
     _appliedFogWeather = _currentWeather;
     _appliedFogNight = night;
     _fogApplied = true;

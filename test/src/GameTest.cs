@@ -94,6 +94,32 @@ public class GameTest : TestClass
   }
 
   [Test]
+  public void SunShadowDistanceCoversMainIsland()
+  {
+    var sun = _game.GetNodeOrNull<DirectionalLight3D>("Sun");
+    sun.ShouldNotBeNull();
+    sun!.DirectionalShadowMaxDistance
+      .ShouldBeGreaterThanOrEqualTo(WorldLayout.MainRadius * 2f);
+  }
+
+  [Test]
+  public void RaftSpawnsOutsideMainIslandRadius()
+  {
+    var raft = _game.GetNodeOrNull<Node3D>("Raft");
+    raft.ShouldNotBeNull();
+    float xz = new Vector2(raft!.Position.X, raft.Position.Z).Length();
+    xz.ShouldBeGreaterThan(WorldLayout.MainRadius);
+  }
+
+  [Test]
+  public void PlayerCameraFarCoversEasterEggRing()
+  {
+    var camera = _game.GetNodeOrNull<Camera3D>("Player/CameraPivot/Camera3D");
+    camera.ShouldNotBeNull();
+    camera!.Far.ShouldBeGreaterThanOrEqualTo(WorldLayout.EasterMaxDistance);
+  }
+
+  [Test]
   public void GeneratedEnemiesRespectSafeRadiusAndHabitats()
   {
     IslandBuilder.SpawnSafeRadius.ShouldBe(40f);

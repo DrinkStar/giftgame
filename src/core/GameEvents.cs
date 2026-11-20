@@ -41,6 +41,11 @@ public static class GameEvents
   public static event Action? GameStarted;
   public static event Action? GamePaused;
   public static event Action? GameResumed;
+
+  /// <summary>
+  ///   TRUE-ENDING ONLY. Death goes PlayerDied -> respawn and must never raise
+  ///   this; the hygiene test whitelists it because no producer exists yet.
+  /// </summary>
   public static event Action? GameOver;
   public static event Action? PlayerDied;
 
@@ -139,19 +144,6 @@ public static class GameEvents
   /// </summary>
   public static event Action<string>? CropHarvested;
 
-  /// <summary>
-  ///   A wild animal was tamed, carrying its livestock type id. Raise-only
-  ///   this iteration (Iter5 plan Decision 9); first raised by W2.
-  /// </summary>
-  public static event Action<string>? LivestockTamed;
-
-  /// <summary>
-  ///   A tamed animal produced its produce (egg/wool/milk), carrying the
-  ///   livestock type id. Raise-only this iteration (Iter5 plan Decision 9);
-  ///   first raised by W2.
-  /// </summary>
-  public static event Action<string>? LivestockProduced;
-
   #endregion Farming
 
   #region Combat
@@ -172,14 +164,6 @@ public static class GameEvents
   public static event Action<string>? BossDefeated;
 
   /// <summary>
-  ///   A boss transitioned between phases, carrying the boss id and the new
-  ///   phase (1/2/3). Raised exactly once per transition by
-  ///   <see cref="Combat.BossPhaseController"/> (Iter6.1 todo 4). Raise-only:
-  ///   the event exists so future audio/UI systems can subscribe.
-  /// </summary>
-  public static event Action<string, int>? BossPhaseChanged;
-
-  /// <summary>
   ///   The active weapon slot toggled, carrying the primary (hotbar) item and
   ///   the secondary slot item AFTER the switch (Iter6.1 todo 5). Raised by
   ///   <see cref="Combat.WeaponSystem.SecondarySlotActive"/>. Raise-only: the
@@ -196,6 +180,30 @@ public static class GameEvents
   public static event Action<string>? MeleeHit;
 
   /// <summary>
+  ///   A player projectile (thrown spear / arrow) hit an enemy. Raised by
+  ///   Projectile.ApplyHit when it hits an enemy (reached via OnBodyEntered
+  ///   and the physics sweep). Carries the launching weapon item id (bow id
+  ///   for arrows, spear id for throws). Distinct from <see cref="MeleeHit"/>: the
+  ///   tutorial's "chop with a tool" step must not advance on a throw.
+  ///   Raise-only, consumed by SfxHook (enemy_hit).
+  /// </summary>
+  public static event Action<string>? ProjectileHit;
+
+  /// <summary>
+  ///   Player started a melee attack swing (feel feedback). Carries the
+  ///   effective weapon item id, or empty for unarmed. Raise-only — SfxHook
+  ///   plays melee_swing; does not imply a hit. Ranged attacks raise
+  ///   <see cref="RangedAttack"/> instead.
+  /// </summary>
+  public static event Action<string>? AttackSwing;
+
+  /// <summary>
+  ///   A ranged attack was launched (Throw or Shoot). Sibling of
+  ///   <see cref="AttackSwing"/>, which is now melee-only.
+  /// </summary>
+  public static event Action<string>? RangedAttack;
+
+  /// <summary>
   ///   T9.3: an armor item was equipped, carrying its item id
   ///   (cloth_armor/leather_armor/iron_armor). Raised by WeaponSystem's armor
   ///   equip branch; consumed by the player outfit visuals. Raise-only.
@@ -203,24 +211,6 @@ public static class GameEvents
   public static event Action<string>? ArmorEquipped;
 
   #endregion Combat
-
-  #region Progression (Iter8p R1)
-
-  /// <summary>
-  ///   A talent was unlocked, carrying its talent id. R1 reserve — raise-only:
-  ///   the event exists so future UI/audio/save systems can subscribe; first
-  ///   raised once a real talent tree replaces the null tree.
-  /// </summary>
-  public static event Action<string>? TalentUnlocked;
-
-  /// <summary>
-  ///   A skill activated, carrying its skill id. R1 reserve — raise-only:
-  ///   the event exists so future UI/audio/save systems can subscribe; first
-  ///   raised once a real skill host replaces the null host.
-  /// </summary>
-  public static event Action<string>? SkillActivated;
-
-  #endregion Progression (Iter8p R1)
 
   #region Quests (Iter7)
 
@@ -391,33 +381,25 @@ public static class GameEvents
 
   public static void RaiseCropHarvested(string cropId) => CropHarvested?.Invoke(cropId);
 
-  public static void RaiseLivestockTamed(string livestockId) =>
-    LivestockTamed?.Invoke(livestockId);
-
-  public static void RaiseLivestockProduced(string livestockId) =>
-    LivestockProduced?.Invoke(livestockId);
-
   public static void RaiseEnemyDied(string enemyId) => EnemyDied?.Invoke(enemyId);
 
   public static void RaiseBossDefeated(string enemyId) =>
     BossDefeated?.Invoke(enemyId);
-
-  public static void RaiseBossPhaseChanged(string bossId, int phase) =>
-    BossPhaseChanged?.Invoke(bossId, phase);
 
   public static void RaiseWeaponSlotChanged(ItemData? primary, ItemData? secondary) =>
     WeaponSlotChanged?.Invoke(primary, secondary);
 
   public static void RaiseMeleeHit(string weaponId) => MeleeHit?.Invoke(weaponId);
 
+  public static void RaiseProjectileHit(string itemId) => ProjectileHit?.Invoke(itemId);
+
+  public static void RaiseAttackSwing(string weaponId) =>
+    AttackSwing?.Invoke(weaponId);
+
+  public static void RaiseRangedAttack(string itemId) => RangedAttack?.Invoke(itemId);
+
   public static void RaiseArmorEquipped(string itemId) =>
     ArmorEquipped?.Invoke(itemId);
-
-  public static void RaiseTalentUnlocked(string talentId) =>
-    TalentUnlocked?.Invoke(talentId);
-
-  public static void RaiseSkillActivated(string skillId) =>
-    SkillActivated?.Invoke(skillId);
 
   public static void RaiseQuestStarted(string questId) =>
     QuestStarted?.Invoke(questId);

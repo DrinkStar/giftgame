@@ -1,11 +1,11 @@
 {
   "task_id": "godot-dev-20260818-001",
   "created_at": "2026-08-18T09:10:00+08:00",
-  "updated_at": "2026-08-21T11:35:00+08:00",
-  "stage": "phase4-aim-swim-tide",
-  "current_iteration": "enlarge-islands",
-  "git_branch": "(no .git in workspace)",
-  "last_stable_commit": "ae89640",
+  "updated_at": "2026-11-19T14:30:00+08:00",
+  "stage": "project-audit-r3",
+  "current_iteration": "review-closeout-2026-11-17",
+  "git_branch": "dev/perf-p0-p1-20260817",
+  "last_stable_commit": "306b35d",
   "contracts": [
     "PlayerDied ≠ GameOver（死亡=存档点重生，不结束游戏）",
     "Game.tscn = 产品；ocean_test/storm_zone = 实验室",
@@ -33,57 +33,87 @@
     "test_framework": "GoDotTest",
     "main_scene": "res://src/Main.tscn",
     "renderer": "forward_plus",
-    "scene_count": 36,
-    "script_count": 113,
-    "test_script_count": 53,
+    "scene_count": 40,
+    "script_count": 129,
+    "test_script_count": 69,
     "codegraph": "colbymchenry/codegraph v1.6.0 CLI + Cursor MCP (codegraph_explore); index via tools/ensure-codegraph.sh → .codegraph/",
     "godot_editor_mcp": "offline (ECONNREFUSED 127.0.0.1:9920)"
   },
   "iterations": [
     {
-      "name": "crash-logging",
+      "name": "project-polish-r1-disposed",
       "status": "verified",
       "tasks": [
-        {"id": "T-L.1", "file": "src/core/logging/CrashLogWriter.cs", "action": "create", "status": "done", "verify": "CrashLogTest session/ring/dump/prune"},
-        {"id": "T-L.2", "file": "src/core/logging/CrashLog.cs + EngineLogSink.cs + CrashLogService.cs/.tscn", "action": "create", "status": "done", "verify": "dotnet build; _EnterTree init"},
-        {"id": "T-L.3", "file": "project.godot", "action": "modify", "status": "done", "verify": "autoload + file_logging.pc"},
-        {"id": "T-L.4", "file": "src/Main.cs + src/core/GameManager.cs", "action": "modify", "status": "done", "verify": "PlayerDied Info is not a crash dump"},
-        {"id": "T-L.5", "file": "test/src/CrashLogTest.cs", "action": "create", "status": "done", "verify": "GoDotTest 322/0"},
-        {"id": "T-L.6", "file": "README.md", "action": "modify", "status": "done", "verify": "docs match paths"}
+        {"id": "T-R1.1", "file": "src/combat/BossPhaseController.cs", "action": "modify", "status": "done", "verify": "IsInstanceValid boss; latch bad MinionScene"},
+        {"id": "T-R1.2", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "IsInstanceValid player before GlobalPosition; AI switch untouched"},
+        {"id": "T-R1.3", "file": "test/src/BossPhaseTest.cs + CombatHurtboxTest.cs", "action": "modify", "status": "done", "verify": "disposed boss/player guards"},
+        {"id": "T-R1.4", "file": ".godot-dev/state.json", "action": "modify", "status": "done", "verify": "fixed missing comma between iterations"}
       ]
     },
     {
-      "name": "perf-p0-p1",
+      "name": "project-polish-r2-weapon-yaw",
       "status": "verified",
       "tasks": [
-        {"id": "T-P.1", "file": "src/world/ocean/WaveGenerator.cs", "action": "modify", "status": "done", "verify": "no catch-up flush; NormalizeMapSize tests"},
-        {"id": "T-P.2", "file": "src/world/ocean/WaterMesh.cs", "action": "modify", "status": "done", "verify": "async readback; headless GetWaveHeight 0"},
-        {"id": "T-P.3", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "SleepDistance early-out; AI switch untouched"},
-        {"id": "T-P.4", "file": "src/player/PlayerInteraction.cs + PlayerController.cs + Projectile.cs", "action": "modify", "status": "done", "verify": "cached Array<Rid>"},
-        {"id": "T-P.5", "file": "src/ui/HUD.cs + src/core/WeatherService.cs", "action": "modify", "status": "done", "verify": "clock/fog dirty writes"},
-        {"id": "T-P.6", "file": "src/building/BuildableInstance.cs + MouseObject.cs", "action": "modify", "status": "done", "verify": "null Object3DModel no NRE"}
+        {"id": "T-R2.1", "file": "src/player/WeaponVisual.cs", "action": "modify", "status": "done", "verify": "hand offset orbits with PlayerModel yaw"},
+        {"id": "T-R2.2", "file": "test/src/WeaponVisualTest.cs", "action": "modify", "status": "done", "verify": "SyncYawToPlayerModel_OrbitsHandOffsetWithMeshYaw"}
       ]
     },
     {
-      "name": "main-menu",
+      "name": "project-audit-r3",
       "status": "verified",
       "tasks": [
-        {"id": "T-M.1", "file": "src/ui/TutorialUI.cs", "action": "modify", "status": "done", "verify": "AutoStart=false; CompleteChapter1WithoutPlaying"},
-        {"id": "T-M.2", "file": "src/core/save/SaveService.cs", "action": "modify", "status": "done", "verify": "TryLoadPath; AutoLoadOnReady false"},
-        {"id": "T-M.3", "file": "src/ui/MainMenuUI.cs + scenes/ui/main_menu.tscn + src/Game.tscn", "action": "create", "status": "done", "verify": "four buttons + save list"},
-        {"id": "T-M.4", "file": "test/src/MainMenuUITest.cs", "action": "create", "status": "done", "verify": "GoDotTest menu cases"},
-        {"id": "T-M.5", "file": "README.md + .godot-dev/state.json + .cursor/rules", "action": "modify", "status": "done", "verify": "dotnet build; smoke; tests"}
+        {"id": "T-R3.1", "file": "src/world/WoodTree.cs + src/world/CoconutPalm.cs", "action": "modify", "status": "done", "verify": "shrink tween targets near-zero 0.001 not Vector3.Zero; eliminates native 'det == 0' basis error on harvest exhaustion (product path)"},
+        {"id": "T-R3.2", "file": "src/core/save/SaveService.cs", "action": "modify", "status": "done", "verify": "Snapshot/RestoreFarms/RestoreLivestock/RestoreStorageBoxes guard IsInsideTree before GetTree(); kills 9 native data.tree errors"},
+        {"id": "T-R3.3", "file": "src/combat/EnemyBase.cs", "action": "modify", "status": "done", "verify": "_PhysicsProcess bails when !IsInsideTree (real free-race guard); AI behavior switch untouched"}
+      ],
+      "residual_test_only_errors": {
+        "body_get_space_null": 4,
+        "not_in_tree_globalposition": 4,
+        "why": "CombatHurtboxTest manually calls enemy._PhysicsProcess with ProcessMode.Disabled body (no physics space); TutorialIslandTest sets GlobalPosition pre-tree. Harness-only, not engine-dispatched."
+      }
+    },
+    {
+      "name": "review-closeout-2026-11-17",
+      "status": "verified",
+      "tasks": [
+        {"id": "C-1.1", "file": ".gitignore + probe_chest.gd", "action": "modify/delete", "status": "done", "verify": "ignore *.log + .godot-dev/*.log; 30.8MB root logs and 5.3MB dev logs no longer reachable by git add; one-off probe removed"},
+        {"id": "C-1.2", "file": "test/src/PlayerCameraTest.cs.uid", "action": "create", "status": "done", "verify": "godot --headless --import generated uid://cw71vv84iufxs; test/src uid count == cs count (66/66)"},
+        {"id": "C-1.3", "file": "commit d3dd314", "action": "commit", "status": "done", "verify": "lands the 2026-09-11..16 working set (53 files, +1532/-177)"},
+        {"id": "C-1.4", "file": ".godot-dev/state.json", "action": "modify", "status": "done", "verify": "last_stable_commit d3dd314; git_branch no longer claims 'no .git in workspace'"},
+        {"id": "C-2.1", "file": "src/core/WeatherFog.cs + src/core/WeatherService.cs + test/src/WeatherFogTest.cs", "action": "create/modify", "status": "done", "verify": "fog table extracted to pure WeatherFog.Resolve(weather, night); 4 tests pin 4 weather x day/night (density/scatter/aerial/Enabled == !night); red (CS0103) then green"},
+        {"id": "C-2.2", "file": "test/src/AimQueryTest.cs", "action": "modify", "status": "done", "verify": "3 physics-rig cases: rejected Area soft-skipped and target behind hit, World body hard-stops, MaxPierceSteps bounds the loop (rig parked at Y=200)"},
+        {"id": "C-2.3", "file": "test/src/PlayerCameraTest.cs", "action": "modify", "status": "done", "verify": "boom pulls in before a World hit (2.8 - 0.25 margin) and rests at the authored offset in open sky; Fov == WalkFov"},
+        {"id": "C-2.4", "file": "test/src/PlayerInputSimulationTest.cs", "action": "modify", "status": "done", "verify": "Setup closes MainMenuUI (title overlay holds gameplay input; a stale release from an older Game instance could land after this scene's Hold and zero the first tick) — removes the 0-velocity flake"},
+        {"id": "C-3.1", "file": "src/player/AimQuery.cs", "action": "modify", "status": "done", "verify": "IntersectPiercing reuses the caller's exclude array and pops appended RIDs in finally: no per-frame new Array<Rid> (perf-review P1-4 / T-P.4)"},
+        {"id": "C-3.2", "file": "src/player/WeaponVisual.cs + src/player/CharacterAnimator.cs", "action": "modify", "status": "done", "verify": "PlayerModel cached + yaw-unchanged early out; look camera cached with IsInstanceValid re-resolve; no per-frame NodePath lookup"},
+        {"id": "C-3.3", "file": "commits a3b1923 / b67a258", "action": "commit", "status": "done", "verify": "test + perf landed separately; --run-tests 484 passed / 0 failed (parallel and --sequential)"},
+        {"id": "C-4.1", "file": "src/core/GameEvents.cs + src/combat/CombatFeedback.cs + src/combat/Projectile.cs + src/core/SfxHook.cs", "action": "create/modify", "status": "done", "verify": "plan B semantics split: ProjectileHit/RangedAttack added, pure static CombatFeedback.RaiseAttack(AttackType) seam, Projectile.ItemId [Export], SfxHook routes bow->bow_shoot / throw->melee_swing (unchanged behavior); commit ecfd0e8 + fix 2de3c1a (CA1861 x3, RangedSfxId string? null-safe)"},
+        {"id": "C-4.2", "file": "src/core/GameEvents.cs + BossPhaseController.cs + Livestock.cs", "action": "modify", "status": "done", "verify": "5 dead events retired with raise helpers and every call site: LivestockTamed, LivestockProduced, BossPhaseChanged, TalentUnlocked, SkillActivated; declared events 54 -> 51; grep 0 hits under src/"},
+        {"id": "C-4.3", "file": "test/src/BossPhaseTest.cs", "action": "modify", "status": "done", "verify": "2 event-dependent tests rewritten to assert BossPhaseController.CurrentPhase for sequence [2,3,3] and staying at 1 above 70%"},
+        {"id": "C-4.4", "file": "src/ui/CraftUI.cs + src/ui/HUD.cs", "action": "modify", "status": "done", "verify": "CraftingProgress -> CraftProgress ProgressBar (0/terminal hides); GameSaved/GameLoaded -> ToastLabel + ShowToast 1.5s in _Process; subscriptions in _Ready, unsubscribed in _ExitTree (CraftUI Unsubscribe); GameOver doc annotated TRUE-ENDING ONLY; 2 new tests"},
+        {"id": "C-4.5", "file": "test/src/GameEventsHygieneTest.cs", "action": "create", "status": "done", "verify": "3 static-scan guards: per-file +=/-= pairing, every declared event has producer+consumer (GameOver whitelisted both sides), name uniqueness; declared count hard-asserted 51; producer regex narrowed to GameEvents\\.Raise(\\w+)\\(; mutation self-check archived (t5-run-mut.log shows HUD.cs:GameSaved +=1 -=0, t5-run-green.log 493/0); commits f2f3ed3 + 9050b19"},
+        {"id": "C-4.6", "file": "commits 574cebf", "action": "commit", "status": "done", "verify": "final whole-branch review: Ready to merge = Yes, 0 Critical / 0 Important; fix wave narrows producer regex and aligns ProjectileHit summary to Projectile.ApplyHit; scoped re-review all ADDRESSED; Rebuild 79 warnings / 0 errors, --run-tests 493 passed / 0 failed"},
+        {"id": "C-4.7", "file": "commit 306b35d + PR #5", "action": "merge/push", "status": "done", "verify": "merged origin/dev/perf-p0-p1-20260817 (PR #1 devex work, single .godot-dev/state.json conflict resolved by keeping both sides); merged result verified Rebuild 79 warnings / 0 errors and 495 passed / 0 failed; pushed review/gameevents-convergence; PR #5 open against dev/perf-p0-p1-20260817"},
+        {"id": "C-4.8", "file": "src/combat/Projectile.cs + src/core/GameEvents.cs + src/ui/CraftUI.cs + test/src/GameEventsHygieneTest.cs", "action": "modify", "status": "done", "verify": "parked minors closed: ItemId/ProjectileHit docs name the launching weapon id; CraftProgress MouseFilter=Ignore; hygiene counts keyed by src-relative path, declaration scan skips comment lines and anchors the regex, whitelist renamed WhitelistedEvents; commit 5180479"},
+        {"id": "C-4.9", "file": "test/src/IslandGeneratorTest.cs", "action": "modify", "status": "done", "verify": "recurring flake fixed at the harness level: BuilderPlacesEnemiesPerTierWhenPlayerExists got [Timeout(60000)] because it builds the whole archipelago synchronously; two full runs green (495/0) after the change; commit 8959104"},
+        {"id": "C-4.10", "file": "test/src/WeaponSystemTest.cs", "action": "modify", "status": "done", "verify": "last parked coverage gap closed: 3 tests drive WeaponSystem._UnhandledInput (primary/secondary) and assert the seam end to end — spear throw and bow shot raise RangedAttack with the launching weapon id (no AttackSwing, arrow consumed once), axe primary raises AttackSwing only; 498 passed / 0 failed; commit 1d00973"},
+        {"id": "C-4.11", "file": "src/combat/BossPhaseController.cs", "action": "modify", "status": "done", "verify": "BossId kept by explicit ruling (scene files and parallel iteration branches author it) and its summary now states it is scene metadata with no consumer, pointing new logic at EnemyData.Id; Rebuild 79 warnings / 0 errors, suite 498 passed / 0 failed"}
       ]
     }
   ],
-  "pending_todos": [],
-  "checkpoint": "phase4_irregular_islands_verified",
+  "pending_todos": [
+    "BuildingSystem upstream TODO (complete demolish/save edge cases) — large feature, not this polish pass",
+    "WaterMesh cascade sample TODO — blocked by headless GPU contract; product path separate",
+    "WaveGenerator barrier FIXME — needs profiling before change",
+    "BuildingInput load-from-configuration TODO — low priority"
+  ],
+  "checkpoint": "project_audit_r3_verified",
   "verification": {
-    "build": "dotnet build 0 errors",
-    "smoke": "godot --headless --path . --quit-after 5 exit 0; WaterMesh headless warning is WARN not crash dump",
-    "tests": "2026-08-21 enlarge-islands: IslandGeneratorTest 20/0; IslandVegetationTest 5/0; TutorialIslandTest 4/0; EnemyHabitatTest 9/0; GameTest 4/0. CombatHurtbox suite still aborts on pre-existing disposed-GCHandle. Full suite remains unstable.",
+    "build": "dotnet build 0 errors; src warnings 10 (CA1805 x4, CA1859 x4, CA1869 x2), test warnings 144 (mostly CA1310 locale StartsWith)",
+    "smoke": "2026-09-16 godot --headless --path . --quit-after 5 exit 0 (WaterMesh headless WARN only)",
+    "tests": "2026-11-19: GoDotTest Passed: 495 | Failed: 0 | Skipped: 0 (493 after GameEvents convergence + 2 from the merged origin/devex commit); ObjectDisposedException 0; det==0 0; data.tree null 0; residual harness-only ERROR noise unchanged; exit RID leaks = dummy-renderer teardown noise. Verified on the merged result (306b35d). Flake notes: IslandGeneratorTest::BuilderPlacesEnemiesPerTierWhenPlayerExists timed out three times across this iteration under load, green on re-run (needs its own ticket); PlayerInputSimulationTest fixed earlier via MainMenuUI.Dismiss().",
     "test_invocation": "godot --headless --path . --run-tests --quit-on-finish",
-    "export": "re-export 2026-08-18 19:22 after denser vegetation: same command exit 0; pck still 68646116 (65.47 MB, unchanged — vegetation is C# quotas not new assets); SeaAnomaly.dll 573440; file_logging.pc=true"
+    "export": "not re-exported this pass"
   },
-  "notes": "2026-08-21 enlarge-islands: product radii ×1.5 (Main 80→120), Storm ×1.2 (30–38→36–46), tutorial size unchanged (ring pushed 770–830). Vegetation/enemies ×2.25 area (Storm ×1.44); shark_king + tutorial crab stay 1. HeightScale/NoiseScale unchanged. DefaultResolution 129→193. SpawnSafeRadius 40 and BuildingPlateauRadius 24 unchanged. Prior aim-swim-tide still in tree."
+  "notes": "2026-09-16 audit R3: fixed product-path native error — harvest shrink tweens tweened scale to exact Vector3.Zero (WoodTree/CoconutPalm), basis det 0 on every inversion, fired in shipped game when trees exhausted; now near-zero 0.001. SaveService off-tree GetTree() printed 9 native data.tree errors despite null check (native errors inside GetTree) — IsInsideTree guards in Snapshot + 3 Restore methods. EnemyBase _PhysicsProcess bails when !IsInsideTree (real free-race guard, AI switch untouched). PlayerMotion untouched. Remaining pending_todos upstream/large/contract-deferred. 2026-11-19 GameEvents convergence (plan B): semantic split (ProjectileHit/RangedAttack + CombatFeedback seam), 5 dead events retired (51 declared), CraftingProgress/GameSaved/GameLoaded wired to UI, hygiene guard test added; input-lock ownership stack (plan C) deliberately deferred to its own ticket. 5 review minors: 5 closed in 5180479 (Projectile.ItemId/ProjectileHit docs, CraftUI ProgressBar MouseFilter, hygiene relative-path keys, declaration-scan comment filtering + anchor, whitelist rename); the WeaponSystem call-site gap is now closed by 3 end-to-end input tests in 1d00973 (spear throw / bow shot raise RangedAttack with the launching weapon id and no AttackSwing; axe primary raises AttackSwing only). Only BossPhaseController.BossId remains by explicit decision: it is an [Export] scene field with a _Ready self-initialisation read and no downstream consumer, so per the 2026-11-20 ruling it is kept (scenes and parallel iteration branches author it) and now documents that status instead of being deleted. The recurring IslandGeneratorTest archipelago-builder flake was fixed at the harness level with [Timeout(60000)] in 8959104; two consecutive full runs green (495/0). 2026-11-19 integration: merged origin PR #1 (CodeGraph tools, headless smoke, lava-pool fallback, LookGood/DRM guard) with a single state.json conflict resolved by keeping both sides and refreshing scene/script/test counts; merged result verified 495/0; pushed review/gameevents-convergence and opened PR #5 against dev/perf-p0-p1-20260817."
 }

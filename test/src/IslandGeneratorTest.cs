@@ -372,6 +372,38 @@ public class IslandGeneratorTest : TestClass, IDisposable
     }
 
     /// <summary>
+    ///   Ring distances clear worst-case radii + shore gap after island enlarge.
+    /// </summary>
+    [Test]
+    public void LayoutRingClearancesAreConsistent()
+    {
+        WorldLayout.StormMinDistance.ShouldBeGreaterThanOrEqualTo(
+            WorldLayout.StoryMaxDistance
+            + WorldLayout.MutantMaxRadius
+            + WorldLayout.StormMaxRadius
+            + WorldLayout.IslandShoreGap
+            - 0.01f);
+        WorldLayout.ExploreMinDistance.ShouldBeGreaterThanOrEqualTo(
+            WorldLayout.StormMaxDistance
+            + WorldLayout.StormMaxRadius
+            + WorldLayout.WildMaxRadius
+            + WorldLayout.IslandShoreGap
+            - 0.01f);
+        (WorldLayout.TutorialMinDistance
+            - WorldLayout.TutorialMaxRadius
+            - WorldLayout.WildMaxRadius
+            - WorldLayout.IslandShoreGap)
+            .ShouldBeGreaterThanOrEqualTo(WorldLayout.ExploreMaxDistance - 0.01f);
+        WorldLayout.EasterMinDistance.ShouldBeGreaterThanOrEqualTo(
+            WorldLayout.TutorialMaxDistance
+            + WorldLayout.TutorialMaxRadius
+            + WorldLayout.PolarMaxRadius
+            + WorldLayout.IslandShoreGap
+            - 0.01f);
+        EnemyBase.SleepDistance.ShouldBeGreaterThan(WorldLayout.MainRadius);
+    }
+
+    /// <summary>
     ///   ⑤ IslandBuilder places island bodies and per-tier story hooks;
     ///   radio Area on Main, shark_king Area on Storm, ruin via the third
     ///   StoryInteractable on the Ruin island (no walk-in Area).
@@ -439,8 +471,11 @@ public class IslandGeneratorTest : TestClass, IDisposable
     ///   their enemy roster with real models wired (crab+boar+wolf on Main,
     ///   mutant on the woods island, storm_beast on the storm island);
     ///   without a player, no enemies are placed (fail-closed).
+    ///   Builds the whole archipelago synchronously, so it needs a wider
+    ///   wall-clock budget than the runner default under parallel load.
     /// </summary>
     [Test]
+    [Timeout(60000)]
     public async Task BuilderPlacesEnemiesPerTierWhenPlayerExists()
     {
         var player = new PlayerController { Name = "Player" };

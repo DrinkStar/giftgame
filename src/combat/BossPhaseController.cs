@@ -18,13 +18,19 @@ using Godot;
 ///     interval, applied by <see cref="EnemyBase"/> reading
 ///     <see cref="CurrentPhase"/>, plus a dark-red visual tint applied here.
 ///
-///   <see cref="GameEvents.RaiseBossPhaseChanged(string, int)"/> fires exactly
-///   once per transition. This node is pure wiring — all thresholds and
-///   decisions live in <see cref="CombatLogic"/>.
+///   Phase transitions are exposed to consumers through
+///   <see cref="CurrentPhase"/>. This node is pure wiring — all thresholds
+///   and decisions live in <see cref="CombatLogic"/>.
 /// </summary>
 public partial class BossPhaseController : Node
 {
-  /// <summary>Id reported with BossPhaseChanged events (defaults to the boss EnemyData id).</summary>
+  /// <summary>
+  ///   Identifier of this boss (defaults to the boss EnemyData id). Scene
+  ///   metadata only: after the Iter8p boss-phase event retirement nothing
+  ///   consumes the value, but the field is kept because scene files and
+  ///   parallel iteration branches author it. Do not build new logic on it —
+  ///   read <c>EnemyData.Id</c> instead.
+  /// </summary>
   [Export] public string BossId = "";
 
   /// <summary>Path to the boss EnemyBase; empty = this node's parent.</summary>
@@ -84,6 +90,8 @@ public partial class BossPhaseController : Node
   private int _phase = 1;
   private float _spawnTimer;
   private int _spawnSequence;
+  /// <summary>Latches after a bad MinionScene so we do not spam warn every tick.</summary>
+  private bool _minionSceneRejected;
 
   /// <summary>Current boss phase (1/2/3); read by EnemyBase for rage math.</summary>
   public int CurrentPhase => _phase;
@@ -106,7 +114,16 @@ public partial class BossPhaseController : Node
 
   public override void _PhysicsProcess(double delta)
   {
-    if (_boss == null || _boss.EnemyData == null)
+    // Boss may be Free()'d while this child still receives ticks (tests /
+    // death teardown). Guard before any property access.
+    if (!GodotObject.IsInstanceValid(_boss))
+    {
+      _boss = null;
+      SetPhysicsProcess(false);
+      return;
+    }
+
+    if (_boss.EnemyData == null)
       return;
 
     var dt = (float)delta;
@@ -118,7 +135,6 @@ public partial class BossPhaseController : Node
     if (phase != _phase)
     {
       _phase = phase;
-      GameEvents.RaiseBossPhaseChanged(BossId, phase);
 
       if (phase == 3)
         _boss.OverrideTint(RageTint);
@@ -145,7 +161,7 @@ public partial class BossPhaseController : Node
   /// <summary>Drops freed minions (death calls QueueFree) from the roster.</summary>
   private void PruneMinions()
   {
-    _minions.RemoveAll(m => !IsInstanceValid(m) || m.IsQueuedForDeletion());
+    _minions.RemoveAll(m => !GodotObject.IsInstanceValid(m) || m.IsQueuedForDeletion());
   }
 
   /// <summary>
@@ -166,7 +182,10 @@ public partial class BossPhaseController : Node
 
   private void SpawnMinion()
   {
-    if (MinionScene == null || MinionData == null)
+    if (_minionSceneRejected || MinionScene == null || MinionData == null)
+      return;
+
+    if (!GodotObject.IsInstanceValid(_boss))
       return;
 
     var parent = MinionSpawnParentPath.IsEmpty
@@ -182,6 +201,7 @@ public partial class BossPhaseController : Node
     var minion = MinionScene.Instantiate() as EnemyBase;
     if (minion == null)
     {
+      _minionSceneRejected = true;
       GD.PushWarning(
         "BossPhaseController: minion scene root is not an EnemyBase; spawn skipped."
       );
@@ -211,11 +231,17 @@ public partial class BossPhaseController : Node
       }
     }
 
+    if (!GodotObject.IsInstanceValid(_boss))
+    {
+      minion.QueueFree();
+      return;
+    }
+
     parent.AddChild(minion);
     // Spawn slightly above a deterministic ring around the boss. Gravity
     // settles land minions while distinct slots avoid collision piles.
     minion.GlobalPosition =
-      _boss!.GlobalPosition + MinionSpawnOffset(_spawnSequence);
+      _boss.GlobalPosition + MinionSpawnOffset(_spawnSequence);
     _spawnSequence++;
 
     _minions.Add(minion);

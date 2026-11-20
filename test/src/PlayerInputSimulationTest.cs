@@ -29,6 +29,14 @@ public class PlayerInputSimulationTest : TestClass
     _fixture = new Fixture(TestScene.GetTree());
     var game = await _fixture.LoadAndAddScene<Game>();
     _player = game.GetNode<PlayerController>("Player");
+
+    // The title overlay holds gameplay input while it is up, and freeing an
+    // older Game instance can release that static lock after this scene's
+    // Hold() depending on finalizer / frame timing. Close the overlay the way
+    // the start button does so the input -> motion pipeline always begins from
+    // a known "game started" state.
+    game.GetNode<MainMenuUI>("MainMenuUI").Dismiss();
+    GameEvents.GameplayInputLocked.ShouldBeFalse();
   }
 
   [Cleanup]

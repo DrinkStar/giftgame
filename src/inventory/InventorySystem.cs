@@ -107,6 +107,11 @@ public partial class InventorySystem : Node
     if (GetParentOrNull<PlayerController>()?.Stats is { IsAlive: false })
       return;
 
+    // Craft / storage / inventory overlay locks gameplay — do not scroll the
+    // hotbar under the cursor while the panel owns the mouse.
+    if (GameEvents.GameplayInputLocked)
+      return;
+
     // Hotbar selection with number keys.
     for (var i = 0; i < HotbarSize; i++)
     {
