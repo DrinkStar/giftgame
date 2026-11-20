@@ -471,8 +471,11 @@ public class IslandGeneratorTest : TestClass, IDisposable
     ///   their enemy roster with real models wired (crab+boar+wolf on Main,
     ///   mutant on the woods island, storm_beast on the storm island);
     ///   without a player, no enemies are placed (fail-closed).
+    ///   Builds the whole archipelago synchronously, so it needs a wider
+    ///   wall-clock budget than the runner default under parallel load.
     /// </summary>
     [Test]
+    [Timeout(60000)]
     public async Task BuilderPlacesEnemiesPerTierWhenPlayerExists()
     {
         var player = new PlayerController { Name = "Player" };
