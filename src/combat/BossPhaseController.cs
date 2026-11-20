@@ -24,7 +24,13 @@ using Godot;
 /// </summary>
 public partial class BossPhaseController : Node
 {
-  /// <summary>Identifier of this boss (defaults to the boss EnemyData id).</summary>
+  /// <summary>
+  ///   Identifier of this boss (defaults to the boss EnemyData id). Scene
+  ///   metadata only: after the Iter8p boss-phase event retirement nothing
+  ///   consumes the value, but the field is kept because scene files and
+  ///   parallel iteration branches author it. Do not build new logic on it —
+  ///   read <c>EnemyData.Id</c> instead.
+  /// </summary>
   [Export] public string BossId = "";
 
   /// <summary>Path to the boss EnemyBase; empty = this node's parent.</summary>
