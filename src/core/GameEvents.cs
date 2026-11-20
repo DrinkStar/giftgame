@@ -182,7 +182,8 @@ public static class GameEvents
   /// <summary>
   ///   A player projectile (thrown spear / arrow) hit an enemy. Raised by
   ///   Projectile.ApplyHit when it hits an enemy (reached via OnBodyEntered
-  ///   and the physics sweep). Distinct from <see cref="MeleeHit"/>: the
+  ///   and the physics sweep). Carries the launching weapon item id (bow id
+  ///   for arrows, spear id for throws). Distinct from <see cref="MeleeHit"/>: the
   ///   tutorial's "chop with a tool" step must not advance on a throw.
   ///   Raise-only, consumed by SfxHook (enemy_hit).
   /// </summary>

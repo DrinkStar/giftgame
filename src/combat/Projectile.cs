@@ -21,7 +21,7 @@ public partial class Projectile : Area3D
 
   [Export] public float Lifetime = 5f;
 
-  /// <summary>Item id of the thrown spear / fired arrow (feedback + sfx).</summary>
+  /// <summary>Item id of the launching weapon (bow id for arrows, spear id for throws); feedback + sfx.</summary>
   [Export] public string ItemId = "";
 
   private Vector3 _velocity;

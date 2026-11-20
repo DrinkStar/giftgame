@@ -39,10 +39,12 @@ public partial class GameEventsHygieneTest : TestClass
   [GeneratedRegex(@"GameEvents\.Raise(\w+)\s*\(")]
   private static partial Regex RaiseCallRegex();
 
-  [GeneratedRegex(@"public static event Action(?:<[^>]+>)?\??\s+(\w+);")]
+  [GeneratedRegex(@"^\s*public static event Action(?:<[^>]+>)?\??\s+(\w+);")]
   private static partial Regex DeclarationRegex();
 
-  private static readonly List<string> WhitelistedProducerlessEvents =
+  // Skips both the producer and the consumer assertion (see
+  // EveryDeclaredEventHasProducerAndConsumer).
+  private static readonly List<string> WhitelistedEvents =
     new() { "GameOver" };
 
   public GameEventsHygieneTest(Node testScene) : base(testScene) { }
@@ -80,7 +82,7 @@ public partial class GameEventsHygieneTest : TestClass
     var missing = new List<string>();
     foreach (var name in declared)
     {
-      if (WhitelistedProducerlessEvents.Contains(name))
+      if (WhitelistedEvents.Contains(name))
       {
         continue;
       }
@@ -136,6 +138,11 @@ public partial class GameEventsHygieneTest : TestClass
     var names = new List<string>();
     foreach (var line in File.ReadLines(path))
     {
+      if (IsCommentLine(line))
+      {
+        continue;
+      }
+
       var match = DeclarationRegex().Match(line);
       if (match.Success)
       {
@@ -157,6 +164,8 @@ public partial class GameEventsHygieneTest : TestClass
         continue;
       }
 
+      var relativePath = Path.GetRelativePath(SrcRoot, file).Replace('\\', '/');
+
       foreach (var line in File.ReadLines(file))
       {
         if (IsCommentLine(line))
@@ -166,7 +175,7 @@ public partial class GameEventsHygieneTest : TestClass
 
         foreach (Match match in regex.Matches(line))
         {
-          var key = (fileName, match.Groups[1].Value);
+          var key = (relativePath, match.Groups[1].Value);
           counts[key] = counts.GetValueOrDefault(key) + 1;
         }
       }

@@ -363,7 +363,8 @@ public partial class CraftUI : CanvasLayer
       Name = "CraftProgress",
       MinValue = 0, MaxValue = 1, Step = 0.001,
       Visible = false,
-      CustomMinimumSize = new Vector2(0, 10)
+      CustomMinimumSize = new Vector2(0, 10),
+      MouseFilter = Control.MouseFilterEnum.Ignore
     };
     vbox.AddChild(progress);
     _progressBar = progress;
